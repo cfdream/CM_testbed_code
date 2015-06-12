@@ -1,0 +1,195 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <pcap.h>
+#include <netinet/in.h>
+#include "../public_lib/packet.h"
+
+
+#define ETHER_ADDR_LEN 6
+
+/* Ethernet header */
+struct sniff_ethernet {
+    u_char ether_dhost[ETHER_ADDR_LEN]; /* Destination host address */
+    u_char ether_shost[ETHER_ADDR_LEN]; /* Source host address */
+    u_short ether_type; /* IP? ARP? RARP? etc */
+};
+
+/* IP header, big endian */
+struct sniff_ip {
+    u_char ip_vhl;		/* version << 4 | header length >> 2 */
+    u_char ip_tos;		/* type of service */
+    u_short ip_len;		/* total length */
+    u_short ip_id;		/* identification */
+    u_short ip_off;		/* fragment offset field */
+#define IP_RF 0x8000		/* reserved fragment flag */
+#define IP_DF 0x4000		/* dont fragment flag */
+#define IP_MF 0x2000		/* more fragments flag */
+#define IP_OFFMASK 0x1fff	/* mask for fragmenting bits */
+    u_char ip_ttl;		/* time to live */
+    u_char ip_p;		/* protocol */
+    u_short ip_sum;		/* checksum */
+    struct in_addr ip_src,ip_dst; /* source and dest address */
+};
+#define IP_HL(ip)		(((ip)->ip_vhl) & 0x0f)
+#define IP_V(ip)		(((ip)->ip_vhl) >> 4)
+
+
+/* TCP header */
+typedef u_int tcp_seq;
+
+struct sniff_tcp {
+    u_short th_sport;	/* source port */
+    u_short th_dport;	/* destination port */
+    tcp_seq th_seq;		/* sequence number */
+    tcp_seq th_ack;		/* acknowledgement number */
+    u_char th_offx2;	/* data offset, rsvd */
+#define TH_OFF(th)	(((th)->th_offx2 & 0xf0) >> 4)
+    u_char th_flags;
+#define TH_FIN 0x01
+#define TH_SYN 0x02
+#define TH_RST 0x04
+#define TH_PUSH 0x08
+#define TH_ACK 0x10
+#define TH_URG 0x20
+#define TH_ECE 0x40
+#define TH_CWR 0x80
+#define TH_FLAGS (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
+    u_short th_win;		/* window */
+    u_short th_sum;		/* checksum */
+    u_short th_urp;		/* urgent pointer */
+};
+
+int generate_one_packet(packet_s* p_packet, char* packet) {
+    int payload_len = p_packet->len;
+    u_short sport = p_packet->src_port;
+    u_short dport = p_packet->dst_port;
+    u_int srcip = p_packet->srcip;
+    u_int dstip = p_packet->dstip;
+    //u_char src_mac[6] = {0x01, 0x01, 0x01, 0x02, 0x02, 0x02};
+    //u_char src_mac[6] = "abcdef";
+    u_char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
+    u_char dst_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
+    //u_char dst_mac[6] = {0x03, 0x03, 0x03, 0x04, 0x04, 0x04};
+
+    struct sniff_tcp tcp_header;
+    struct sniff_ip ip_header;
+    struct sniff_ethernet ethernet_header;
+    memset(&tcp_header, sizeof(tcp_header), 0);
+    memset(&ip_header, sizeof(ip_header), 0);
+    memset(&ethernet_header, sizeof(ethernet_header), 0);
+
+    //tcp header
+    tcp_header.th_sport = 1111;
+    tcp_header.th_dport = 2222;
+    tcp_header.th_seq = 123456;
+    tcp_header.th_offx2 = 5;
+    
+    //ip header
+    ip_header.ip_vhl = 0x45;
+    ip_header.ip_len = payload_len + sizeof(tcp_header);
+    ip_header.ip_off = 0x4000;
+    ip_header.ip_ttl = 0x40;
+    ip_header.ip_p = 0x06;  //TCP-0x06, UDP-0x11
+    ip_header.ip_src.s_addr = srcip;
+    ip_header.ip_dst.s_addr = dstip;
+    
+    //ethernet header
+    strncpy(ethernet_header.ether_dhost, dst_mac, 6);
+    strncpy(ethernet_header.ether_shost, src_mac, 6);
+    ethernet_header.ether_type = 0x0800;
+
+    //printf("tcp header size:%u, ip header size:%u, ether header size:%u\n",
+    //    sizeof(tcp_header), sizeof(ip_header), sizeof(ethernet_header));
+    //printf("src_mac:%s, afterCopy:%s\n", src_mac, ethernet_header.ether_shost);
+
+    memset(packet, sizeof(ethernet_header) + sizeof(ip_header) + sizeof(tcp_header)+payload_len, 0);
+    memcpy(packet, &ethernet_header, sizeof(ethernet_header));
+    memcpy(packet+sizeof(ethernet_header), &ip_header, sizeof(ip_header));
+    memcpy(packet+sizeof(ethernet_header)+sizeof(ip_header), &tcp_header, sizeof(tcp_header));
+
+    return sizeof(ethernet_header) + sizeof(ip_header) + sizeof(tcp_header)+payload_len;
+}
+
+pcap_t *pd;
+pcap_dumper_t *pdumper;
+
+int init_generate_pcpa_file(const char* out_pcap_fname) {
+    pd = pcap_open_dead(DLT_EN10MB, 65535 /* snaplen */);
+    if (pd == NULL) {
+        return -1;
+    }
+
+    /* Create the output file. */
+    pdumper = pcap_dump_open(pd, out_pcap_fname);
+    if (pdumper == NULL) {
+        return -1;
+    }
+    return 0;
+}
+
+void close_generate_pcpa_file() {
+    pcap_close(pd);
+    pcap_dump_close(pdumper);
+}
+
+void generate_one_pcap_pkt(packet_s* p_packet) {
+    struct pcap_pkthdr pcap_header;
+    int pkt_len = 0;
+    char* packet_buffer = (char*) malloc(5000);
+
+    /* generate a packet*/
+    pkt_len = generate_one_packet(p_packet, packet_buffer);
+
+    /* write packet_buffer to savefile */
+    pcap_header.ts.tv_sec = 0xAA779F47;
+    pcap_header.ts.tv_usec = 0x90A20400;
+    pcap_header.caplen = pkt_len;
+    pcap_header.len = pkt_len;
+
+    pcap_dump(pdumper, &pcap_header, packet_buffer);
+    
+    free(packet_buffer);
+    return 0;
+}
+
+//int main() {
+//    pcap_t *pd;
+//    pcap_dumper_t *pdumper;
+//    struct pcap_pkthdr pcap_header;
+//
+//    int i = 0;
+//    int pkt_len = 0;
+//
+//    pd = pcap_open_dead(DLT_EN10MB, 65535 /* snaplen */);
+//
+//    /* Create the output file. */
+//    pdumper = pcap_dump_open(pd, "/tmp/capture.pcap");
+//
+//    char* packet_buffer = (char*) malloc(5000);
+//
+//    //while (1) {
+//    for (i = 0; i < 10; i++) {
+//        /*
+//         ** Create fake IP header and put UDP header
+//         ** and payload in place
+//         **/
+//
+//        /* generate a packet*/
+//        pkt_len = generate_one_packet(packet_buffer);
+//
+//        /* write packet_buffer to savefile */
+//        pcap_header.ts.tv_sec = 0xAA779F47;
+//        pcap_header.ts.tv_usec = 0x90A20400;
+//        pcap_header.caplen = pkt_len;
+//        pcap_header.len = pkt_len;
+//
+//        pcap_dump(pdumper, &pcap_header, packet_buffer);
+//    }
+//
+//
+//    pcap_close(pd);
+//    pcap_dump_close(pdumper);
+//
+//    return 0;
+//}
