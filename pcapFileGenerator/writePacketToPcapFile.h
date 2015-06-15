@@ -4,6 +4,7 @@
 #include <pcap.h>
 #include <netinet/in.h>
 #include "../public_lib/packet.h"
+#include "../public_lib/hashtable.h"
 
 
 #define ETHER_ADDR_LEN 6
@@ -60,7 +61,26 @@ struct sniff_tcp {
     u_short th_urp;		/* urgent pointer */
 };
 
-int generate_one_packet(packet_s* p_packet, char* packet) {
+hashtable_t *flow_seqid_hashmap;
+pcap_t *pd;
+pcap_dumper_t *pdumper;
+
+u_int get_seqid_of_flow(packet_s* p_packet) {
+    char flow_buffer[1024];
+    snprintf(flow_buffer, 1024, "%u_%u_%u_%u_%u", 
+        p_packet->srcip, p_packet->dstip, p_packet->src_port, p_packet->dst_port, p_packet->protocol);
+    if (ht_get(flow_seqid_hashmap, flow_buffer) == NULL) {
+        ht_set(flow_seqid_hashmap, flow_buffer, "0");
+    }
+    char* seqid_str = ht_get(flow_seqid_hashmap, flow_buffer);
+    u_int seqid = atoi(seqid_str) + 1;
+    char seqid_buffer[1024];
+    snprintf(seqid_buffer, 1024, "%u", seqid);
+    ht_set(flow_seqid_hashmap, flow_buffer, seqid_buffer);
+    return seqid;
+}
+
+int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     int payload_len = p_packet->len;
     u_short sport = p_packet->src_port;
     u_short dport = p_packet->dst_port;
@@ -80,9 +100,9 @@ int generate_one_packet(packet_s* p_packet, char* packet) {
     memset(&ethernet_header, sizeof(ethernet_header), 0);
 
     //tcp header
-    tcp_header.th_sport = 1111;
-    tcp_header.th_dport = 2222;
-    tcp_header.th_seq = 123456;
+    tcp_header.th_sport = sport;
+    tcp_header.th_dport = dport;
+    tcp_header.th_seq = get_seqid_of_flow(p_packet);
     tcp_header.th_offx2 = 5;
     
     //ip header
@@ -103,18 +123,18 @@ int generate_one_packet(packet_s* p_packet, char* packet) {
     //    sizeof(tcp_header), sizeof(ip_header), sizeof(ethernet_header));
     //printf("src_mac:%s, afterCopy:%s\n", src_mac, ethernet_header.ether_shost);
 
-    memset(packet, sizeof(ethernet_header) + sizeof(ip_header) + sizeof(tcp_header)+payload_len, 0);
-    memcpy(packet, &ethernet_header, sizeof(ethernet_header));
-    memcpy(packet+sizeof(ethernet_header), &ip_header, sizeof(ip_header));
-    memcpy(packet+sizeof(ethernet_header)+sizeof(ip_header), &tcp_header, sizeof(tcp_header));
+    memset(packet_buff, sizeof(ethernet_header) + sizeof(ip_header) + sizeof(tcp_header)+payload_len, 0);
+    memcpy(packet_buff, &ethernet_header, sizeof(ethernet_header));
+    memcpy(packet_buff+sizeof(ethernet_header), &ip_header, sizeof(ip_header));
+    memcpy(packet_buff+sizeof(ethernet_header)+sizeof(ip_header), &tcp_header, sizeof(tcp_header));
 
     return sizeof(ethernet_header) + sizeof(ip_header) + sizeof(tcp_header)+payload_len;
 }
 
-pcap_t *pd;
-pcap_dumper_t *pdumper;
-
 int init_generate_pcpa_file(const char* out_pcap_fname) {
+    /*create hashtable*/
+    flow_seqid_hashmap = ht_create(HASH_MAP_SIZE);
+
     pd = pcap_open_dead(DLT_EN10MB, 65535 /* snaplen */);
     if (pd == NULL) {
         return -1;
@@ -129,6 +149,8 @@ int init_generate_pcpa_file(const char* out_pcap_fname) {
 }
 
 void close_generate_pcpa_file() {
+    ht_destory(flow_seqid_hashmap, HASH_MAP_SIZE);
+
     pcap_close(pd);
     pcap_dump_close(pdumper);
 }
@@ -150,7 +172,6 @@ void generate_one_pcap_pkt(packet_s* p_packet) {
     pcap_dump(pdumper, &pcap_header, packet_buffer);
     
     free(packet_buffer);
-    return 0;
 }
 
 //int main() {
