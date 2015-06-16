@@ -3,6 +3,8 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../public_lib/flow.h"
+#include "../public_lib/hashTableFlow.h"
 
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN	6
@@ -76,8 +78,23 @@ void swap_big_endian(void* buffer, int len) {
     }
 }
 
+pcap_t *handle;			/* Session handle */
+hashtable_t *flow_seqid_hashmap;
+
+u_int get_expected_seqid_of_flow(packet_s* p_packet) {
+    if (ht_get(flow_seqid_hashmap, p_packet) < 0) {
+        ht_set(flow_seqid_hashmap, p_packet, 0);
+    }
+    u_int seqid = ht_get(flow_seqid_hashmap, p_packet) + 1;
+    return seqid;
+}
+
+u_int set_seqid_of_flow(packet_s* p_packet, u_int seqid) {
+    ht_set(flow_seqid_hashmap, p_packet, seqid);
+}
+
 void got_packet(u_char *args, const struct pcap_pkthdr *header,
-	const u_char *packet) 
+	const u_char *packet_buffer) 
 {
 /* ethernet headers are always exactly 14 bytes */
 #define SIZE_ETHERNET 14
@@ -86,16 +103,17 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 	const struct sniff_ip *ip; /* The IP header */
 	const struct sniff_tcp *tcp; /* The TCP header */
 	const char *payload; /* Packet payload */
+    packet_s packet;
 
 	u_int size_ip;
 	u_int size_tcp;
     u_char protocol;
 
     //ethernet
-	ethernet = (struct sniff_ethernet*)(packet);
+	ethernet = (struct sniff_ethernet*)(packet_buffer);
 	
     //IP header
-    ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
+    ip = (struct sniff_ip*)(packet_buffer + SIZE_ETHERNET);
 	size_ip = IP_HL(ip)*4;
 	if (size_ip < 20) {
 		printf("   * Invalid IP header length: %u bytes\n", size_ip);
@@ -103,16 +121,28 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 	}
     if (ip->ip_p == 0x06) {
         //TCP header
-        tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
+        tcp = (struct sniff_tcp*)(packet_buffer + SIZE_ETHERNET + size_ip);
         size_tcp = TH_OFF(tcp)*4;
         if (size_tcp < 20) {
             printf("   * Invalid TCP header length: %u bytes\n", size_tcp);
             return;
         }
+        
+        //init the TCP packet, check whether there are packets lost ahead
+        packet.srcip = ip->ip_src.s_addr;
+        packet.dstip = ip->ip_dst.s_addr;
+        packet.src_port = tcp->th_sport;
+        packet.dst_port = tcp->th_dport;
+        packet.protocol = ip->ip_p;
+        u_int expect_seqid = get_expected_seqid_of_flow(&packet);
+        if (tcp->th_seq != expect_seqid) {
+            printf("LOST: flow[%u-%u-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
+                packet.srcip, packet.dstip, packet.src_port, packet.dst_port, packet.protocol,
+                expect_seqid, tcp->th_seq);
+        }
+        set_seqid_of_flow(&packet, tcp->th_seq);
 
-        //payload
-        //swap_big_endian((void*)&ip->ip_src, 4);
-        //swap_big_endian((void*)&ip->ip_dst, 4);
+        /*
         const char* buf = inet_ntoa(ip->ip_src);
         char* srcip_str = malloc(strlen(buf)+1);
         strcpy(srcip_str, buf);
@@ -121,7 +151,8 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         printf("tcp pkt, srcip:%s, dstip:%s, sport:%u, dport:%u, seqid=%u\n", 
             srcip_str, dstip_str,
             tcp->th_sport, tcp->th_dport, tcp->th_seq);
-        payload = (u_char *)(packet + SIZE_ETHERNET + size_ip + size_tcp);
+        payload = (u_char *)(packet_buffer + SIZE_ETHERNET + size_ip + size_tcp);
+        */
     } else if (ip->ip_p == 0x11) {
         //UDP header
         printf("udp pkt\n");
@@ -131,9 +162,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
     }
 }
 
-int main(int argc, char *argv[])
-{
-   pcap_t *handle;			/* Session handle */
+int setup() {
    char *dev;			/* The device to sniff on */
    char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
    struct bpf_program fp;		/* The compiled filter */
@@ -143,13 +172,12 @@ int main(int argc, char *argv[])
    bpf_u_int32 mask;		/* Our netmask */
    bpf_u_int32 net;		/* Our IP */
    struct pcap_pkthdr header;	/* The header that pcap gives us */
-   const u_char *packet;		/* The actual packet */
 
    /* Define the device */
    dev = pcap_lookupdev(errbuf);
    if (dev == NULL) {
        fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
-       return(2);
+       return -1;
    }
    /* Find the properties for the device */
    if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
@@ -166,21 +194,34 @@ int main(int argc, char *argv[])
    /* Compile and apply the filter */
    if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
        fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(handle));
-       return(2);
+       return -1;
    }
    if (pcap_setfilter(handle, &fp) == -1) {
        fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
-       return(2);
+       return -1;
    }
-   /* Grab a packet */
-   packet = pcap_next(handle, &header);
-   /* Print its length */
-   printf("Jacked a packet with length of [%d]\n", header.len);
 
-   pcap_loop(handle, 10000000, got_packet, NULL);
+    /*create hashtable*/
+    flow_seqid_hashmap = ht_create(HASH_MAP_SIZE);
 
-   /* And close the session */
-   //pcap_close(handle);
-   
-   return(0);
+    return 0;
+}
+
+void tearDown() {
+    /* And close the session */
+    pcap_close(handle);
+
+    ht_destory(flow_seqid_hashmap, HASH_MAP_SIZE);
+}
+
+int main(int argc, char *argv[])
+{
+    if (setup() < 0) {
+        printf("setup failed\n");
+        return -1;
+    }
+
+    pcap_loop(handle, 10000000, got_packet, NULL);
+    tearDown();
+    return(0);
 }
