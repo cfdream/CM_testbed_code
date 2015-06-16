@@ -1,5 +1,5 @@
-#ifndef __HASHMAP_H__
-#define __HASHMAP_H__
+#ifndef __HASHMAP_FLOW_H__
+#define __HASHMAP_FLOW_H__
 
 #define _XOPEN_SOURCE 500 /* Enable certain library functions (strdup) on linux.  See feature_test_macros(7) */
 #define HASH_MAP_SIZE 655350
@@ -8,10 +8,11 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
+#include "flow.h"
 
 struct entry_s {
-	char *key;
-	char *value;
+	flow_s *key;
+	u_int value;  //seqid
 	struct entry_s *next;
 };
 
@@ -63,7 +64,6 @@ void ht_destory(hashtable_t *hashtable, int size) {
         p_node = hashtable->table[i];
         while (p_node) {
             free(p_node->key);
-            free(p_node->value);
             next = p_node->next;
             free(p_node);
             p_node = next;
@@ -72,36 +72,25 @@ void ht_destory(hashtable_t *hashtable, int size) {
 }
 
 /* Hash a string for a particular hash table. */
-int ht_hash( hashtable_t *hashtable, char *key ) {
-
-	unsigned long long int hashval = 0;
-	int i = 0;
-
-	/* Convert our string to an integer */
-	while( hashval < ULLONG_MAX && i < strlen( key ) ) {
-		hashval = hashval << 8;
-		hashval += key[ i ];
-		i++;
-	}
+int ht_hash( hashtable_t *hashtable, flow_s *key ) {
+	/* generate a 64-bit integer from srcip and dstip */
+	unsigned long long int hashval = key->srcip;
+    hashval = (hashval << 32) | key->dstip;
 
 	return hashval % hashtable->size;
 }
 
 /* Create a key-value pair. */
-entry_t *ht_newpair( char *key, char *value ) {
+entry_t *ht_newpair( flow_s *key, u_int value ) {
 	entry_t *newpair;
 
 	if( ( newpair = malloc( sizeof( entry_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
-	if( ( newpair->key = strdup( key ) ) == NULL ) {
-		return NULL;
-	}
-
-	if( ( newpair->value = strdup( value ) ) == NULL ) {
-		return NULL;
-	}
+    //copy the key and value
+    newpair->key = deep_copy_flow(key);
+    newpair->value = value;
 
 	newpair->next = NULL;
 
@@ -109,7 +98,7 @@ entry_t *ht_newpair( char *key, char *value ) {
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_set( hashtable_t *hashtable, char *key, char *value ) {
+void ht_set( hashtable_t *hashtable, flow_s *key, u_int value ) {
 	int bin = 0;
 	entry_t *newpair = NULL;
 	entry_t *next = NULL;
@@ -123,16 +112,14 @@ void ht_set( hashtable_t *hashtable, char *key, char *value ) {
 
 	next = hashtable->table[ bin ];
 
-	while( next != NULL && next->key != NULL && strcmp( key, next->key ) > 0 ) {
+	while( next != NULL && next->key != NULL && flow_compare( key, next->key ) > 0 ) {
 		last = next;
 		next = next->next;
 	}
 
 	/* There's already a pair.  Let's replace that string. */
-	if( next != NULL && next->key != NULL && strcmp( key, next->key ) == 0 ) {
-
-		free( next->value );
-		next->value = strdup( value );
+	if( next != NULL && next->key != NULL && flow_compare( key, next->key ) == 0 ) {
+		next->value = value;
 
 	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
@@ -156,25 +143,25 @@ void ht_set( hashtable_t *hashtable, char *key, char *value ) {
 }
 
 /* Retrieve a key-value pair from a hash table. */
-char *ht_get( hashtable_t *hashtable, char *key ) {
+int ht_get( hashtable_t *hashtable, flow_s* key ) {
 	int bin = 0;
 	entry_t *pair;
 
     if (NULL == hashtable) {
-        return NULL;
+        return -1;
     }
 
 	bin = ht_hash( hashtable, key );
 
 	/* Step through the bin, looking for our value. */
 	pair = hashtable->table[ bin ];
-	while( pair != NULL && pair->key != NULL && strcmp( key, pair->key ) > 0 ) {
+	while( pair != NULL && pair->key != NULL && flow_compare( key, pair->key ) > 0 ) {
 		pair = pair->next;
 	}
 
 	/* Did we actually find anything? */
-	if( pair == NULL || pair->key == NULL || strcmp( key, pair->key ) != 0 ) {
-		return NULL;
+	if( pair == NULL || pair->key == NULL || flow_compare( key, pair->key ) != 0 ) {
+		return -1;
 
 	} else {
 		return pair->value;

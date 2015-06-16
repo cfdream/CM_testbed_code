@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
    /* Print its length */
    printf("Jacked a packet with length of [%d]\n", header.len);
 
-   pcap_loop(handle, 100, got_packet, NULL);
+   pcap_loop(handle, 10000000, got_packet, NULL);
 
    /* And close the session */
    //pcap_close(handle);

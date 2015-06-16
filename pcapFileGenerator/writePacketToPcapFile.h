@@ -4,7 +4,7 @@
 #include <pcap.h>
 #include <netinet/in.h>
 #include "../public_lib/packet.h"
-#include "../public_lib/hashtable.h"
+#include "../public_lib/hashTableFlow.h"
 
 
 #define ETHER_ADDR_LEN 6
@@ -66,17 +66,12 @@ pcap_t *pd;
 pcap_dumper_t *pdumper;
 
 u_int get_seqid_of_flow(packet_s* p_packet) {
-    char flow_buffer[1024];
-    snprintf(flow_buffer, 1024, "%u_%u_%u_%u_%u", 
-        p_packet->srcip, p_packet->dstip, p_packet->src_port, p_packet->dst_port, p_packet->protocol);
-    if (ht_get(flow_seqid_hashmap, flow_buffer) == NULL) {
-        ht_set(flow_seqid_hashmap, flow_buffer, "0");
+    if (ht_get(flow_seqid_hashmap, p_packet) < 0) {
+        ht_set(flow_seqid_hashmap, p_packet, 0);
     }
-    char* seqid_str = ht_get(flow_seqid_hashmap, flow_buffer);
-    u_int seqid = atoi(seqid_str) + 1;
-    char seqid_buffer[1024];
-    snprintf(seqid_buffer, 1024, "%u", seqid);
-    ht_set(flow_seqid_hashmap, flow_buffer, seqid_buffer);
+    u_int seqid = ht_get(flow_seqid_hashmap, p_packet) + 1;
+    ht_set(flow_seqid_hashmap, p_packet, seqid);
+
     return seqid;
 }
 
@@ -103,7 +98,7 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     tcp_header.th_sport = sport;
     tcp_header.th_dport = dport;
     tcp_header.th_seq = get_seqid_of_flow(p_packet);
-    tcp_header.th_offx2 = 5;
+    tcp_header.th_offx2 = 5<<4;
     
     //ip header
     ip_header.ip_vhl = 0x45;
