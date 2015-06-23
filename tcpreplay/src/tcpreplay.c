@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "tcpreplay.h"
 #include "tcpreplay_api.h"
@@ -45,6 +46,7 @@ tcpedit_t *tcpedit;
 #include "send_packets.h"
 #include "replay.h"
 #include "signal_handler.h"
+#include "send_condition_thread.h"
 
 #ifdef DEBUG
 int debug = 0;
@@ -60,6 +62,8 @@ main(int argc, char *argv[])
     int i, optct = 0;
     int rcode;
     char buf[1024];
+    pthread_t send_condition_thread;
+    uint32_t condition_ip = 0x0A000001;
 
     fflush(NULL);
 
@@ -129,6 +133,13 @@ main(int argc, char *argv[])
     /* init the signal handlers */
     init_signal_handlers();
 
+    /* send the udp packet through thread */
+    g_tcpreplay_ctx = ctx;
+    if (pthread_create(&send_condition_thread, NULL, send_udp_condition_pkt, &condition_ip)) {
+        notice("\nFailed: pthread_create for send_udp_condition_pkt %u \n", condition_ip);
+        return 1;
+    }
+
     /* main loop */
     rcode = tcpreplay_replay(ctx);
 
@@ -154,7 +165,14 @@ main(int argc, char *argv[])
             printf("%s", buf);
         }
     }
+    /* release the thread */
+    if (pthread_join(send_condition_thread, NULL)) {
+        notice("\nFailed: pthread_join\n", condition_ip);
+    }
+
     tcpreplay_close(ctx);
+
+    printf("main thread exit\n");
     return 0;
 }   /* main() */
 
