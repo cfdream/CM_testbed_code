@@ -497,6 +497,17 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
         }
 
         packetnum++;
+
+        /* re allocate memory to pktdata if pkthdr_ptr->len > pkthdr_ptr->caplen*/
+        if (pkthdr.len > pkthdr.caplen) {
+            //TODO: release new_buffer at later time.
+            char* new_buffer = (char*) malloc(pkthdr.len);
+            memcpy(new_buffer, pktdata, pkthdr.caplen);
+            memset(new_buffer+pkthdr.caplen, '\0', pkthdr.len - pkthdr.caplen);
+            pktdata = new_buffer;
+            pkthdr.caplen = pkthdr.len;
+        }
+
 #if defined TCPREPLAY || defined TCPREPLAY_EDIT
         /* do we use the snaplen (caplen) or the "actual" packet len? */
         pktlen = options->use_pkthdr_len ? pkthdr.len : pkthdr.caplen;
