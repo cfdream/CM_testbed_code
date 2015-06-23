@@ -128,7 +128,7 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     
     //ip header
     ip_header.ip_vhl = 0x45;
-    ip_header.ip_len = payload_len + sizeof(tcp_header);
+    ip_header.ip_len = payload_len + sizeof(tcp_header) + sizeof(ip_header);
     ip_header.ip_off = 0x4000;
     ip_header.ip_ttl = 0x40;
     ip_header.ip_p = 0x06;  //TCP-0x06, UDP-0x11
