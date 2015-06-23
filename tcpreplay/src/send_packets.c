@@ -500,7 +500,6 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
 
         /* re allocate memory to pktdata if pkthdr_ptr->len > pkthdr_ptr->caplen*/
         if (pkthdr.len > pkthdr.caplen) {
-            //TODO: release g_pkt_temporary_buffer at later time.
             memcpy(g_pkt_temporary_buffer, pktdata, pkthdr.caplen);
             memset(g_pkt_temporary_buffer+pkthdr.caplen, '\0', pkthdr.len - pkthdr.caplen);
             pktdata = g_pkt_temporary_buffer;
