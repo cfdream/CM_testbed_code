@@ -152,7 +152,6 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     //    sizeof(tcp_header), sizeof(ip_header), sizeof(ethernet_header_vlan));
     //printf("src_mac:%s, afterCopy:%s\n", src_mac, ethernet_header_vlan.ether_shost);
 
-    memset(packet_buff, sizeof(ethernet_header_vlan) + sizeof(ip_header) + sizeof(tcp_header)+payload_len, 0);
     memcpy(packet_buff, &ethernet_header_vlan, sizeof(ethernet_header_vlan));
     memcpy(packet_buff+sizeof(ethernet_header_vlan), &ip_header, sizeof(ip_header));
     memcpy(packet_buff+sizeof(ethernet_header_vlan)+sizeof(ip_header), &tcp_header, sizeof(tcp_header));
