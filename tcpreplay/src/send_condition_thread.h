@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <netinet/in.h>
 #include "tcpr.h"
 #include "common/sendpacket.h"
 
@@ -40,24 +41,24 @@ void *send_udp_condition_pkt(void* param_ptr) {
     assert(g_tcpreplay_ctx != NULL);
     
     //udp header
-    udp_header.uh_sport = 0x1111;
-    udp_header.uh_dport = 0x1111;
-    udp_header.uh_ulen = sizeof(struct tcpr_udp_hdr);
+    udp_header.uh_sport = 0x01;
+    udp_header.uh_dport = 0x01;
+    udp_header.uh_ulen = htons(sizeof(struct tcpr_udp_hdr));
     
     //ip header
     ip_header.ip_v = 0x4;
     ip_header.ip_hl = 0x5;
-    ip_header.ip_len = sizeof(struct tcpr_ipv4_hdr) + sizeof(struct tcpr_udp_hdr);
+    ip_header.ip_len = htons(sizeof(struct tcpr_ipv4_hdr) + sizeof(struct tcpr_udp_hdr));
     ip_header.ip_off = 0x4000;
     ip_header.ip_ttl = 0x40;
     ip_header.ip_p = 0x11;  //TCP-0x06, UDP-0x11
-    ip_header.ip_src.s_addr = p_condition->srcip;   //set the condition_t.ip
+    ip_header.ip_src.s_addr = htonl(p_condition->srcip);   //set the condition_t.ip
     ip_header.ip_dst.s_addr = 0;
    
     //ethernet header
     strncpy(ethernet_header.ether_dhost, dst_mac, 6);
     strncpy(ethernet_header.ether_shost, src_mac, 6);
-    ethernet_header.ether_type = 0x0008;
+    ethernet_header.ether_type = htons(0x0800);
 
     memcpy(g_pkt_buffer, &ethernet_header, sizeof(ethernet_header));
     memcpy(g_pkt_buffer+sizeof(ethernet_header), &ip_header, sizeof(ip_header));
