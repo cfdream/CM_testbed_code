@@ -1,0 +1,62 @@
+#hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12
+#switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12
+#ip prefix each host represents
+#h1 16.0.0.0/24
+#h2 32.0.0.0/24
+#h3 48.0.0.0/24
+#h4 64.0.0.0/24
+#h5 80.0.0.0/24
+#h6 96.0.0.0/24
+#h7 112.0.0.0/24
+#h8 128.0.0.0/24
+#h9 140.0.0.0/24
+#h10 156.0.0.0/24
+#h11 172.0.0.0/24
+#h12 188.0.0.0/24
+h1 10.0.0.1
+h2 10.0.0.2
+h3 10.0.0.3
+h4 10.0.0.4
+h5 10.0.0.5
+h6 10.0.0.6
+h7 10.0.0.7
+h8 10.0.0.8
+h9 10.0.0.9
+h10 10.0.0.10
+h11 10.0.0.11
+h12 10.0.0.12
+#connection between switches and hosts
+s1 h1
+s2 h2
+s3 h3
+s4 h4
+s5 h5
+s6 h6
+s7 h7
+s8 h8
+s9 h9
+s10 h10
+s11 h11
+s12 h12
+#connections between switches
+s1 s2
+s1 s3
+s2 s5
+s3 s4
+s3 s6
+s4 s5
+s4 s7
+s4 s8
+s5 s6
+s6 s7
+s6 s8
+s7 s8
+s7 s11
+s8 s10
+s9 s10
+s9 s11
+s10 s11
+s10 s12
+s11 s12
