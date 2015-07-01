@@ -87,6 +87,6 @@ types_c.vim
 .settings/
 pcapsend
 
-# ctags file
-tags
-src/tags
+#bin
+reader
+writer
