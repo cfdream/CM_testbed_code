@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include "condition.h"
+#include "../condition.h"
 
 #define TEST_FIFO_FNAME "/tmp/fifo_test"
 

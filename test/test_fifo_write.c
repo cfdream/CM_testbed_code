@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "../public_lib/multi_write_one_read_fifo.h"
+#include "../public_lib/fifo/multi_write_one_read_fifo.h"
 
 int main() {
     /*

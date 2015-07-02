@@ -6,6 +6,7 @@
 #include "../public_lib/flow.h"
 #include "../public_lib/hashTableFlow.h"
 #include "../tcpreplay/src/tcpr.h"
+#include "../public_lib/fifo/senderFIFOManager.h"
 
 
 pcap_t *handle;			/* Session handle */
@@ -68,6 +69,8 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
     u_int seqid;
     int ethernet_header_len = get_ethernet_header_len(packet_buffer);
 
+    condition_t condition;
+
     //ethernet
 	ethernet = (struct tcpr_ethernet_hdr *)(packet_buffer);
 	
@@ -96,14 +99,25 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         seqid = ntohl(tcp->th_seq);
         u_int expect_seqid = get_expected_seqid_of_flow(&packet);
 
-        printf("RECE: flow[%u-%u-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
-            packet.srcip, packet.dstip, packet.src_port, packet.dst_port, packet.protocol,
-            expect_seqid, seqid);
-        if (seqid != expect_seqid) {
+        //printf("RECE: flow[%u-%u-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
+        //    packet.srcip, packet.dstip, packet.src_port, packet.dst_port, packet.protocol,
+        //    expect_seqid, seqid);
+        if (seqid > expect_seqid) {
             printf("LOST: flow[%u-%u-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
                 packet.srcip, packet.dstip, packet.src_port, packet.dst_port, packet.protocol,
                 expect_seqid, seqid);
+
+            condition.srcip = packet.srcip;
+            /*send [expect_seqid, seqid) to related sender*/
+            for (uint32_t i_seqid = expect_seqid; i_seqid < seqid; ++i_seqid) {
+                //write the condition information to the FIFO
+                condition.lost_seqid = i_seqid;
+                writeConditionToFIFO(
+                    get_sender_fifo_handler(condition.srcip), 
+                    &condition);
+            }
         }
+        //set the received seqid
         set_seqid_of_flow(&packet, seqid);
 
         /*
@@ -119,10 +133,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         */
     } else if (ip->ip_p == 0x11) {
         //UDP header
-        printf("udp pkt\n");
+        //printf("udp pkt\n");
     } else {
         //other protocols
-        printf("other protocol pkt\n");
+        //printf("other protocol pkt\n");
     }
 }
 
@@ -132,7 +146,8 @@ int setup() {
    struct bpf_program fp;		/* The compiled filter */
    //char filter_exp[] = "port 23";	/* The filter expression */
    //char filter_exp[] = "tcp";	/* The filter expression */
-   char filter_exp[] = "ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
+   //only keep tcp packets, and dst (included in generated pcap files for senders)
+   char filter_exp[] = "tcp and ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
    bpf_u_int32 mask;		/* Our netmask */
    bpf_u_int32 net;		/* Our IP */
    struct pcap_pkthdr header;	/* The header that pcap gives us */
@@ -180,6 +195,11 @@ void tearDown() {
 
 int main(int argc, char *argv[])
 {
+    /*open_fifos*/
+    if(open_fifos() != 0) {
+        return -1;
+    }
+
     if (setup() < 0) {
         printf("setup failed\n");
         return -1;
@@ -187,5 +207,9 @@ int main(int argc, char *argv[])
 
     pcap_loop(handle, 10000000, got_packet, NULL);
     tearDown();
+
+    //TODO: should close the FIFO, not sure whether they would be closed automatically after the program exits
+    //BTW, don't know how to do it with pcap_loop running.
+
     return(0);
 }

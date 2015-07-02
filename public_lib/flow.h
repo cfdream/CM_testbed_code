@@ -14,6 +14,9 @@ typedef struct flow {
 } flow_s;
 */
 
+/**
+* @brief 5-tuple flow
+*/
 typedef packet_s flow_s;
 
 flow_s* deep_copy_flow(flow_s* input) {

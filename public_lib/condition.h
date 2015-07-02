@@ -5,7 +5,7 @@
 
 typedef struct condition_s {
     uint32_t srcip;
-    uint32_t lost_len;
+    uint32_t lost_seqid;
 }condition_t;
 
 #endif
