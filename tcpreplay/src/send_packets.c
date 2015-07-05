@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -351,6 +352,96 @@ fast_edit_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata,
 }
 
 /**
+* @brief added by xuemei, to track one flow in the switch
+*
+* @param pkthdr
+* @param pktdata
+* @param iteration
+* @param cached
+* @param datalink
+*/
+static inline void
+debug_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata,
+        uint32_t iteration, bool cached, int datalink)
+{
+#define DEBUG_SRCIP 168379437
+#define DEBUG_DSTIP 197988225
+#define DEBUG_SPORT 60826
+#define DEBUG_DPORT 1455
+    uint16_t ether_type;
+    vlan_hdr_t *vlan_hdr;
+    ipv4_hdr_t *ip_hdr = NULL;
+    ipv6_hdr_t *ip6_hdr = NULL;
+    tcp_hdr_t *tcp_hdr = NULL;
+    uint32_t src_ip, dst_ip;
+    uint16_t sport, dport;
+    uint32_t seqid;
+    int l2_len;
+    u_char *packet = *pktdata;
+
+    if (datalink != DLT_EN10MB && datalink != DLT_JUNIPER_ETHER)
+        fast_edit_packet_dl(pkthdr, pktdata, iteration, cached, datalink);
+
+    if (pkthdr->caplen < (bpf_u_int32)TCPR_IPV6_H) {
+        dbgx(2, "Packet too short for Unique IP feature: %u", pkthdr->caplen);
+        return;
+    }
+
+    l2_len = 0;
+    if (datalink == DLT_JUNIPER_ETHER) {
+        if (memcmp(packet, "MGC", 3))
+            warnx("No Magic Number found: %s (0x%x)",
+                 pcap_datalink_val_to_description(datalink), datalink);
+
+        if ((packet[3] & 0x80) == 0x80) {
+            l2_len = ntohs(*((uint16_t*)&packet[4]));
+            l2_len += 6;
+        } else
+            l2_len = 4; /* no header extensions */
+    }
+
+    /* assume Ethernet, IPv4 for now */
+    ether_type = ntohs(((eth_hdr_t*)(packet + l2_len))->ether_type);
+    while (ether_type == ETHERTYPE_VLAN) {
+        vlan_hdr = (vlan_hdr_t *)(packet + l2_len);
+        ether_type = ntohs(vlan_hdr->vlan_len);
+        l2_len += 4;
+    }
+    l2_len += sizeof(eth_hdr_t);
+
+    switch (ether_type) {
+        case ETHERTYPE_IP:
+            ip_hdr = (ipv4_hdr_t *)(packet + l2_len);
+            src_ip = ntohl(ip_hdr->ip_src.s_addr);
+            dst_ip = ntohl(ip_hdr->ip_dst.s_addr);
+            tcp_hdr = (tcp_hdr_t*)(packet + l2_len + sizeof(ipv4_hdr_t));
+            sport = ntohs(tcp_hdr->th_sport);
+            dport = ntohs(tcp_hdr->th_dport);
+            seqid = ntohl(tcp_hdr->th_seq);
+            if (src_ip == DEBUG_SRCIP && dst_ip == DEBUG_DSTIP &&
+                sport == DEBUG_SPORT && dport == DEBUG_DPORT) {
+                struct in_addr src_addr;
+                struct in_addr dst_addr;
+                char src_str[100];
+                char dst_str[100];
+                src_addr.s_addr = htonl(src_ip);
+                char* temp = inet_ntoa(src_addr);
+                memcpy(src_str, temp, strlen(temp));
+                dst_addr.s_addr = htonl(dst_ip);
+                temp = inet_ntoa(dst_addr);
+                memcpy(dst_str, temp, strlen(temp));
+
+                printf("flow[%s-%s-%u-%u-%u]\n", 
+                    src_str, dst_str, 
+                    sport, dport, seqid);
+            }
+            break;
+        default:
+            return; /* non-IP */
+    }
+}
+
+/**
  * \brief Update flow stats
  *
  * Finds out if flow is unique and updates stats.
@@ -545,6 +636,8 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
             /* edit packet to ensure every pass is unique */
             fast_edit_packet(&pkthdr, &pktdata, iteration,
                     preload, datalink);
+        debug_ipv4_packet(&pkthdr, &pktdata, iteration,
+                preload, datalink);
 
         /* update flow stats */
         if (options->flow_stats && !preload)
@@ -795,6 +888,8 @@ send_dual_packets(tcpreplay_t *ctx, pcap_t *pcap1, int cache_file_idx1, pcap_t *
             /* edit packet to ensure every pass is unique */
             fast_edit_packet(pkthdr_ptr, &pktdata, ctx->iteration,
                     options->file_cache[cache_file_idx].cached, datalink);
+        debug_ipv4_packet(pkthdr_ptr, &pktdata, ctx->iteration,
+                options->file_cache[cache_file_idx].cached, datalink);
 
         /* update flow stats */
         if (options->flow_stats && !options->file_cache[cache_file_idx].cached)
