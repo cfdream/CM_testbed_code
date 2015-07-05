@@ -131,7 +131,7 @@ int parse_one_line(char* line_buffer, packet_s* p_packet) {
         //printf("\n");
         free(tokens);
     }
-    if (ith_token < 7 || p_packet->len > 2048) {
+    if (ith_token < 7 || p_packet->len > MAX_PAYLOAD_SIZE) {
         //the line is in wrong format
         return -1;
     }

@@ -22,6 +22,7 @@ typedef packet_s flow_s;
 flow_s* deep_copy_flow(flow_s* input) {
     flow_s* output = malloc(sizeof(flow_s));
     *output = *input;
+    return output;
 }
 
 int flow_compare(flow_s* flow1, flow_s* flow2) {
