@@ -1,5 +1,6 @@
 #include <pcap.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,6 +69,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
     u_char protocol;
     u_int seqid;
     int ethernet_header_len = get_ethernet_header_len(packet_buffer);
+    if(ethernet_header_len < 0) {
+        printf("no ethernet header in the packet\n");
+        return;
+    }
 
     condition_t condition;
 
@@ -99,17 +104,33 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         seqid = ntohl(tcp->th_seq);
         u_int expect_seqid = get_expected_seqid_of_flow(&packet);
 
-        //printf("RECE: flow[%u-%u-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
-        //    packet.srcip, packet.dstip, packet.src_port, packet.dst_port, packet.protocol,
-        //    expect_seqid, seqid);
+        /*DEBUG: print packet info*/
+        struct in_addr src_addr;
+        struct in_addr dst_addr;
+        char src_str[100];
+        char dst_str[100];
+        src_addr.s_addr = htonl(packet.srcip);
+        char* temp = (char*)inet_ntoa(src_addr);
+        memcpy(src_str, temp, strlen(temp));
+        src_str[strlen(temp)] = 0;
+        dst_addr.s_addr = htonl(packet.dstip);
+        temp = (char*)inet_ntoa(dst_addr);
+        memcpy(dst_str, temp, strlen(temp));
+        dst_str[strlen(temp)] = 0;
+
+        printf("RECE: flow[%s-%s-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
+            src_str, dst_str, packet.src_port, packet.dst_port, packet.protocol,
+            expect_seqid, seqid);
+        /*DEBUG END: print packet info*/
         if (seqid > expect_seqid) {
-            printf("LOST: flow[%u-%u-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
-                packet.srcip, packet.dstip, packet.src_port, packet.dst_port, packet.protocol,
+            printf("LOST: flow[%s-%s-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
+                src_str, dst_str, packet.src_port, packet.dst_port, packet.protocol,
                 expect_seqid, seqid);
 
             condition.srcip = packet.srcip;
             /*send [expect_seqid, seqid) to related sender*/
-            for (uint32_t i_seqid = expect_seqid; i_seqid < seqid; ++i_seqid) {
+            uint32_t i_seqid = 0;
+            for (i_seqid = expect_seqid; i_seqid < seqid; ++i_seqid) {
                 //write the condition information to the FIFO
                 condition.lost_seqid = i_seqid;
                 writeConditionToFIFO(
@@ -133,10 +154,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         */
     } else if (ip->ip_p == 0x11) {
         //UDP header
-        //printf("udp pkt\n");
+        printf("udp pkt\n");
     } else {
         //other protocols
-        //printf("other protocol pkt\n");
+        printf("other protocol pkt\n");
     }
 }
 
@@ -148,12 +169,14 @@ int setup() {
    //char filter_exp[] = "tcp";	/* The filter expression */
    //only keep tcp packets, and dst (included in generated pcap files for senders)
    char filter_exp[] = "tcp and ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
+   //char filter_exp[] = "";
    bpf_u_int32 mask;		/* Our netmask */
    bpf_u_int32 net;		/* Our IP */
    struct pcap_pkthdr header;	/* The header that pcap gives us */
 
    /* Define the device */
    dev = pcap_lookupdev(errbuf);
+   printf("NIC:%s\n", dev);
    if (dev == NULL) {
        fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
        return -1;
