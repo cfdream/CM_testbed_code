@@ -26,14 +26,6 @@ flow_s* deep_copy_flow(flow_s* input) {
 }
 
 int flow_compare(flow_s* flow1, flow_s* flow2) {
-    if ( flow1->srcip == flow2->srcip && 
-           flow1->dstip == flow2->dstip &&
-           flow1->src_port == flow2->src_port &&
-           flow1->dst_port == flow2->dst_port &&
-           flow1->protocol == flow2->protocol ) {
-        return 0;
-    }
-
     //srcip not equal
     if (flow1->srcip != flow2->srcip) {
         return flow1->srcip - flow2->srcip;

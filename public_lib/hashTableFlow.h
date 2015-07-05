@@ -75,7 +75,7 @@ void ht_destory(hashtable_t *hashtable, int size) {
 int ht_hash( hashtable_t *hashtable, flow_s *key ) {
 	/* generate a 64-bit integer from srcip and dstip */
 	unsigned long long int hashval = key->srcip;
-    hashval = (hashval << 32) | key->dstip;
+    hashval = ((hashval << 32) | key->dstip) ^ key->src_port ^ key->dst_port;
 
 	return hashval % hashtable->size;
 }
