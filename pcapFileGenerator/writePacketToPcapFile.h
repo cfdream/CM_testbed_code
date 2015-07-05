@@ -4,7 +4,7 @@
 #include <pcap.h>
 #include <netinet/in.h>
 #include "../public_lib/packet.h"
-#include "../public_lib/hashTableFlow.h"
+#include "../public_lib/hashtable/hashTableFlow.h"
 #include "../tcpreplay/src/tcpr.h"
 
 hashtable_t *flow_seqid_hashmap;

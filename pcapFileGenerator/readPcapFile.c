@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include "../public_lib/flow.h"
-#include "../public_lib/hashTableFlow.h"
+#include "../public_lib/hashtable/hashTableFlow.h"
 
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN	6

@@ -1,3 +1,5 @@
+/*single thread*/
+
 #ifndef __HASHMAP_FLOW_H__
 #define __HASHMAP_FLOW_H__
 
