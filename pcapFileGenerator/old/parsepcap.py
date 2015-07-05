@@ -25,7 +25,7 @@ def ReadPcap(file):
         sport = packet[2].sport
         dport = packet[2].dport
         length = packet[2].len
-        #print srcip, dstip, sport, dport, length
+        print srcip, dstip, sport, dport, length
         #print packet.summary();
         #print binascii.hexlify(packet[2].payload['Raw'].load)
         num+=1

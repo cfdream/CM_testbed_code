@@ -35,6 +35,7 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     u_short dport = p_packet->dst_port;
     u_int srcip = p_packet->srcip;
     u_int dstip = p_packet->dstip;
+    u_int seqid = 0;
     //u_char src_mac[6] = {0x01, 0x01, 0x01, 0x02, 0x02, 0x02};
     //u_char src_mac[6] = "abcdef";
     u_char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
@@ -52,7 +53,8 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     //tcp header
     tcp_header.th_sport = htons(sport);
     tcp_header.th_dport = htons(dport);
-    tcp_header.th_seq = htonl(get_seqid_of_flow(p_packet));
+    seqid = get_seqid_of_flow(p_packet);
+    tcp_header.th_seq = htonl(seqid);
     tcp_header.th_off = 5;
     
     //ip header
@@ -78,6 +80,12 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     memcpy(packet_buff, &ethernet_header_vlan, sizeof(ethernet_header_vlan));
     memcpy(packet_buff+sizeof(ethernet_header_vlan), &ip_header, sizeof(ip_header));
     memcpy(packet_buff+sizeof(ethernet_header_vlan)+sizeof(ip_header), &tcp_header, sizeof(tcp_header));
+
+    /*debug 168379437-197988225-60826-1455-6*/
+    //if (srcip == 168379437 && dstip == 197988225 && sport== 60826 && dport==1455) {
+    //    printf("%d\n", seqid);
+    //}
+    /*end debug*/
 
     return sizeof(ethernet_header_vlan) + sizeof(ip_header) + sizeof(tcp_header);
 }
