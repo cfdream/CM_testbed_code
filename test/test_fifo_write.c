@@ -9,6 +9,10 @@ int main() {
     }
     */
     int fifo_handler = openFIFO(TEST_FIFO_FNAME);
+    if (fifo_handler < 0) {
+        printf("FAIL:openFIFO %s\n", TEST_FIFO_FNAME);
+        return -1;
+    }
     condition_t condition;
     while (true) {
         int i = 0;
