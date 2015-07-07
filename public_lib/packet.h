@@ -4,6 +4,9 @@
 #define MAX_MTU_SIZE 5000
 #define MAX_PAYLOAD_SIZE (5000-58)
 
+#define u_int uint32_t
+#define u_short uint16_t
+
 typedef struct packet {
    u_int srcip;
    u_int dstip;

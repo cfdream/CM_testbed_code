@@ -167,9 +167,6 @@ int ht_get( hashtable_t *hashtable, flow_s* key ) {
         pthread_mutex_unlock(&hashtable->mutexs[bin]);
 		return pair->value;
 	}
-    
-    /* release mutex */
-    pthread_mutex_unlock(&hashtable->mutexs[bin]);
 }
 
 /* Insert a key-value pair into a hash table. */

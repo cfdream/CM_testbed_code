@@ -9,8 +9,8 @@
  *
  * */
 
-#ifndef __CM_HASHTABLE_KFLOW_VINT_H__
-#define __CM_HASHTABLE_KFLOW_VINT_H__
+#ifndef __CM_HASHTABLE_KFLOW_VFLOAT_H__
+#define __CM_HASHTABLE_KFLOW_VFLOAT_H__
 
 #define KEY_TYPE float
 
@@ -167,9 +167,6 @@ int ht_get( hashtable_t *hashtable, flow_s* key ) {
         pthread_mutex_unlock(&hashtable->mutexs[bin]);
 		return pair->value;
 	}
-    
-    /* release mutex */
-    pthread_mutex_unlock(&hashtable->mutexs[bin]);
 }
 
 /* Insert a key-value pair into a hash table. */
