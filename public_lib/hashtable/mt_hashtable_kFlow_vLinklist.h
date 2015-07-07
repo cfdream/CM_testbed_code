@@ -2,8 +2,8 @@
  * multi-thread hashtable. set by one thread, get by another thread. only two threads operate on the hashmap:w
  *
  * Each enntry records the one flow's packets (<seqid, volume of the packet>) list
- * ht_set(flow, seqid, volume): add one packet for the 
- * ht_get_rece_lost_volume(flow, seqid): get the <received volume, lost volume> of one flow. 
+ * ht_vl_set(flow, seqid, volume): add one packet for the 
+ * ht_vl_get_rece_lost_volume(flow, seqid): get the <received volume, lost volume> of one flow. 
  */
 
 #ifndef __MT_HASHTABLE_KFLOW_VLINKLIST_H__
@@ -31,24 +31,24 @@ typedef struct pkt_volume_s {
     struct pkt_volume_s* next;
 }pkt_volume_t;
 
-struct entry_s {
+struct entry_vl_s {
 	flow_s *key;
 	pkt_volume_t *oldest_pkt;
 	pkt_volume_t *newest_pkt;
-	struct entry_s *next;
+	struct entry_vl_s *next;
 };
 
-typedef struct entry_s entry_t;
+typedef struct entry_vl_s entry_vl_t;
 
-struct hashtable_s {
+struct hashtable_vl_s {
 	int size;
-	struct entry_s *table[HASH_MAP_SIZE];
+	struct entry_vl_s *table[HASH_MAP_SIZE];
 
     /* for multi-thread accessing */
     pthread_mutex_t mutexs[HASH_MAP_SIZE];
 };
 
-typedef struct hashtable_s hashtable_t;
+typedef struct hashtable_vl_s hashtable_vl_t;
 
 pkt_volume_t* new_pkt_volume(uint32_t seqid, uint32_t volume) {
     pkt_volume_t* pkt_volume;
@@ -69,13 +69,13 @@ pkt_volume_t* new_pkt_volume(uint32_t seqid, uint32_t volume) {
 *
 * @return 
 */
-hashtable_t *ht_create() {
+hashtable_vl_t *ht_vl_create() {
 
-	hashtable_t *hashtable = NULL;
+	hashtable_vl_t *hashtable = NULL;
 	int i;
 
 	/* Allocate the table itself. */
-	if( ( hashtable = malloc( sizeof( hashtable_t ) ) ) == NULL ) {
+	if( ( hashtable = malloc( sizeof( hashtable_vl_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -90,15 +90,15 @@ hashtable_t *ht_create() {
 
 	hashtable->size = HASH_MAP_SIZE;
 
-    printf("SUCC: ht_create\n");
+    printf("SUCC: ht_vl_create\n");
 
 	return hashtable;	
 }
 
-void ht_destory( hashtable_t *hashtable ) {
+void ht_vl_destory( hashtable_vl_t *hashtable ) {
     int i;
-    entry_t* p_node;
-    entry_t* next;
+    entry_vl_t* p_node;
+    entry_vl_t* next;
     pkt_volume_t* p_pkt;
     pkt_volume_t* p_next_pkt;
 
@@ -133,7 +133,7 @@ void ht_destory( hashtable_t *hashtable ) {
 }
 
 /* Hash a string for a particular hash table. */
-int ht_hash( hashtable_t *hashtable, flow_s *key ) {
+int ht_vl_hash( hashtable_vl_t *hashtable, flow_s *key ) {
 	/* generate a 64-bit integer from srcip and dstip */
 	unsigned long long int hashval = key->srcip;
     hashval = ((hashval << 32) | key->dstip) ^ key->src_port ^ key->dst_port;
@@ -142,11 +142,11 @@ int ht_hash( hashtable_t *hashtable, flow_s *key ) {
 }
 
 /* Create a key-value pair. */
-entry_t *ht_newpair( flow_s *key, pkt_volume_t* pkt_volume) {
+entry_vl_t *ht_vl_newpair( flow_s *key, pkt_volume_t* pkt_volume) {
     assert(pkt_volume != NULL);
-	entry_t *newpair;
+	entry_vl_t *newpair;
 
-	if( ( newpair = malloc( sizeof( entry_t ) ) ) == NULL ) {
+	if( ( newpair = malloc( sizeof( entry_vl_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -169,9 +169,9 @@ entry_t *ht_newpair( flow_s *key, pkt_volume_t* pkt_volume) {
 *
 * @return 
 */
-get_ans_t ht_get_rece_lost_volume( hashtable_t *hashtable, flow_s* key, uint32_t seqid ) {
+get_ans_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key, uint32_t seqid ) {
 	int bin = 0;
-	entry_t *pair;
+	entry_vl_t *pair;
     uint32_t lost_volume = 0;
     uint32_t received_volume = 0;
     pkt_volume_t* temp;
@@ -182,7 +182,7 @@ get_ans_t ht_get_rece_lost_volume( hashtable_t *hashtable, flow_s* key, uint32_t
         return ans;
     }
 
-	bin = ht_hash( hashtable, key );
+	bin = ht_vl_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -231,17 +231,17 @@ get_ans_t ht_get_rece_lost_volume( hashtable_t *hashtable, flow_s* key, uint32_t
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_set( hashtable_t *hashtable, flow_s *key, uint32_t seqid, uint32_t volume) {
+void ht_vl_set( hashtable_vl_t *hashtable, flow_s *key, uint32_t seqid, uint32_t volume) {
 	int bin = 0;
-	entry_t *newpair = NULL;
-	entry_t *next = NULL;
-	entry_t *last = NULL;
+	entry_vl_t *newpair = NULL;
+	entry_vl_t *next = NULL;
+	entry_vl_t *last = NULL;
 
     if (NULL == hashtable) {
         return;
     }
 
-	bin = ht_hash( hashtable, key );
+	bin = ht_vl_hash( hashtable, key );
     
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -267,7 +267,7 @@ void ht_set( hashtable_t *hashtable, flow_s *key, uint32_t seqid, uint32_t volum
 
 	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
-		newpair = ht_newpair( key, pkt_volume);
+		newpair = ht_vl_newpair( key, pkt_volume);
 
 		/* We're at the start of the linked list in this bin. */
 		if( next == hashtable->table[ bin ] ) {
