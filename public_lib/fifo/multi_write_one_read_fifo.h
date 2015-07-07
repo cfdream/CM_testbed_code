@@ -1,3 +1,7 @@
+/*
+ * API of FIFO for multi-writer single-reader usage
+ */
+
 #include <stdio.h> 
 #include <fcntl.h>
 #include <unistd.h>
