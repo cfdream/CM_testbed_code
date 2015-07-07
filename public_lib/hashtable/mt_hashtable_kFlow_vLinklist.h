@@ -1,7 +1,9 @@
 /*
- * multi-thread hashtable
- * 
+ * multi-thread hashtable. set by one thread, get by another thread. only two threads operate on the hashmap:w
  *
+ * Each enntry records the one flow's packets (<seqid, volume of the packet>) list
+ * ht_set(flow, seqid, volume): add one packet for the 
+ * ht_get_rece_lost_volume(flow, seqid): get the <received volume, lost volume> of one flow. 
  */
 
 #ifndef __MT_HASHTABLE_KFLOW_VLINKLIST_H__
@@ -158,7 +160,15 @@ entry_t *ht_newpair( flow_s *key, pkt_volume_t* pkt_volume) {
 	return newpair;
 }
 
-/* Retrieve a key-value pair from a hash table. */
+/**
+* @brief packets between [oldest_pkt.seqid, seqid) for the flow is treated as lost, while seqid is treated as received
+*
+* @param hashtable
+* @param key
+* @param seqid
+*
+* @return 
+*/
 get_ans_t ht_get_rece_lost_volume( hashtable_t *hashtable, flow_s* key, uint32_t seqid ) {
 	int bin = 0;
 	entry_t *pair;
