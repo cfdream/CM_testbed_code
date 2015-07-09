@@ -1,50 +1,15 @@
 /* 
  * multi-thread hashtable 
  * key: flow
- * Value: float
+ * Value: uint
  * get()
  * set()
- * ht_vf_next(): can only be used by one thread
+ * ht_vi_next(): can only be used by one thread
  * del()
  *
  * */
 
-#ifndef __CM_HASHTABLE_KFLOW_VFLOAT_H__
-#define __CM_HASHTABLE_KFLOW_VFLOAT_H__
-
-#define KEY_FLOAT_TYPE float
-
-#include <pthread.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
-#include "../flow.h"
-#include "hashtable.h"
-
-struct entry_vf_s {
-	flow_s *key;
-	KEY_FLOAT_TYPE value;
-	struct entry_vf_s *next;
-};
-
-typedef struct entry_vf_s entry_vf_t;
-
-struct hashtable_vf_s {
-	int size;
-	struct entry_vf_s *table[HASH_MAP_SIZE];
-
-    /* for multi-thread accessing */
-    pthread_mutex_t mutexs[HASH_MAP_SIZE];
-
-    /* for ht_vf_next() */
-    int next_current_bin;
-    struct entry_vf_s* next_last_visit_entry;
-};
-
-typedef struct hashtable_vf_s hashtable_vf_t;
-
+#include "mt_hashtable_kFlow_vInt.h"
 
 /* 
 * @brief Create a new hashtable.
@@ -53,13 +18,13 @@ typedef struct hashtable_vf_s hashtable_vf_t;
 *
 * @return 
 */
-hashtable_vf_t *ht_vf_create() {
+hashtable_vi_t *ht_vi_create() {
 
-	hashtable_vf_t *hashtable = NULL;
+	hashtable_vi_t *hashtable = NULL;
 	int i;
 
 	/* Allocate the table itself. */
-	if( ( hashtable = malloc( sizeof( hashtable_vf_t ) ) ) == NULL ) {
+	if( ( hashtable = malloc( sizeof( hashtable_vi_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -72,7 +37,7 @@ hashtable_vf_t *ht_vf_create() {
         pthread_mutex_init(&hashtable->mutexs[i], NULL);
     }
 
-    /* initilize for ht_vf_next() */
+    /* initilize for ht_vi_next() */
     hashtable->next_current_bin = -1;
     hashtable->next_last_visit_entry = NULL;
 
@@ -81,10 +46,10 @@ hashtable_vf_t *ht_vf_create() {
 	return hashtable;	
 }
 
-void ht_vf_destory( hashtable_vf_t *hashtable ) {
+void ht_vi_destory( hashtable_vi_t *hashtable ) {
     int i;
-    entry_vf_t* p_node;
-    entry_vf_t* next;
+    entry_vi_t* p_node;
+    entry_vi_t* next;
 
     if (NULL == hashtable) {
         return;
@@ -109,7 +74,7 @@ void ht_vf_destory( hashtable_vf_t *hashtable ) {
 }
 
 /* Hash a string for a particular hash table. */
-int ht_vf_hash( hashtable_vf_t *hashtable, flow_s *key ) {
+int ht_vi_hash( hashtable_vi_t *hashtable, flow_s *key ) {
 	/* generate a 64-bit integer from srcip and dstip */
 	unsigned long long int hashval = key->srcip;
     hashval = ((hashval << 32) | key->dstip) ^ key->src_port ^ key->dst_port;
@@ -118,10 +83,10 @@ int ht_vf_hash( hashtable_vf_t *hashtable, flow_s *key ) {
 }
 
 /* Create a key-value pair. */
-entry_vf_t *ht_vf_newpair( flow_s *key, KEY_FLOAT_TYPE value ) {
-	entry_vf_t *newpair;
+entry_vi_t *ht_vi_newpair( flow_s *key, KEY_INT_TYPE value ) {
+	entry_vi_t *newpair;
 
-	if( ( newpair = malloc( sizeof( entry_vf_t ) ) ) == NULL ) {
+	if( ( newpair = malloc( sizeof( entry_vi_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -142,15 +107,15 @@ entry_vf_t *ht_vf_newpair( flow_s *key, KEY_FLOAT_TYPE value ) {
 *
 * @return -1: key not exist in the hashtable, >=0 : value of the key
 */
-int ht_vf_get( hashtable_vf_t *hashtable, flow_s* key ) {
+int ht_vi_get( hashtable_vi_t *hashtable, flow_s* key ) {
 	int bin = 0;
-	entry_vf_t *pair;
+	entry_vi_t *pair;
 
     if (NULL == hashtable) {
         return -1;
     }
 
-	bin = ht_vf_hash( hashtable, key );
+	bin = ht_vi_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -175,17 +140,17 @@ int ht_vf_get( hashtable_vf_t *hashtable, flow_s* key ) {
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_vf_set( hashtable_vf_t *hashtable, flow_s *key, KEY_FLOAT_TYPE value ) {
+void ht_vi_set( hashtable_vi_t *hashtable, flow_s *key, KEY_INT_TYPE value ) {
 	int bin = 0;
-	entry_vf_t *newpair = NULL;
-	entry_vf_t *next = NULL;
-	entry_vf_t *last = NULL;
+	entry_vi_t *newpair = NULL;
+	entry_vi_t *next = NULL;
+	entry_vi_t *last = NULL;
 
     if (NULL == hashtable) {
         return;
     }
 
-	bin = ht_vf_hash( hashtable, key );
+	bin = ht_vi_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -203,7 +168,7 @@ void ht_vf_set( hashtable_vf_t *hashtable, flow_s *key, KEY_FLOAT_TYPE value ) {
 
 	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
-		newpair = ht_vf_newpair( key, value );
+		newpair = ht_vi_newpair( key, value );
 
 		/* We're at the start of the linked list in this bin. */
 		if( next == hashtable->table[ bin ] ) {
@@ -225,16 +190,16 @@ void ht_vf_set( hashtable_vf_t *hashtable, flow_s *key, KEY_FLOAT_TYPE value ) {
 }
 
 /* del a key-value pair from a hash table. */
-void ht_vf_del( hashtable_vf_t *hashtable, flow_s *key) {
+void ht_vi_del( hashtable_vi_t *hashtable, flow_s *key) {
 	int bin = 0;
-	entry_vf_t *next = NULL;
-	entry_vf_t *last = NULL;
+	entry_vi_t *next = NULL;
+	entry_vi_t *last = NULL;
 
     if (NULL == hashtable) {
         return;
     }
 
-	bin = ht_vf_hash( hashtable, key );
+	bin = ht_vi_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -269,13 +234,13 @@ void ht_vf_del( hashtable_vf_t *hashtable, flow_s *key) {
 *
 * @return 0-ret_entry is the next entry, -1:no more entries
 */
-int ht_vf_next(hashtable_vf_t *hashtable, entry_vf_t* ret_entry) {
+int ht_vi_next(hashtable_vi_t *hashtable, entry_vi_t* ret_entry) {
     if (hashtable->next_current_bin >= hashtable->size) {
         return -1;
     }
     
     //assert(ret_entry != NULL);
-    entry_vf_t* iterator = NULL;
+    entry_vi_t* iterator = NULL;
     if (hashtable->next_current_bin >= 0 && hashtable->next_current_bin < hashtable->size) {
         pthread_mutex_lock(&hashtable->mutexs[hashtable->next_current_bin]);
         if (hashtable->next_last_visit_entry != NULL && hashtable->next_last_visit_entry->next != NULL) {
@@ -314,5 +279,3 @@ int ht_vf_next(hashtable_vf_t *hashtable, entry_vf_t* ret_entry) {
     }
     return 0;
 }
-
-#endif

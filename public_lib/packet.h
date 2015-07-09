@@ -1,6 +1,8 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+#include <stdint.h>
+
 #define MAX_MTU_SIZE 5000
 #define MAX_PAYLOAD_SIZE (5000-58)
 

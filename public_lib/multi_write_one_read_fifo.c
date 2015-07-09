@@ -2,14 +2,7 @@
  * API of FIFO for multi-writer single-reader usage
  */
 
-#include <stdio.h> 
-#include <fcntl.h>
-#include <unistd.h>
-#include <assert.h>
-
-#include "../receiver_2_sender_proto.h"
-
-#define TEST_FIFO_FNAME "/tmp/fifo_test"
+#include "multi_write_one_read_fifo.h"
 
 /**
 * @brief 

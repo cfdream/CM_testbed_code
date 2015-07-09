@@ -1,32 +1,6 @@
 /*single thread*/
 
-#ifndef __HASHMAP_FLOW_H__
-#define __HASHMAP_FLOW_H__
-
-#define _XOPEN_SOURCE 500 /* Enable certain library functions (strdup) on linux.  See feature_test_macros(7) */
-#define HASH_MAP_SIZE 655350
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
-#include "../flow.h"
-
-struct entry_kf_s {
-	flow_s *key;
-	u_int value;  //seqid
-	struct entry_kf_s *next;
-};
-
-typedef struct entry_kf_s entry_kf_t;
-
-struct hashtable_kf_s {
-	int size;
-	struct entry_kf_s **table;	
-};
-
-typedef struct hashtable_kf_s hashtable_kf_t;
-
+#include "hashTableFlow.h"
 
 /* Create a new hashtable. */
 hashtable_kf_t *ht_kf_create( int size ) {
@@ -189,4 +163,3 @@ int main( int argc, char **argv ) {
 	return 0;
 }
 */
-#endif

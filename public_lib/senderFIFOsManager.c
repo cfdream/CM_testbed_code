@@ -1,27 +1,4 @@
-#ifndef __SENDER_FIFO_MANAGER__
-#define __SENDER_FIFO_MANAGER__
-
-/*
- * used in Mininet
- * all sender side FIFO manager
- * get the FIFO handlers for all senders,
- * and then each receiver will be used to send information to different senders
- */
-#include <pcap.h>
-#include <string.h>
-#include "multi_write_one_read_fifo.h"
-
-#define NUM_SENDERS 12
-
-#define IP_MASK 0xFF000000
-//ip prefix of first sender is 10/24
-//ip prefix of second sender is 11/24
-//...
-#define FIRST_SENDER_IP_PREFIX 0x0A000000
-
-#define GET_SENDER_IDX(ip) {(((ip&IP_MASK)>>24) - FIRST_SENDER_IP_PREFIX>>24)}
-
-int fifo_handlers[NUM_SENDERS];
+#include "senderFIFOsManager.h"
 
 /**
 * @brief for receiver, get the fifo name of one sender
@@ -33,7 +10,7 @@ int fifo_handlers[NUM_SENDERS];
 void get_sender_fifo_fname(int ith_sender, char* buffer, int buffer_len) {
     assert(buffer != NULL);
     snprintf(buffer, buffer_len, "/tmp/h%d_fifo", ith_sender);
-};
+}
 
 
 /**
@@ -72,7 +49,7 @@ int createFIFOFiles() {
         }
     }
     return 0;
-};
+}
 
 /**
 * @brief get the handler for all FIFO files for each sender
@@ -92,7 +69,7 @@ int open_fifos() {
         fifo_fname[i] = fifo_handler;
     }
     return 0;
-};
+}
 
 
 /**
@@ -106,5 +83,3 @@ int get_sender_fifo_handler(uint32_t srcip) {
     int fifo_idx = GET_SENDER_IDX(srcip);
     return fifo_handlers[fifo_idx];
 };
-
-#endif

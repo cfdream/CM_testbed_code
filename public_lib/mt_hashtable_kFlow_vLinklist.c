@@ -6,48 +6,7 @@
  * ht_vl_get_rece_lost_volume(flow, seqid): get the <received volume, lost volume> of one flow. 
  */
 
-#ifndef __MT_HASHTABLE_KFLOW_VLINKLIST_H__
-#define __MT_HASHTABLE_KFLOW_VLINKLIST_H__
-
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
-#include <pthread.h>
-#include <assert.h>
-#include "../flow.h"
-#include "hashtable.h"
-
-typedef struct receV_lostV_s {
-    uint32_t received_volume;
-    uint32_t lost_volume;
-} receV_lostV_t;
-
-typedef struct pkt_volume_s {
-    uint32_t seqid; //seqid of the packet for the flow
-    uint32_t volume;   //volume of the packet for the flow
-    struct pkt_volume_s* next;
-}pkt_volume_t;
-
-struct entry_vl_s {
-	flow_s *key;
-	pkt_volume_t *oldest_pkt;
-	pkt_volume_t *newest_pkt;
-	struct entry_vl_s *next;
-};
-
-typedef struct entry_vl_s entry_vl_t;
-
-struct hashtable_vl_s {
-	int size;
-	struct entry_vl_s *table[HASH_MAP_SIZE];
-
-    /* for multi-thread accessing */
-    pthread_mutex_t mutexs[HASH_MAP_SIZE];
-};
-
-typedef struct hashtable_vl_s hashtable_vl_t;
+#include "mt_hashtable_kFlow_vLinklist.h"
 
 pkt_volume_t* new_pkt_volume(uint32_t seqid, uint32_t volume) {
     pkt_volume_t* pkt_volume;
@@ -284,5 +243,3 @@ void ht_vl_set( hashtable_vl_t *hashtable, flow_s *key, uint32_t seqid, uint32_t
     /* release mutex */
     pthread_mutex_unlock(&hashtable->mutexs[bin]);
 }
-
-#endif

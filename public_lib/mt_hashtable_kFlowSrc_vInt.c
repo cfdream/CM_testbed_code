@@ -9,42 +9,7 @@
  *
  * */
 
-#ifndef __CM_HASHTABLE_KFLOWSRC_VINT_H__
-#define __CM_HASHTABLE_KFLOWSRC_VINT_H__
-
-#define KEY_INT_TYPE uint32_t
-
-#include <pthread.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
-#include "../flow.h"
-#include "hashtable.h"
-
-struct entry_kfs_s {
-	flow_src_t *key;
-	KEY_INT_TYPE value;
-	struct entry_kfs_s *next;
-};
-
-typedef struct entry_kfs_s entry_kfs_t;
-
-struct hashtable_kfs_s {
-	int size;
-	struct entry_kfs_s *table[HASH_MAP_SIZE];
-
-    /* for multi-thread accessing */
-    pthread_mutex_t mutexs[HASH_MAP_SIZE];
-
-    /* for ht_kfs_next() */
-    int next_current_bin;
-    struct entry_kfs_s* next_last_visit_entry;
-};
-
-typedef struct hashtable_kfs_s hashtable_kfs_t;
-
+#include "mt_hashtable_kFlowSrc_vInt.h"
 
 /* 
 * @brief Create a new hashtable.
@@ -314,5 +279,3 @@ int ht_kfs_next(hashtable_kfs_t *hashtable, entry_kfs_t* ret_entry) {
     }
     return 0;
 }
-
-#endif
