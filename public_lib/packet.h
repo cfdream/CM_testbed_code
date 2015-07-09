@@ -16,4 +16,6 @@ typedef struct packet {
    u_int len;
 }packet_s;
 
+typedef packet_s packet_t;
+
 #endif

@@ -10,39 +10,39 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
-#include "flow.h"
+#include "../flow.h"
 
-struct entry_s {
+struct entry_kf_s {
 	flow_s *key;
 	u_int value;  //seqid
-	struct entry_s *next;
+	struct entry_kf_s *next;
 };
 
-typedef struct entry_s entry_t;
+typedef struct entry_kf_s entry_kf_t;
 
-struct hashtable_s {
+struct hashtable_kf_s {
 	int size;
-	struct entry_s **table;	
+	struct entry_kf_s **table;	
 };
 
-typedef struct hashtable_s hashtable_t;
+typedef struct hashtable_kf_s hashtable_kf_t;
 
 
 /* Create a new hashtable. */
-hashtable_t *ht_create( int size ) {
+hashtable_kf_t *ht_kf_create( int size ) {
 
-	hashtable_t *hashtable = NULL;
+	hashtable_kf_t *hashtable = NULL;
 	int i;
 
 	if( size < 1 ) return NULL;
 
 	/* Allocate the table itself. */
-	if( ( hashtable = malloc( sizeof( hashtable_t ) ) ) == NULL ) {
+	if( ( hashtable = malloc( sizeof( hashtable_kf_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
 	/* Allocate pointers to the head nodes. */
-	if( ( hashtable->table = malloc( sizeof( entry_t * ) * size ) ) == NULL ) {
+	if( ( hashtable->table = malloc( sizeof( entry_kf_t * ) * size ) ) == NULL ) {
 		return NULL;
 	}
 	for( i = 0; i < size; i++ ) {
@@ -54,10 +54,10 @@ hashtable_t *ht_create( int size ) {
 	return hashtable;	
 }
 
-void ht_destory(hashtable_t *hashtable, int size) {
+void ht_kf_destory(hashtable_kf_t *hashtable, int size) {
     int i;
-    entry_t* p_node;
-    entry_t* next;
+    entry_kf_t* p_node;
+    entry_kf_t* next;
 
     if (NULL == hashtable) {
         return;
@@ -74,7 +74,7 @@ void ht_destory(hashtable_t *hashtable, int size) {
 }
 
 /* Hash a string for a particular hash table. */
-int ht_hash( hashtable_t *hashtable, flow_s *key ) {
+int ht_kf_hash( hashtable_kf_t *hashtable, flow_s *key ) {
 	/* generate a 64-bit integer from srcip and dstip */
 	unsigned long long int hashval = key->srcip;
     hashval = ((hashval << 32) | key->dstip) ^ key->src_port ^ key->dst_port;
@@ -83,10 +83,10 @@ int ht_hash( hashtable_t *hashtable, flow_s *key ) {
 }
 
 /* Create a key-value pair. */
-entry_t *ht_newpair( flow_s *key, u_int value ) {
-	entry_t *newpair;
+entry_kf_t *ht_kf_newpair( flow_s *key, u_int value ) {
+	entry_kf_t *newpair;
 
-	if( ( newpair = malloc( sizeof( entry_t ) ) ) == NULL ) {
+	if( ( newpair = malloc( sizeof( entry_kf_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -100,17 +100,17 @@ entry_t *ht_newpair( flow_s *key, u_int value ) {
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_set( hashtable_t *hashtable, flow_s *key, u_int value ) {
+void ht_kf_set( hashtable_kf_t *hashtable, flow_s *key, u_int value ) {
 	int bin = 0;
-	entry_t *newpair = NULL;
-	entry_t *next = NULL;
-	entry_t *last = NULL;
+	entry_kf_t *newpair = NULL;
+	entry_kf_t *next = NULL;
+	entry_kf_t *last = NULL;
 
     if (NULL == hashtable) {
         return;
     }
 
-	bin = ht_hash( hashtable, key );
+	bin = ht_kf_hash( hashtable, key );
 
 	next = hashtable->table[ bin ];
 
@@ -125,7 +125,7 @@ void ht_set( hashtable_t *hashtable, flow_s *key, u_int value ) {
 
 	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
-		newpair = ht_newpair( key, value );
+		newpair = ht_kf_newpair( key, value );
 
 		/* We're at the start of the linked list in this bin. */
 		if( next == hashtable->table[ bin ] ) {
@@ -145,15 +145,15 @@ void ht_set( hashtable_t *hashtable, flow_s *key, u_int value ) {
 }
 
 /* Retrieve a key-value pair from a hash table. */
-int ht_get( hashtable_t *hashtable, flow_s* key ) {
+int ht_kf_get( hashtable_kf_t *hashtable, flow_s* key ) {
 	int bin = 0;
-	entry_t *pair;
+	entry_kf_t *pair;
 
     if (NULL == hashtable) {
         return -1;
     }
 
-	bin = ht_hash( hashtable, key );
+	bin = ht_kf_hash( hashtable, key );
 
 	/* Step through the bin, looking for our value. */
 	pair = hashtable->table[ bin ];
@@ -174,17 +174,17 @@ int ht_get( hashtable_t *hashtable, flow_s* key ) {
 /*
 int main( int argc, char **argv ) {
 
-	hashtable_t *hashtable = ht_create( 65536 );
+	hashtable_kf_t *hashtable = ht_kf_create( 65536 );
 
-	ht_set( hashtable, "key1", "inky" );
-	ht_set( hashtable, "key2", "pinky" );
-	ht_set( hashtable, "key3", "blinky" );
-	ht_set( hashtable, "key4", "floyd" );
+	ht_kf_set( hashtable, "key1", "inky" );
+	ht_kf_set( hashtable, "key2", "pinky" );
+	ht_kf_set( hashtable, "key3", "blinky" );
+	ht_kf_set( hashtable, "key4", "floyd" );
 
-	printf( "%s\n", ht_get( hashtable, "key1" ) );
-	printf( "%s\n", ht_get( hashtable, "key2" ) );
-	printf( "%s\n", ht_get( hashtable, "key3" ) );
-	printf( "%s\n", ht_get( hashtable, "key4" ) );
+	printf( "%s\n", ht_kf_get( hashtable, "key1" ) );
+	printf( "%s\n", ht_kf_get( hashtable, "key2" ) );
+	printf( "%s\n", ht_kf_get( hashtable, "key3" ) );
+	printf( "%s\n", ht_kf_get( hashtable, "key4" ) );
 
 	return 0;
 }

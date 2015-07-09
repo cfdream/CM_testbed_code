@@ -14,9 +14,6 @@
 
 #define KEY_FLOAT_TYPE float
 
-#define _XOPEN_SOURCE 500 /* Enable certain library functions (strdup) on linux.  See feature_test_macros(7) */
-#define HASH_MAP_SIZE 65535
-
 #include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -24,6 +21,7 @@
 #include <limits.h>
 #include <string.h>
 #include "../flow.h"
+#include "hashtable.h"
 
 struct entry_vf_s {
 	flow_s *key;
@@ -136,7 +134,14 @@ entry_vf_t *ht_vf_newpair( flow_s *key, KEY_FLOAT_TYPE value ) {
 	return newpair;
 }
 
-/* Retrieve a key-value pair from a hash table. */
+/**
+* @brief Retrieve a key-value pair from a hash table.
+*
+* @param hashtable
+* @param key
+*
+* @return -1: key not exist in the hashtable, >=0 : value of the key
+*/
 int ht_vf_get( hashtable_vf_t *hashtable, flow_s* key ) {
 	int bin = 0;
 	entry_vf_t *pair;
@@ -222,7 +227,6 @@ void ht_vf_set( hashtable_vf_t *hashtable, flow_s *key, KEY_FLOAT_TYPE value ) {
 /* del a key-value pair from a hash table. */
 void ht_vf_del( hashtable_vf_t *hashtable, flow_s *key) {
 	int bin = 0;
-	entry_vf_t *newpair = NULL;
 	entry_vf_t *next = NULL;
 	entry_vf_t *last = NULL;
 

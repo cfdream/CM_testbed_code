@@ -1,12 +1,14 @@
+#ifndef __SENDER_FIFO_MANAGER__
+#define __SENDER_FIFO_MANAGER__
+
 /*
+ * used in Mininet
  * all sender side FIFO manager
  * get the FIFO handlers for all senders,
  * and then each receiver will be used to send information to different senders
  */
-
-#ifndef __SENDER_FIFO_MANAGER__
-#define __SENDER_FIFO_MANAGER__
-
+#include <pcap.h>
+#include <string.h>
 #include "multi_write_one_read_fifo.h"
 
 #define NUM_SENDERS 12
@@ -21,10 +23,42 @@
 
 int fifo_handlers[NUM_SENDERS];
 
+/**
+* @brief for receiver, get the fifo name of one sender
+*
+* @param ith_sender
+* @param buffer
+* @param buffer_len
+*/
 void get_sender_fifo_fname(int ith_sender, char* buffer, int buffer_len) {
     assert(buffer != NULL);
     snprintf(buffer, buffer_len, "/tmp/h%d_fifo", ith_sender);
 };
+
+
+/**
+* @brief for sender: get its fifo name.
+* 1. get_mininet_host_name
+* 2. sender_host_name_fifo is the fifo for the sender
+*
+* @param buffer
+* @param buffer_len
+*
+* @return 0-succ, -1-fail
+*/
+int sender_get_fifo_fname(char* buffer, int buffer_len ) {
+    //1. get hostname
+    char hostname[100];
+    if (get_mininet_host_name(hostname, 100) != 0) {
+        printf("FAIL:get_mininet_host_name\n");
+        return -1;
+    }
+    
+    //2. get fifo name
+    snprintf(buffer, buffer_len, "%s_fifo", hostname);
+
+    return 0;
+}
 
 int createFIFOFiles() {
     char fifo_fname[100];

@@ -9,8 +9,6 @@
 #ifndef __MT_HASHTABLE_KFLOW_VLINKLIST_H__
 #define __MT_HASHTABLE_KFLOW_VLINKLIST_H__
 
-#define HASH_MAP_SIZE 65535
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,11 +17,12 @@
 #include <pthread.h>
 #include <assert.h>
 #include "../flow.h"
+#include "hashtable.h"
 
-typedef struct get_ans_s {
+typedef struct receV_lostV_s {
     uint32_t received_volume;
     uint32_t lost_volume;
-} get_ans_t;
+} receV_lostV_t;
 
 typedef struct pkt_volume_s {
     uint32_t seqid; //seqid of the packet for the flow
@@ -161,21 +160,19 @@ entry_vl_t *ht_vl_newpair( flow_s *key, pkt_volume_t* pkt_volume) {
 }
 
 /**
-* @brief packets between [oldest_pkt.seqid, seqid) for the flow is treated as lost, while seqid is treated as received
+* @brief packets between [oldest_pkt.seqid, seqid) for the flow are treated as lost, while seqid is treated as received
 *
 * @param hashtable
 * @param key
-* @param seqid
+* @param seqid received at the sender side
 *
-* @return 
+* @return receV_lostV
 */
-get_ans_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key, uint32_t seqid ) {
+receV_lostV_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key, uint32_t seqid ) {
 	int bin = 0;
 	entry_vl_t *pair;
-    uint32_t lost_volume = 0;
-    uint32_t received_volume = 0;
     pkt_volume_t* temp;
-    get_ans_t ans;
+    receV_lostV_t ans;
     memset(&ans, 0, sizeof(pkt_volume_t));
 
     if (NULL == hashtable) {

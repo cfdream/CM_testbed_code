@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include "../condition.h"
+#include "../receiver_2_sender_proto.h"
 
 #define TEST_FIFO_FNAME "/tmp/fifo_test"
 
@@ -38,7 +38,7 @@ int createFIFOFile(const char* fifo_name) {
 int openFIFO(const char* fifo_name) {
     assert(fifo_name != NULL);
 
-    //O_NONBLOCK is not set, and sizeof(condition_t) is smaller, thus multiple writer is ok
+    //O_NONBLOCK is not set, and sizeof(recv_2_send_proto_t) is smaller, thus multiple writer is ok
     int fifo_handle = open(fifo_name, O_RDWR);
     if (fifo_handle < 0) {
         printf("Error opening FIFO file\n");
@@ -50,20 +50,20 @@ void closeFIFO(int fifo_handler) {
     close(fifo_handler);
 }
 
-int writeConditionToFIFO(int fifo_handler, condition_t* p_condition) {
-    int wlen = write(fifo_handler, p_condition, sizeof(condition_t));
+int writeConditionToFIFO(int fifo_handler, recv_2_send_proto_t* p_recv_2_send_proto) {
+    int wlen = write(fifo_handler, p_recv_2_send_proto, sizeof(recv_2_send_proto_t));
     fsync(fifo_handler);
-    if (wlen != sizeof(condition_t)) {
+    if (wlen != sizeof(recv_2_send_proto_t)) {
         printf("Error write FIFO\n");
         return -1;
     }
     return 0;
 }
 
-int readConditionFromFIFO(int fifo_handler, condition_t* p_condition) {
-    assert(p_condition != NULL);
-    int rlen = read(fifo_handler, p_condition, sizeof(condition_t));
-    if (rlen != sizeof(condition_t)) {
+int readConditionFromFIFO(int fifo_handler, recv_2_send_proto_t* p_recv_2_send_proto) {
+    assert(p_recv_2_send_proto != NULL);
+    int rlen = read(fifo_handler, p_recv_2_send_proto, sizeof(recv_2_send_proto_t));
+    if (rlen != sizeof(recv_2_send_proto_t)) {
         printf("Error read FIFO\n");
         return -1;
     }

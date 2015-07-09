@@ -28,7 +28,7 @@ void *test_get_func(void* param_ptr) {
     flow.srcip = 1;
     uint32_t seqid = 10;
     for (; seqid < 1000001*50; seqid+=10) {
-        get_ans_t pkt_volume = ht_vl_get_rece_lost_volume(hashtable, &flow, seqid);
+        receV_lostV_t pkt_volume = ht_vl_get_rece_lost_volume(hashtable, &flow, seqid);
         if (! (seqid%1000000)) 
             printf("get- flow-%d, lost_volume:%u, rece_volume:%u\n", flow.srcip, pkt_volume.lost_volume, pkt_volume.received_volume);
     }
@@ -41,7 +41,7 @@ void *test_get_func(void* param_ptr) {
 
 int main( int argc, char **argv ) {
 
-	hashtable_vl_t *hashtable = ht_vl_create( 65536 );
+	hashtable_vl_t *hashtable = ht_vl_create();
 
     pthread_t set_thread1;
     pthread_t get_thread1;

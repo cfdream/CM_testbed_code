@@ -53,5 +53,15 @@ int flow_compare(flow_s* flow1, flow_s* flow2) {
     return 0;
 }
 
+/*
+ * <src> flow
+ *
+ */
+typedef flow_s flow_src_t;
+
+int flow_src_compare(flow_src_t* flow1, flow_src_t* flow2) {
+    return flow1->srcip - flow2->srcip;
+}
+
 #endif
 

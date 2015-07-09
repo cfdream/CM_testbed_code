@@ -54,7 +54,7 @@ void *test_next_func(void* param_ptr) {
 
 int main( int argc, char **argv ) {
 
-	hashtable_vi_t *hashtable = ht_vi_create( 65536 );
+	hashtable_vi_t *hashtable = ht_vi_create();
 
 
     pthread_t set_thread1;
