@@ -1,3 +1,7 @@
+/*
+ * Receiver sends received <5_tuple_info, seqid> to sender
+ */
+
 #include <pcap.h>
 #include <stdio.h>
 #include <arpa/inet.h>
@@ -8,22 +12,9 @@
 #include "../public_lib/hashTableFlow.h"
 #include "../public_lib/senderFIFOsManager.h"
 #include "../tcpreplay/src/tcpr.h"
-
+#include "../public_lib/receiver_2_sender_proto.h"
 
 pcap_t *handle;			/* Session handle */
-hashtable_t *flow_seqid_hashmap;
-
-u_int get_expected_seqid_of_flow(packet_s* p_packet) {
-    if (ht_get(flow_seqid_hashmap, p_packet) < 0) {
-        ht_set(flow_seqid_hashmap, p_packet, 0);
-    }
-    u_int seqid = ht_get(flow_seqid_hashmap, p_packet) + 1;
-    return seqid;
-}
-
-u_int set_seqid_of_flow(packet_s* p_packet, u_int seqid) {
-    ht_set(flow_seqid_hashmap, p_packet, seqid);
-}
 
 /*
  * Function returns the Layer 3 protocol type of the given packet, or TCPEDIT_ERROR on error
@@ -62,7 +53,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
     struct tcpr_ethernet_hdr *ethernet;
 
 	const char *payload; /* Packet payload */
-    packet_s packet;
+    recv_2_send_proto_t packet;
 
 	u_int size_ip;
 	u_int size_tcp;
@@ -74,7 +65,6 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         return;
     }
 
-    condition_t condition;
 
     //ethernet
 	ethernet = (struct tcpr_ethernet_hdr *)(packet_buffer);
@@ -101,8 +91,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         packet.src_port = ntohs(tcp->th_sport);
         packet.dst_port = ntohs(tcp->th_dport);
         packet.protocol = ip->ip_p;
-        seqid = ntohl(tcp->th_seq);
-        u_int expect_seqid = get_expected_seqid_of_flow(&packet);
+        packet.rece_seqid = ntohl(tcp->th_seq);
+        writeConditionToFIFO(
+            get_sender_fifo_handler(packet.srcip), 
+            &packet);
 
         /*DEBUG: print packet info*/
         struct in_addr src_addr;
@@ -118,40 +110,11 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         memcpy(dst_str, temp, strlen(temp));
         dst_str[strlen(temp)] = 0;
 
-        printf("RECE: flow[%s-%s-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
-            src_str, dst_str, packet.src_port, packet.dst_port, packet.protocol,
-            expect_seqid, seqid);
+        printf("RECE: flow[%s-%s-%u-%u-%u], receive_seqid[%u]\n", 
+            src_str, dst_str, packet.src_port, packet.dst_port, 
+            packet.protocol, packet.rece_seqid);
         /*DEBUG END: print packet info*/
-        if (seqid > expect_seqid) {
-            printf("LOST: flow[%s-%s-%u-%u-%u] expect_seqid[%u], receive_seqid[%u]\n", 
-                src_str, dst_str, packet.src_port, packet.dst_port, packet.protocol,
-                expect_seqid, seqid);
 
-            condition.srcip = packet.srcip;
-            /*send [expect_seqid, seqid) to related sender*/
-            uint32_t i_seqid = 0;
-            for (i_seqid = expect_seqid; i_seqid < seqid; ++i_seqid) {
-                //write the condition information to the FIFO
-                condition.lost_seqid = i_seqid;
-                writeConditionToFIFO(
-                    get_sender_fifo_handler(condition.srcip), 
-                    &condition);
-            }
-        }
-        //set the received seqid
-        set_seqid_of_flow(&packet, seqid);
-
-        /*
-        const char* buf = inet_ntoa(ip->ip_src);
-        char* srcip_str = malloc(strlen(buf)+1);
-        strcpy(srcip_str, buf);
-        buf = inet_ntoa(ip->ip_dst);
-        const char* dstip_str = strcpy(malloc(strlen(buf)+1), buf);
-        printf("tcp pkt, srcip:%s, dstip:%s, sport:%u, dport:%u, seqid=%u\n", 
-            srcip_str, dstip_str,
-            tcp->th_sport, tcp->th_dport, tcp->th_seq);
-        payload = (u_char *)(packet_buffer + ethernet_header_len + size_ip + size_tcp);
-        */
     } else if (ip->ip_p == 0x11) {
         //UDP header
         printf("udp pkt\n");
@@ -203,17 +166,12 @@ int setup() {
        return -1;
    }
 
-    /*create hashtable*/
-    flow_seqid_hashmap = ht_create(HASH_MAP_SIZE);
-
     return 0;
 }
 
 void tearDown() {
     /* And close the session */
     pcap_close(handle);
-
-    ht_destory(flow_seqid_hashmap, HASH_MAP_SIZE);
 }
 
 int main(int argc, char *argv[])
