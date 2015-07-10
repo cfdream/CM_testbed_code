@@ -23,7 +23,7 @@ void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     }
 }
 
-void rotate_interval() {
+void* rotate_interval(void* param_ptr) {
     //sleep two second
     sleep(2);
 
@@ -51,4 +51,6 @@ void rotate_interval() {
 
     //close file
     fclose(fp_target_flow);
+
+    return NULL;
 }

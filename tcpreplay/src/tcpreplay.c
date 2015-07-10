@@ -46,9 +46,12 @@ tcpedit_t *tcpedit;
 #include "send_packets.h"
 #include "replay.h"
 #include "signal_handler.h"
+#include "condition_sender.h"
+#include "interval_rotator.h"
+#include "flow_infor_updator.h"
 #include "../../public_lib/time_library.h"
 #include "../../public_lib/cm_experiment_setting.h"
-#include "condition_sender.h"
+
 
 #ifdef DEBUG
 int debug = 0;
@@ -64,6 +67,8 @@ main(int argc, char *argv[])
     int i, optct = 0;
     int rcode;
     char buf[1024];
+    pthread_t flow_info_update_thread;
+    pthread_t interval_rotate_thread;
 
     fflush(NULL);
 
@@ -138,6 +143,16 @@ main(int argc, char *argv[])
     
     /* all hosts/senders start/end at the nearby timestamp for intervals */
     get_next_interval_start(CM_TIME_INTERVAL);
+
+    /* start the flow_infor_updator and interval_rotator threads */
+    if (pthread_create(&flow_info_update_thread, NULL, flow_infor_update, NULL)) {
+        notice("\nFailed: pthread_create flow_info_update_thread %u \n", 1);
+        return 1;
+    }
+    if (pthread_create(&interval_rotate_thread, NULL, rotate_interval, NULL)) {
+        notice("\nFailed: pthread_create rotate_interval %u \n", 1);
+        return 1;
+    }
 
     /* main loop */
     rcode = tcpreplay_replay(ctx);
