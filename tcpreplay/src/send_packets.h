@@ -24,7 +24,7 @@
 #ifndef __SEND_PACKETS_H__
 #define __SEND_PACKETS_H__
 
-char g_pkt_temporary_buffer[15000];
+u_char g_pkt_temporary_buffer[15000];
 
 void send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx);
 void send_dual_packets(tcpreplay_t *ctx, pcap_t *pcap1, int idx1, pcap_t *pcap2, int idx2);

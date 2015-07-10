@@ -46,7 +46,9 @@ tcpedit_t *tcpedit;
 #include "send_packets.h"
 #include "replay.h"
 #include "signal_handler.h"
-#include "send_condition_thread.h"
+#include "../../public_lib/time_library.h"
+#include "../../public_lib/cm_experiment_setting.h"
+#include "condition_sender.h"
 
 #ifdef DEBUG
 int debug = 0;
@@ -62,8 +64,6 @@ main(int argc, char *argv[])
     int i, optct = 0;
     int rcode;
     char buf[1024];
-    pthread_t send_condition_thread;
-    uint32_t condition_ip = 0x0A000001;
 
     fflush(NULL);
 
@@ -135,10 +135,9 @@ main(int argc, char *argv[])
 
     /* send the udp packet through thread */
     g_tcpreplay_ctx = ctx;
-    if (pthread_create(&send_condition_thread, NULL, send_udp_condition_pkt, &condition_ip)) {
-        notice("\nFailed: pthread_create for send_udp_condition_pkt %u \n", condition_ip);
-        return 1;
-    }
+    
+    /* all hosts/senders start/end at the nearby timestamp for intervals */
+    get_next_interval_start(CM_TIME_INTERVAL);
 
     /* main loop */
     rcode = tcpreplay_replay(ctx);
@@ -164,10 +163,6 @@ main(int argc, char *argv[])
             sendpacket_getstat(ctx->intf2, buf, sizeof(buf));
             printf("%s", buf);
         }
-    }
-    /* release the thread */
-    if (pthread_join(send_condition_thread, NULL)) {
-        notice("\nFailed: pthread_join\n", condition_ip);
     }
 
     tcpreplay_close(ctx);

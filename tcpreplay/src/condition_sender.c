@@ -1,22 +1,9 @@
-#ifndef __SEND_CONDITIOND_THREAD_H__
-#define __SEND_CONDITIOND_THREAD_H__
-
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include "tcpr.h"
-#include "common/sendpacket.h"
-
+#include "tcpreplay_api.h"
+#include "condition_sender.h"
 
 char g_pkt_buffer[15000];   //1.5kb
 
 tcpreplay_t* g_tcpreplay_ctx;
-
-typedef struct condition_s {
-    uint32_t srcip;
-}condition_t;
 
 /**
 * @brief 
@@ -25,11 +12,9 @@ typedef struct condition_s {
 *
 * @return 
 */
-void *send_udp_condition_pkt(void* param_ptr) {
-    condition_t* p_condition = (condition_t*)param_ptr;
-
-    u_char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
-    u_char dst_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
+int send_udp_condition_pkt(condition_t* p_condition) {
+    char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
+    char dst_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
     //geneate a udp packet
     struct pcap_pkthdr pcap_header;
     struct tcpr_udp_hdr udp_header;
@@ -56,8 +41,8 @@ void *send_udp_condition_pkt(void* param_ptr) {
     ip_header.ip_dst.s_addr = 0;
    
     //ethernet header
-    strncpy(ethernet_header.ether_dhost, dst_mac, 6);
-    strncpy(ethernet_header.ether_shost, src_mac, 6);
+    strncpy((char*)ethernet_header.ether_dhost, dst_mac, 6);
+    strncpy((char*)ethernet_header.ether_shost, src_mac, 6);
     ethernet_header.ether_type = htons(0x0800);
 
     memcpy(g_pkt_buffer, &ethernet_header, sizeof(ethernet_header));
@@ -72,11 +57,24 @@ void *send_udp_condition_pkt(void* param_ptr) {
     pcap_header.len = pkt_len;
 
     //send the packet 
-    if(sendpacket(g_tcpreplay_ctx->intf1, g_pkt_buffer, pkt_len, &pcap_header) < pkt_len ) {
+    if(sendpacket(g_tcpreplay_ctx->intf1, (u_char*)g_pkt_buffer, pkt_len, &pcap_header) < pkt_len ) {
         printf("Unable to send packet\n");
+        return -1;
     } 
 
     printf("send_condition_pkt succeeded\n");
+    return 0;
 }
 
-#endif
+void* send_condition_to_network(void* param_ptr) {
+    hashtable_kfs_t* target_flow_map = data_warehouse_get_target_flow_map();
+    entry_kfs_t ret_entry;
+    condition_t condition;
+    while (ht_kfs_next(target_flow_map, &ret_entry) == 0) {
+        //get one target flow, send to the network
+        condition.srcip = ret_entry.key->srcip;
+        send_udp_condition_pkt(&condition);
+    }
+    return NULL;
+}
+

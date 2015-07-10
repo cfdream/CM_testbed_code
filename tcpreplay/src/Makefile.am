@@ -12,7 +12,7 @@ SUBDIRS = common tcpedit $(FRAGROUTE_DIR)
 if SYSTEM_STRLCPY
 LIBSTRL =
 else
-LIBSTRL = ../lib/libstrl.a
+LIBSTRL = ../lib/libstrl.a -lpthread ../../public_lib/libpublic.a ../../public_lib/libpcap-1.7.3/libpcap.a
 endif
 
 manpages: tcpprep.1 tcprewrite.1 tcpreplay.1 tcpbridge.1 tcpreplay-edit.1 tcpliveplay.1 tcpcapinfo.1
@@ -62,7 +62,7 @@ endif
 
 tcpreplay_edit_CFLAGS = $(LIBOPTS_CFLAGS) -I.. -Itcpedit $(LNAV_CFLAGS) @LDNETINC@ -DTCPREPLAY -DTCPREPLAY_EDIT -DHAVE_CACHEFILE_SUPPORT
 tcpreplay_edit_LDADD = ./tcpedit/libtcpedit.a ./common/libcommon.a $(LIBSTRL) @LPCAPLIB@ @LDNETLIB@ $(LIBOPTS_LDADD)
-tcpreplay_edit_SOURCES = tcpreplay_edit_opts.c send_packets.c signal_handler.c tcpreplay.c sleep.c tcpreplay_api.c replay.c
+tcpreplay_edit_SOURCES = tcpreplay_edit_opts.c condition_sender.c send_packets.c signal_handler.c tcpreplay.c sleep.c  tcpreplay_api.c replay.c flow_infor_updator.c interval_rotator.c sample_model.c data_warehouse.c vlan_tag.c host_samplor.c
 tcpreplay_edit_OBJECTS: tcpreplay_opts.h
 tcpreplay_edit_opts.h: tcpreplay_edit_opts.c
 
@@ -70,7 +70,7 @@ tcpreplay_edit_opts.c: tcpreplay_opts.def
 	@AUTOGEN@ $(opts_list)  @NETMAPFLAGS@ -DTCPREPLAY_EDIT -b tcpreplay_edit_opts tcpreplay_opts.def
 
 tcpreplay_CFLAGS = $(LIBOPTS_CFLAGS) -I.. $(LNAV_CFLAGS) @LDNETINC@ -DTCPREPLAY
-tcpreplay_SOURCES = tcpreplay_opts.c send_packets.c signal_handler.c tcpreplay.c sleep.c tcpreplay_api.c replay.c
+tcpreplay_SOURCES = tcpreplay_opts.c condition_sender.c send_packets.c signal_handler.c tcpreplay.c sleep.c  tcpreplay_api.c replay.c flow_infor_updator.c interval_rotator.c sample_model.c data_warehouse.c vlan_tag.c host_samplor.c
 tcpreplay_LDADD = ./common/libcommon.a $(LIBSTRL) @LPCAPLIB@ @LDNETLIB@ $(LIBOPTS_LDADD)
 tcpreplay_OBJECTS: tcpreplay_opts.h
 tcpreplay_opts.h: tcpreplay_opts.c

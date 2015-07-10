@@ -25,6 +25,8 @@
 #include "defines.h"
 #include "common/sendpacket.h"
 #include "common/tcpdump.h"
+#include "common/interface.h"
+#include "common/utils.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
