@@ -4,7 +4,7 @@
 #include <pcap.h>
 #include <netinet/in.h>
 #include "../public_lib/packet.h"
-#include "../public_lib/hashtable/hashTableFlow.h"
+#include "../public_lib/hashTableFlow.h"
 #include "../tcpreplay/src/tcpr.h"
 
 hashtable_t *flow_seqid_hashmap;
@@ -27,7 +27,7 @@ u_int get_seqid_of_flow(packet_s* p_packet) {
 * @param p_packet
 * @param packet_buff
 *
-* @return pcap len of the packet
+* @return pcap len of the packet, i.e., header length of the packet
 */
 int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     int payload_len = p_packet->len;

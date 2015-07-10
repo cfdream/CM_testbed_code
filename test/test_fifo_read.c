@@ -1,4 +1,4 @@
-#include "../public_lib/fifo/multi_write_one_read_fifo.h"
+#include "../public_lib/multi_write_one_read_fifo.h"
 
 int main() {
     int fifo_handler = openFIFO(TEST_FIFO_FNAME);
@@ -6,11 +6,11 @@ int main() {
         printf("FAIL: openFIFO %s\n", TEST_FIFO_FNAME);
         return -1;
     }
-    condition_t condition;
+    recv_2_send_proto_t recv_2_send_proto;
 
-    while(readConditionFromFIFO(fifo_handler, &condition) == 0)
+    while(readConditionFromFIFO(fifo_handler, &recv_2_send_proto) == 0)
     {
-        printf("read:%u-%u\n", condition.srcip, condition.lost_len);
+        printf("read:%u-%u\n", recv_2_send_proto.srcip, recv_2_send_proto.rece_seqid);
     }
 
     closeFIFO(fifo_handler);

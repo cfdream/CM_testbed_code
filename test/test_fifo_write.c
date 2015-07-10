@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "../public_lib/fifo/multi_write_one_read_fifo.h"
+#include "../public_lib/multi_write_one_read_fifo.h"
 
 int main() {
     /*
@@ -13,14 +13,14 @@ int main() {
         printf("FAIL:openFIFO %s\n", TEST_FIFO_FNAME);
         return -1;
     }
-    condition_t condition;
+    recv_2_send_proto_t recv_2_send_proto;
     while (true) {
         int i = 0;
         for (; i < 100; i++) {
-            condition.srcip = i;
-            condition.lost_len = 12;
-            writeConditionToFIFO(fifo_handler, &condition);
-            printf("write:%u\t%u\n", condition.srcip, condition.lost_len);
+            recv_2_send_proto.srcip = i;
+            recv_2_send_proto.rece_seqid = 12;
+            writeConditionToFIFO(fifo_handler, &recv_2_send_proto);
+            printf("write:%u\t%u\n", recv_2_send_proto.srcip, recv_2_send_proto.rece_seqid);
         }
         sleep(1);
     }

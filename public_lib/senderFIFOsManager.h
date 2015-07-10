@@ -7,7 +7,7 @@
  * get the FIFO handlers for all senders,
  * and then each receiver will be used to send information to different senders
  */
-#include <pcap.h>
+//#include <pcap.h>
 #include <string.h>
 #include "multi_write_one_read_fifo.h"
 #include "get_mininet_host_name.h"
