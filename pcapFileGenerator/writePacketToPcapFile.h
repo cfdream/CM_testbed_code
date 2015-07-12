@@ -7,16 +7,16 @@
 #include "../public_lib/hashTableFlow.h"
 #include "../tcpreplay/src/tcpr.h"
 
-hashtable_t *flow_seqid_hashmap;
+hashtable_kf_t *flow_seqid_hashmap;
 pcap_t *pd;
 pcap_dumper_t *pdumper;
 
 u_int get_seqid_of_flow(packet_s* p_packet) {
-    if (ht_get(flow_seqid_hashmap, p_packet) < 0) {
-        ht_set(flow_seqid_hashmap, p_packet, 0);
+    if (ht_kf_get(flow_seqid_hashmap, p_packet) < 0) {
+        ht_kf_set(flow_seqid_hashmap, p_packet, 0);
     }
-    u_int seqid = ht_get(flow_seqid_hashmap, p_packet) + 1;
-    ht_set(flow_seqid_hashmap, p_packet, seqid);
+    u_int seqid = ht_kf_get(flow_seqid_hashmap, p_packet) + 1;
+    ht_kf_set(flow_seqid_hashmap, p_packet, seqid);
 
     return seqid;
 }
@@ -92,7 +92,7 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
 
 int init_generate_pcpa_file(const char* out_pcap_fname) {
     /*create hashtable*/
-    flow_seqid_hashmap = ht_create(HASH_MAP_SIZE);
+    flow_seqid_hashmap = ht_kf_create(HASH_MAP_SIZE);
 
     pd = pcap_open_dead(DLT_EN10MB, 65535 /* snaplen */);
     if (pd == NULL) {
@@ -108,7 +108,7 @@ int init_generate_pcpa_file(const char* out_pcap_fname) {
 }
 
 void close_generate_pcpa_file() {
-    ht_destory(flow_seqid_hashmap, HASH_MAP_SIZE);
+    ht_kf_destory(flow_seqid_hashmap, HASH_MAP_SIZE);
 
     pcap_close(pd);
     pcap_dump_close(pdumper);

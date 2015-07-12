@@ -1,5 +1,7 @@
 /*
  * multi-thread hashtable. set by one thread, get by another thread. only two threads operate on the hashmap:w
+ * key: 5-tuple flow, or flow_t
+ * Value: linkedlist, sent pkt infor for the flow
  *
  * Each enntry records the one flow's packets (<seqid, volume of the packet>) list
  * ht_vl_set(flow, seqid, volume): add one packet for the 

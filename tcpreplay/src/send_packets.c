@@ -64,6 +64,7 @@ extern tcpedit_t *tcpedit;
 #include "sleep.h"
 #include "../public_lib/flow.h"
 #include "../public_lib/cm_experiment_setting.h"
+#include "../public_lib/debug_config.h"
 #include "vlan_tag.h"
 #include "host_samplor.h"
 #include "condition_sender.h"
@@ -366,11 +367,6 @@ fast_edit_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata,
 static inline void
 cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink)
 {
-#define ENABLE_DEBUG_FLOW 0
-#define DEBUG_SRCIP 168379437
-#define DEBUG_DSTIP 197988225
-#define DEBUG_SPORT 60826
-#define DEBUG_DPORT 1455
     uint16_t ether_type;
     vlan_hdr_t *vlan_hdr;
     ipv4_hdr_t *ip_hdr = NULL;
@@ -431,7 +427,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
                 tag_packet_as_sampled(packet_buf, datalink);
             }
             
-            if (ENABLE_DEBUG_FLOW && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
+            if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
                 packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
                 struct in_addr src_addr;
                 struct in_addr dst_addr;

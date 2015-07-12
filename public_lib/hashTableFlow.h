@@ -14,7 +14,7 @@
 
 struct entry_kf_s {
 	flow_s *key;
-	u_int value;  //seqid
+	uint32_t value;  //seqid
 	struct entry_kf_s *next;
 };
 
@@ -37,10 +37,10 @@ void ht_kf_destory(hashtable_kf_t *hashtable, int size);
 int ht_kf_hash( hashtable_kf_t *hashtable, flow_s *key );
 
 /* Create a key-value pair. */
-entry_kf_t *ht_kf_newpair( flow_s *key, u_int value );
+entry_kf_t *ht_kf_newpair( flow_s *key, uint32_t value );
 
 /* Insert a key-value pair into a hash table. */
-void ht_kf_set( hashtable_kf_t *hashtable, flow_s *key, u_int value );
+void ht_kf_set( hashtable_kf_t *hashtable, flow_s *key, uint32_t value );
 
 /* Retrieve a key-value pair from a hash table. */
 int ht_kf_get( hashtable_kf_t *hashtable, flow_s* key );

@@ -5,8 +5,7 @@
 #include "common/dlt_names.h"
 #include "defines.h"
 #include "defines.h"
-
-#define TAG_VLAN_VAL 0X01
+#include "../../public_lib/packet.h"
 
 void tag_packet_as_sampled(u_char* packet_buf, int datalink);
 

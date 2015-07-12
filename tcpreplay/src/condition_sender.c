@@ -67,10 +67,10 @@ int send_udp_condition_pkt(condition_t* p_condition) {
 }
 
 void* send_condition_to_network(void* param_ptr) {
-    hashtable_kfs_t* target_flow_map = data_warehouse_get_target_flow_map();
-    entry_kfs_t ret_entry;
+    hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+    entry_kfs_vi_t ret_entry;
     condition_t condition;
-    while (ht_kfs_next(target_flow_map, &ret_entry) == 0) {
+    while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
         //get one target flow, send to the network
         condition.srcip = ret_entry.key->srcip;
         send_udp_condition_pkt(&condition);

@@ -107,7 +107,7 @@ entry_vf_t *ht_vf_newpair( flow_s *key, KEY_FLOAT_TYPE value ) {
 *
 * @return -1: key not exist in the hashtable, >=0 : value of the key
 */
-int ht_vf_get( hashtable_vf_t *hashtable, flow_s* key ) {
+KEY_FLOAT_TYPE ht_vf_get( hashtable_vf_t *hashtable, flow_s* key ) {
 	int bin = 0;
 	entry_vf_t *pair;
 

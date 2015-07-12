@@ -8,8 +8,6 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../public_lib/flow.h"
-#include "../public_lib/hashTableFlow.h"
 #include "../public_lib/senderFIFOsManager.h"
 #include "../tcpreplay/src/tcpr.h"
 #include "../public_lib/receiver_2_sender_proto.h"

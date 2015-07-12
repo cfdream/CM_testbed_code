@@ -14,9 +14,9 @@ FILE* init_target_flow_file() {
 void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     assert(fp_target_flow != NULL);
     fprintf(fp_target_flow, "time-%lu seconds\n", current_sec);
-    hashtable_kfs_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
-    entry_kfs_t ret_entry;
-    while (ht_kfs_next(target_flow_map_pre_interval, &ret_entry) == 0) {
+    hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
+    entry_kfs_vi_t ret_entry;
+    while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
         //get one target flow, output to file
         flow_s* p_flow = ret_entry.key;
         fprintf(fp_target_flow, "%u\t%u\t%u\t%u\t%u\n", p_flow->srcip, p_flow->dstip, p_flow->src_port, p_flow->dst_port, p_flow->protocol);
@@ -31,7 +31,7 @@ void* rotate_interval(void* param_ptr) {
     FILE* fp_target_flow = init_target_flow_file();
     if (fp_target_flow == NULL) {
         printf("FAIL: initilize file-%s\n", CM_TARGET_FLOW_FNAME);
-        return;
+        return NULL;
     }
 
     while (true) {

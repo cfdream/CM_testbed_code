@@ -24,44 +24,45 @@ void* flow_infor_update(void* param_ptr) {
     {
         printf("read:%u-%u\n", recv_2_send_proto.srcip, recv_2_send_proto.rece_seqid);
 
-        //get the key of the flow
+        //get the key of the 5-tuple flow
         flow_t* p_flow = (flow_t*)(&recv_2_send_proto);
 
         //get <rece volume, loss volume> for the flow
         hashtable_vl_t* flow_recePktList_map = data_warehouse_get_flow_recePktList_map();
         receV_lostV_t receV_lostV = ht_vl_get_rece_lost_volume(flow_recePktList_map, p_flow, recv_2_send_proto.rece_seqid);
 
-        hashtable_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
-        hashtable_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
-        hashtable_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
+        hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
+        hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
+        hashtable_kfs_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
 
-        //2. update flow_volume_map, flow_lost_volume_map, flow_loss_rate_map
+        // 2. update <srcip> flow infor
+        // flow_volume_map, flow_lost_volume_map, flow_loss_rate_map
         if (receV_lostV.received_volume + receV_lostV.lost_volume) {
 
             //update total volume of flow, account for receV, lostV 
-            uint32_t volume = ht_vi_get(flow_volume_map, p_flow);
+            uint32_t volume = ht_kfs_vi_get(flow_volume_map, p_flow);
             volume += (receV_lostV.received_volume + receV_lostV.lost_volume);
-            ht_vi_set(flow_volume_map, p_flow, volume);
+            ht_kfs_vi_set(flow_volume_map, p_flow, volume);
 
             //update loss volume if necessary
-            uint32_t loss_volume = ht_vi_get(flow_loss_volume_map, p_flow);
+            uint32_t loss_volume = ht_kfs_vi_get(flow_loss_volume_map, p_flow);
             if (receV_lostV.lost_volume) {
                 loss_volume += receV_lostV.lost_volume;
-                ht_vi_set(flow_loss_volume_map, p_flow, loss_volume);
+                ht_kfs_vi_set(flow_loss_volume_map, p_flow, loss_volume);
             }
             //update loss rate
             float loss_rate = 1.0 * loss_volume / volume;
-            ht_vf_set(flow_loss_rate_map, p_flow, loss_rate);
+            ht_kfs_vf_set(flow_loss_rate_map, p_flow, loss_rate);
 
             //3. update target flows
-            hashtable_kfs_t* target_flow_map = data_warehouse_get_target_flow_map();
+            hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
             if (volume >= TARGET_FLOW_VOLUME && loss_rate >= TARGET_FLOW_LOSS_RATE) {
                 //this is a target flow
-                ht_kfs_set(target_flow_map, p_flow, 1);
+                ht_kfs_vi_set(target_flow_map, p_flow, 1);
             } else {
                 //this is not a target flow.
                 //to simplity, just del the flow from target_flow_map
-                ht_kfs_del(target_flow_map, p_flow);
+                ht_kfs_vi_del(target_flow_map, p_flow);
             }
         }
     }

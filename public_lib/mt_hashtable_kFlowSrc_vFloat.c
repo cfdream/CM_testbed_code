@@ -1,15 +1,15 @@
 /* 
  * multi-thread hashtable 
  * key: flow_src_t, or kfs-key flow_src
- * Value: uint
+ * Value: float
  * get()
  * set()
- * ht_kfs_vi_next(): can only be used by one thread
+ * ht_kfs_vf_next(): can only be used by one thread
  * del()
  *
  * */
 
-#include "mt_hashtable_kFlowSrc_vInt.h"
+#include "mt_hashtable_kFlowSrc_vFloat.h"
 
 /* 
 * @brief Create a new hashtable.
@@ -18,13 +18,13 @@
 *
 * @return 
 */
-hashtable_kfs_vi_t *ht_kfs_vi_create() {
+hashtable_kfs_vf_t *ht_kfs_vf_create() {
 
-	hashtable_kfs_vi_t *hashtable = NULL;
+	hashtable_kfs_vf_t *hashtable = NULL;
 	int i;
 
 	/* Allocate the table itself. */
-	if( ( hashtable = malloc( sizeof( hashtable_kfs_vi_t ) ) ) == NULL ) {
+	if( ( hashtable = malloc( sizeof( hashtable_kfs_vf_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -37,7 +37,7 @@ hashtable_kfs_vi_t *ht_kfs_vi_create() {
         pthread_mutex_init(&hashtable->mutexs[i], NULL);
     }
 
-    /* initilize for ht_kfs_vi_next() */
+    /* initilize for ht_kfs_vf_next() */
     hashtable->next_current_bin = -1;
     hashtable->next_last_visit_entry = NULL;
 
@@ -46,10 +46,10 @@ hashtable_kfs_vi_t *ht_kfs_vi_create() {
 	return hashtable;	
 }
 
-void ht_kfs_vi_destory( hashtable_kfs_vi_t *hashtable ) {
+void ht_kfs_vf_destory( hashtable_kfs_vf_t *hashtable ) {
     int i;
-    entry_kfs_vi_t* p_node;
-    entry_kfs_vi_t* next;
+    entry_kfs_vf_t* p_node;
+    entry_kfs_vf_t* next;
 
     if (NULL == hashtable) {
         return;
@@ -74,7 +74,7 @@ void ht_kfs_vi_destory( hashtable_kfs_vi_t *hashtable ) {
 }
 
 /* Hash a string for a particular hash table. */
-int ht_kfs_vi_hash( hashtable_kfs_vi_t *hashtable, flow_src_t *key ) {
+int ht_kfs_vf_hash( hashtable_kfs_vf_t *hashtable, flow_src_t *key ) {
 	/* generate a 64-bit integer from srcip and dstip */
 	unsigned long long int hashval = key->srcip;
     hashval = ((hashval << 32) | key->dstip) ^ key->src_port ^ key->dst_port;
@@ -83,10 +83,10 @@ int ht_kfs_vi_hash( hashtable_kfs_vi_t *hashtable, flow_src_t *key ) {
 }
 
 /* Create a key-value pair. */
-entry_kfs_vi_t *ht_kfs_vi_newpair( flow_src_t *key, KEY_INT_TYPE value ) {
-	entry_kfs_vi_t *newpair;
+entry_kfs_vf_t *ht_kfs_vf_newpair( flow_src_t *key, KEY_FLOAT_TYPE value ) {
+	entry_kfs_vf_t *newpair;
 
-	if( ( newpair = malloc( sizeof( entry_kfs_vi_t ) ) ) == NULL ) {
+	if( ( newpair = malloc( sizeof( entry_kfs_vf_t ) ) ) == NULL ) {
 		return NULL;
 	}
 
@@ -107,15 +107,15 @@ entry_kfs_vi_t *ht_kfs_vi_newpair( flow_src_t *key, KEY_INT_TYPE value ) {
 *
 * @return -1: key not exist in the hashtable, >=0 : value of the key
 */
-int ht_kfs_vi_get( hashtable_kfs_vi_t *hashtable, flow_src_t* key ) {
+KEY_FLOAT_TYPE ht_kfs_vf_get( hashtable_kfs_vf_t *hashtable, flow_src_t* key ) {
 	int bin = 0;
-	entry_kfs_vi_t *pair;
+	entry_kfs_vf_t *pair;
 
     if (NULL == hashtable) {
         return -1;
     }
 
-	bin = ht_kfs_vi_hash( hashtable, key );
+	bin = ht_kfs_vf_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -140,17 +140,17 @@ int ht_kfs_vi_get( hashtable_kfs_vi_t *hashtable, flow_src_t* key ) {
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_kfs_vi_set( hashtable_kfs_vi_t *hashtable, flow_src_t *key, KEY_INT_TYPE value ) {
+void ht_kfs_vf_set( hashtable_kfs_vf_t *hashtable, flow_src_t *key, KEY_FLOAT_TYPE value ) {
 	int bin = 0;
-	entry_kfs_vi_t *newpair = NULL;
-	entry_kfs_vi_t *next = NULL;
-	entry_kfs_vi_t *last = NULL;
+	entry_kfs_vf_t *newpair = NULL;
+	entry_kfs_vf_t *next = NULL;
+	entry_kfs_vf_t *last = NULL;
 
     if (NULL == hashtable) {
         return;
     }
 
-	bin = ht_kfs_vi_hash( hashtable, key );
+	bin = ht_kfs_vf_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -168,7 +168,7 @@ void ht_kfs_vi_set( hashtable_kfs_vi_t *hashtable, flow_src_t *key, KEY_INT_TYPE
 
 	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
-		newpair = ht_kfs_vi_newpair( key, value );
+		newpair = ht_kfs_vf_newpair( key, value );
 
 		/* We're at the start of the linked list in this bin. */
 		if( next == hashtable->table[ bin ] ) {
@@ -190,16 +190,16 @@ void ht_kfs_vi_set( hashtable_kfs_vi_t *hashtable, flow_src_t *key, KEY_INT_TYPE
 }
 
 /* del a key-value pair from a hash table. */
-void ht_kfs_vi_del( hashtable_kfs_vi_t *hashtable, flow_src_t *key) {
+void ht_kfs_vf_del( hashtable_kfs_vf_t *hashtable, flow_src_t *key) {
 	int bin = 0;
-	entry_kfs_vi_t *next = NULL;
-	entry_kfs_vi_t *last = NULL;
+	entry_kfs_vf_t *next = NULL;
+	entry_kfs_vf_t *last = NULL;
 
     if (NULL == hashtable) {
         return;
     }
 
-	bin = ht_kfs_vi_hash( hashtable, key );
+	bin = ht_kfs_vf_hash( hashtable, key );
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -234,13 +234,13 @@ void ht_kfs_vi_del( hashtable_kfs_vi_t *hashtable, flow_src_t *key) {
 *
 * @return 0-ret_entry is the next entry, -1:no more entries
 */
-int ht_kfs_vi_next(hashtable_kfs_vi_t *hashtable, entry_kfs_vi_t* ret_entry) {
+int ht_kfs_vf_next(hashtable_kfs_vf_t *hashtable, entry_kfs_vf_t* ret_entry) {
     if (hashtable->next_current_bin >= hashtable->size) {
         return -1;
     }
     
     //assert(ret_entry != NULL);
-    entry_kfs_vi_t* iterator = NULL;
+    entry_kfs_vf_t* iterator = NULL;
     if (hashtable->next_current_bin >= 0 && hashtable->next_current_bin < hashtable->size) {
         pthread_mutex_lock(&hashtable->mutexs[hashtable->next_current_bin]);
         if (hashtable->next_last_visit_entry != NULL && hashtable->next_last_visit_entry->next != NULL) {

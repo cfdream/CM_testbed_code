@@ -1,9 +1,9 @@
 #include "host_samplor.h"
 
 int flow_src_already_sampled(flow_src_t* p_flow_src) {
-    hashtable_kfs_t* flow_sample_map = data_warehouse_get_flow_sample_map();
+    hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
     assert(flow_sample_map != NULL);
-    if (ht_kfs_get(flow_sample_map, p_flow_src) >= 0) {
+    if (ht_kfs_vi_get(flow_sample_map, p_flow_src) >= 0) {
         return 1;
     }
     return 0;
@@ -27,9 +27,9 @@ int sample_packet(packet_t* p_packet) {
 
     if (rand_num <= pkt_sample_num) {
         //mark the flow as sampled
-        hashtable_kfs_t* flow_sample_map = data_warehouse_get_flow_sample_map();
+        hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
         assert(flow_sample_map != NULL);
-        ht_kfs_set(flow_sample_map, p_flow_src, 1);
+        ht_kfs_vi_set(flow_sample_map, p_flow_src, 1);
 
         return 1;
     }

@@ -1,10 +1,9 @@
 #ifndef __DATA_WAREHOUSE_H__
 #define __DATA_WAREHOUSE_H__
 
-#include "../../public_lib/mt_hashtable_kFlow_vFloat.h"
-#include "../../public_lib/mt_hashtable_kFlow_vInt.h"
 #include "../../public_lib/mt_hashtable_kFlow_vLinklist.h"
 #include "../../public_lib/mt_hashtable_kFlowSrc_vInt.h"
+#include "../../public_lib/mt_hashtable_kFlowSrc_vFloat.h"
 
 #define BUFFER_NUM 2
 
@@ -13,18 +12,20 @@
 */
 typedef struct data_warehouse_s {
     /*This is the hashmap recording sent pkts for each flow, only one buffer*/
+    /* 5-tuple flow */
     hashtable_vl_t* flow_recePktList_map;
 
     /*Following are 2-buffer hashtables*/
     int active_idx;
     //4 hashtables for recording flow properties
-    hashtable_vi_t* flow_volume_map[BUFFER_NUM];
-    hashtable_vi_t* flow_loss_volume_map[BUFFER_NUM];
-    hashtable_vf_t* flow_loss_rate_map[BUFFER_NUM];
-    hashtable_kfs_t* target_flow_map[BUFFER_NUM];
+    //here are <srcip> flow
+    hashtable_kfs_vi_t* flow_volume_map[BUFFER_NUM];
+    hashtable_kfs_vi_t* flow_loss_volume_map[BUFFER_NUM];
+    hashtable_kfs_vf_t* flow_loss_rate_map[BUFFER_NUM];
+    hashtable_kfs_vi_t* target_flow_map[BUFFER_NUM];
 
     /* 1 hashtable for sample and hold*/
-    hashtable_kfs_t* flow_sample_map[BUFFER_NUM];
+    hashtable_kfs_vi_t* flow_sample_map[BUFFER_NUM];
 }data_warehouse_t;
 
 data_warehouse_t data_warehouse;
@@ -51,16 +52,16 @@ int data_warehouse_reset_noactive_buf();
 
 hashtable_vl_t* data_warehouse_get_flow_recePktList_map();
 
-hashtable_vi_t* data_warehouse_get_flow_volume_map();
+hashtable_kfs_vi_t* data_warehouse_get_flow_volume_map();
 
-hashtable_vi_t* data_warehouse_get_flow_loss_volume_map();
+hashtable_kfs_vi_t* data_warehouse_get_flow_loss_volume_map();
 
-hashtable_vf_t* data_warehouse_get_flow_loss_rate_map();
+hashtable_kfs_vf_t* data_warehouse_get_flow_loss_rate_map();
 
-hashtable_kfs_t* data_warehouse_get_target_flow_map();
+hashtable_kfs_vi_t* data_warehouse_get_target_flow_map();
 
-hashtable_kfs_t* data_warehouse_get_flow_sample_map();
+hashtable_kfs_vi_t* data_warehouse_get_flow_sample_map();
 
-hashtable_kfs_t* data_warehouse_get_unactive_target_flow_map();
+hashtable_kfs_vi_t* data_warehouse_get_unactive_target_flow_map();
 
 #endif

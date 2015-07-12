@@ -1,0 +1,10 @@
+#ifndef __DEBUG_CONFIG_H__
+#define __DEBUG_CONFIG_H__
+
+#define ENABLE_DEBUG 1
+#define DEBUG_SRCIP 168379437
+#define DEBUG_DSTIP 197988225
+#define DEBUG_SPORT 60826
+#define DEBUG_DPORT 1455
+
+#endif
