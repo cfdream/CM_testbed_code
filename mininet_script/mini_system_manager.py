@@ -34,6 +34,7 @@ class SystemManager():
         generator.read_eth_id_name_topo("eth_id_name_map.txt")
         generator.read_topo("b4_topo_ip_prefixes.txt")
         generator.generate_rules_for_normal_packets("rules_to_add_flow_table.sh")
+        generator.generate_rules_for_condition_packets("rules_to_add_flow_table.sh")
         #run rules_to_add_flow_table.sh
         commands.getstatusoutput('sh -x rules_to_add_flow_table.sh')
         #remove useless files

@@ -133,7 +133,48 @@ class GenerateRulesIntoTables:
             elif self.graph['s1'][i].neigh_name=='s3':
                 assert(self.graph['s1'][i].ethid==2)
 
-    def get_shortest_paths_from_src_to_dst(self, src, dst):
+    def get_reverse_pre_nodes(self, dst):
+        visited_name_id_map={}
+        visited_name_id_map[dst]=0
+        ith=0
+        expand_name_list=[dst]
+        while ith < len(expand_name_list):
+            now_name=expand_name_list[ith]
+            now_id=visited_name_id_map[now_name]
+            neighbors = self.graph[now_name]
+            dst_reached=False
+            for neigh in neighbors:
+                neigh_name=neigh.neigh_name
+                if neigh_name in visited_name_id_map:
+                    continue
+                expand_name_list.append(neigh_name)
+                visited_name_id_map[neigh_name]=now_id+1
+            ith+=1
+        #reverse to get the ECMP paths
+        path={}
+        expand_name_list=[]
+        expand_name_list.append(dst)
+        ith = 0
+        while ith < len(expand_name_list):
+            now_name=expand_name_list[ith]
+            now_id=visited_name_id_map[now_name]
+            neighbors = self.graph[now_name]
+            for neigh in neighbors:
+                neigh_name=neigh.neigh_name
+                neigh_id = visited_name_id_map[neigh_name]
+                if neigh_id == now_id+1:
+                    #one link: neigh_name=>now_name
+                    if neigh_name not in path:
+                        next_nodes=[]
+                        path[neigh_name] = next_nodes
+                    neigh_next_nodes=path[neigh_name]
+                    neigh_next_nodes.append(now_name)
+                    if neigh_name not in expand_name_list:
+                        expand_name_list.append(neigh_name)
+            ith+=1
+        return path
+    
+    def get_forward_next_nodes(self, src):
         visited_name_id_map={}
         visited_name_id_map[src]=0
         ith=0
@@ -149,99 +190,124 @@ class GenerateRulesIntoTables:
                     continue
                 expand_name_list.append(neigh_name)
                 visited_name_id_map[neigh_name]=now_id+1
-                if neigh_name == dst:
-                    dst_reached=True
-                    break
-            if dst_reached:
-                break
             ith+=1
         #reverse to get the ECMP paths
         path={}
+        #every node just needs to be one parent's next list, if it has multi-parents.
+        node_included={}
         expand_name_list=[]
-        expand_name_list.append(dst)
+        expand_name_list.append(src)
         ith = 0
         while ith < len(expand_name_list):
             now_name=expand_name_list[ith]
             now_id=visited_name_id_map[now_name]
+            path[now_name] = []
             neighbors = self.graph[now_name]
             for neigh in neighbors:
                 neigh_name=neigh.neigh_name
-                if neigh_name not in visited_name_id_map:
-                    continue
                 neigh_id = visited_name_id_map[neigh_name]
-                if neigh_id == now_id-1:
-                    #one link: neigh_name=>now_name
-                    if neigh_name not in path:
-                        next_nodes=[]
-                        path[neigh_name] = next_nodes
-                    next_nodes=path[neigh_name]
-                    next_nodes.append(now_name)
+                if neigh_id == now_id+1:
+                    #one link: now_name=>neigh_name
+                    if neigh_name not in node_included:
+                        path[now_name].append(neigh_name)
+                        node_included[neigh_name] = 1
                     if neigh_name not in expand_name_list:
                         expand_name_list.append(neigh_name)
             ith+=1
         return path
     
-    def get_shortest_paths_from_src_to_dst_test(self):
-        #self.read_topo("b4.topo")
-        path=self.get_shortest_paths_from_src_to_dst('h1', 'h2')
-        print path
-        #assert(len(path)==4)
-        path=self.get_shortest_paths_from_src_to_dst('h1', 'h12')
-        print path
-
     def generate_rules_for_normal_packets(self, filename):
         out_file = open(filename, 'w')
-        for entity1 in self.hosts:
-            for entity2 in self.hosts:
-                if entity1 == entity2:
+        for host in self.hosts:
+            path = self.get_reverse_pre_nodes(host)
+            #add rule for each node in the path
+            for entity, next_nodes in path.items():
+                if re.match("^h(\d+)", entity) != None:
+                    #only add forwarding rules to switches
                     continue
-                #from entity1 ===> entity2
-                path = self.get_shortest_paths_from_src_to_dst(entity1, entity2)
-                #add rule for each node in the path
-                for entity, next_nodes in path.items():
-                    if re.match("^h(\d+)", entity) != None:
-                        #only add forwarding rules to switches
-                        continue
-                    if len(next_nodes) > 1:
-                        neighbor_nodes=self.graph[entity]
-                        ports=[]
-                        for next_node in next_nodes:
-                            for neighbor in neighbor_nodes:
-                                if next_node==neighbor.neigh_name:
-                                    ports.append(neighbor.ethid)
-                                    break
-                        #get next forwarding ports
-                        port_str=""
-                        for i in range(0, len(ports)-1):
-                            port_str+=("{0}," .format(ports[i]))
-                        port_str+=("{0}" .format(ports[len(ports)-1]))
-                        #add other IP pkts (UDP pkts exclusive) forwarding rules, low priority
-                        out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},priority={priority},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[entity2], port_str, priority=GenerateRulesIntoTables.LOW_PRIORITY)
-                        #out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[entity2], port_str)
-                        out_file.write(out_str + "\n")
-                        #add ARP pkts forwarding rules
-                        out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0806,nw_dst={1},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[entity2], port_str)
-                        out_file.write(out_str + "\n")
-                    else:
-                        portid=1
-                        neighbor_nodes=self.graph[entity]
+                if len(next_nodes) > 1:
+                    neighbor_nodes=self.graph[entity]
+                    ports=[]
+                    for next_node in next_nodes:
                         for neighbor in neighbor_nodes:
-                            if neighbor.neigh_name == next_nodes[0]:
-                                portid=neighbor.ethid
-                        #add IP pkts forwarding rules
-                        out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[entity2], portid)
-                        out_file.write(out_str + "\n")
-                        #add ARP pkts forwarding rules
-                        out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0806,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[entity2], portid)
-                        out_file.write(out_str + "\n")
+                            if next_node==neighbor.neigh_name:
+                                ports.append(neighbor.ethid)
+                                break
+                    #get next forwarding ports
+                    port_str=""
+                    for i in range(0, len(ports)-1):
+                        port_str+=("{0}," .format(ports[i]))
+                    port_str+=("{0}" .format(ports[len(ports)-1]))
+                    #add other IP pkts (UDP pkts exclusive) forwarding rules, low priority
+                    out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},priority={priority},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[host], port_str, priority=GenerateRulesIntoTables.LOW_PRIORITY)
+                    #out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[host], port_str)
+                    out_file.write(out_str + "\n")
+                    #add ARP pkts forwarding rules
+                    out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0806,nw_dst={1},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[host], port_str)
+                    out_file.write(out_str + "\n")
+                else:
+                    portid=1
+                    neighbor_nodes=self.graph[entity]
+                    for neighbor in neighbor_nodes:
+                        if neighbor.neigh_name == next_nodes[0]:
+                            portid=neighbor.ethid
+                    #add IP pkts forwarding rules
+                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
+                    out_file.write(out_str + "\n")
+                    #add ARP pkts forwarding rules
+                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0806,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
+                    out_file.write(out_str + "\n")
         out_file.close()                    
         
+    def generate_rules_for_condition_packets(self, filename):
+        out_file = open(filename, 'a')
+        for host in self.hosts:
+            path = self.get_forward_next_nodes(host)
+            #add rule for each node in the path
+            for entity, next_nodes in path.items():
+                if re.match("^h(\d+)", entity) != None:
+                    #only add forwarding rules to switches
+                    continue
+                if len(next_nodes) > 1:
+                    neighbor_nodes=self.graph[entity]
+                    ports=[]
+                    for next_node in next_nodes:
+                        for neighbor in neighbor_nodes:
+                            if next_node==neighbor.neigh_name:
+                                ports.append(neighbor.ethid)
+                                break
+                    #get next forwarding ports
+                    port_str=""
+                    for i in range(0, len(ports)-1):
+                        port_str+=("{0}," .format(ports[i]))
+                    port_str+=("{0}" .format(ports[len(ports)-1]))
+                    #add UDP pkts forwarding rules, high priority (condition packets are sent in udp format)
+                    #multi-casting to all the next ports, flooding the condition packets in minimum spanning tree mode
+                    out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_dst={1},priority={priority},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], port_str, priority=GenerateRulesIntoTables.HIGH_PRIORITY)
+                    out_file.write(out_str + "\n")
+                else:
+                    portid=1
+                    neighbor_nodes=self.graph[entity]
+                    for neighbor in neighbor_nodes:
+                        if neighbor.neigh_name == next_nodes[0]:
+                            portid=neighbor.ethid
+                    #add IP pkts forwarding rules
+                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
+                    out_file.write(out_str + "\n")
+        out_file.close()                    
+
+    def get_reverse_pre_forward_next_nodes_test(self):
+        print "get_reverse_pre_nodes for h1"
+        path=self.get_reverse_pre_nodes('h1')
+        print sorted(path.items(), key=lambda item:item[0])
+        print "get_forward_next_nodes h1"
+        path=self.get_forward_next_nodes('h1')
+        print sorted(path.items(), key=lambda item:item[0])
 
 generator = GenerateRulesIntoTables()
 generator.read_eth_id_name_topo("eth_id_name_map.txt")
 generator.read_topo("b4_topo_ip_prefixes.txt")
 generator.generate_rules_for_normal_packets("rules_to_add_flow_table.sh")
+generator.generate_rules_for_condition_packets("rules_to_add_flow_table.sh")
 
-#generator.read_topo_test()
-#generator.get_shortest_paths_from_src_to_dst()
-#generator.get_shortest_paths_from_src_to_dst_test()
+generator.get_reverse_pre_forward_next_nodes_test()

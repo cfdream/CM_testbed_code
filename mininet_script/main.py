@@ -16,6 +16,8 @@ if __name__ == "__main__":
     #system_topo.testConnectivity()
 
     #-----------create FIFO files for each sender
+    commands.getstatusoutput('mkdir /tmp/fifo')
+    commands.getstatusoutput('mkdir /tmp/sender')
     commands.getstatusoutput('../public_lib/createFIFOFiles')
 
     #------------setup all receivers------------
