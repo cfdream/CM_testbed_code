@@ -12,31 +12,31 @@ int data_warehouse_init() {
         return -1;
     }
 
-    //set the initial buffer
-    data_warehouse.active_idx = 0;
-    int a_idx = data_warehouse.active_idx;
-    
-    data_warehouse.flow_volume_map[a_idx] = ht_kfs_vi_create();
-    if (data_warehouse.flow_volume_map[a_idx] == NULL) {
-        return -1;
-    }
-    data_warehouse.flow_loss_volume_map[a_idx] = ht_kfs_vi_create();
-    if (data_warehouse.flow_loss_volume_map[a_idx] == NULL) {
-        return -1;
-    }
-    data_warehouse.flow_loss_rate_map[a_idx] = ht_kfs_vf_create();
-    if (data_warehouse.flow_loss_rate_map[a_idx] == NULL) {
-        return -1;
-    }
-    data_warehouse.target_flow_map[a_idx] = ht_kfs_vi_create();
-    if (data_warehouse.target_flow_map[a_idx] == NULL) {
-        return -1;
-    }
-    data_warehouse.flow_sample_map[a_idx] = ht_kfs_vi_create();
-    if (data_warehouse.flow_sample_map[a_idx] == NULL) {
-        return -1;
+    int a_idx = 0;
+    for (; a_idx < BUFFER_NUM; ++a_idx) {
+        data_warehouse.flow_volume_map[a_idx] = ht_kfs_vi_create();
+        if (data_warehouse.flow_volume_map[a_idx] == NULL) {
+            return -1;
+        }
+        data_warehouse.flow_loss_volume_map[a_idx] = ht_kfs_vi_create();
+        if (data_warehouse.flow_loss_volume_map[a_idx] == NULL) {
+            return -1;
+        }
+        data_warehouse.flow_loss_rate_map[a_idx] = ht_kfs_vf_create();
+        if (data_warehouse.flow_loss_rate_map[a_idx] == NULL) {
+            return -1;
+        }
+        data_warehouse.target_flow_map[a_idx] = ht_kfs_vi_create();
+        if (data_warehouse.target_flow_map[a_idx] == NULL) {
+            return -1;
+        }
+        data_warehouse.flow_sample_map[a_idx] = ht_kfs_vi_create();
+        if (data_warehouse.flow_sample_map[a_idx] == NULL) {
+            return -1;
+        }
     }
 
+    data_warehouse.active_idx = 0;
     return 0;
 }
 

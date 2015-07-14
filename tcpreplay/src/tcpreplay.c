@@ -49,6 +49,7 @@ tcpedit_t *tcpedit;
 #include "condition_sender.h"
 #include "interval_rotator.h"
 #include "flow_infor_updator.h"
+#include "data_warehouse.h"
 #include "../../public_lib/time_library.h"
 #include "../../public_lib/cm_experiment_setting.h"
 
@@ -142,8 +143,14 @@ main(int argc, char *argv[])
     g_tcpreplay_ctx = ctx;
     
     /* all hosts/senders start/end at the nearby timestamp for intervals */
-    get_next_interval_start(CM_TIME_INTERVAL);
+    uint64_t current_sec =  get_next_interval_start(CM_TIME_INTERVAL);
+    printf("current_sec:%lu\n", current_sec);
 
+    /* initialize the data_warehouse */
+    if (data_warehouse_init() != 0) {
+        notice("\nFAIL: data_warehouse_init() %u\n", 1);
+        return 1;
+    }
     /* start the flow_infor_updator and interval_rotator threads */
     if (pthread_create(&flow_info_update_thread, NULL, flow_infor_update, NULL)) {
         notice("\nFailed: pthread_create flow_info_update_thread %u \n", 1);
@@ -178,6 +185,13 @@ main(int argc, char *argv[])
             sendpacket_getstat(ctx->intf2, buf, sizeof(buf));
             printf("%s", buf);
         }
+    }
+
+    if (pthread_join(flow_info_update_thread, NULL)) {
+        printf("\nFailed: pthread_join\n");
+    }
+    if (pthread_join(interval_rotate_thread, NULL)) {
+        printf("\nFailed: pthread_join\n");
     }
 
     tcpreplay_close(ctx);

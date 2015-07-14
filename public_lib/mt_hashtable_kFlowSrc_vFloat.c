@@ -18,7 +18,7 @@
 *
 * @return 
 */
-hashtable_kfs_vf_t *ht_kfs_vf_create() {
+hashtable_kfs_vf_t *ht_kfs_vf_create(void) {
 
 	hashtable_kfs_vf_t *hashtable = NULL;
 	int i;

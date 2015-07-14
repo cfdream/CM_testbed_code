@@ -4,4 +4,7 @@
 #define TARGET_FLOW_LOSS_RATE 0.01
 #define TARGET_FLOW_VOLUME 1000000
 
+//TODO: to set
+#define SH_HASHMAP_SIZE 100000
+
 #endif

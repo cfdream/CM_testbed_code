@@ -53,7 +53,7 @@ typedef struct hashtable_kfs_vf_s hashtable_kfs_vf_t;
 *
 * @return 
 */
-hashtable_kfs_vf_t *ht_kfs_vf_create();
+hashtable_kfs_vf_t *ht_kfs_vf_create(void);
 
 void ht_kfs_vf_destory( hashtable_kfs_vf_t *hashtable );
 

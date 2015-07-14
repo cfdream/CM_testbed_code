@@ -1,7 +1,6 @@
 #ifndef __HASHMAP_H__
 #define __HASHMAP_H__
 
-#define _XOPEN_SOURCE 500 /* Enable certain library functions (strdup) on linux.  See feature_test_macros(7) */
 #define HASH_MAP_SIZE 65535
 
 #include <stdlib.h>

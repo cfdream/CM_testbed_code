@@ -53,7 +53,7 @@ typedef struct hashtable_vf_s hashtable_vf_t;
 *
 * @return 
 */
-hashtable_vf_t *ht_vf_create();
+hashtable_vf_t *ht_vf_create(void);
 
 void ht_vf_destory( hashtable_vf_t *hashtable );
 

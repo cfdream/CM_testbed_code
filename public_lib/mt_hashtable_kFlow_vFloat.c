@@ -18,7 +18,7 @@
 *
 * @return 
 */
-hashtable_vf_t *ht_vf_create() {
+hashtable_vf_t *ht_vf_create(void) {
 
 	hashtable_vf_t *hashtable = NULL;
 	int i;

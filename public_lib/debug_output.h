@@ -4,14 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "ovs-thread.h"
-#include "global_setting.h"
-#include "common_lib.h"
 
 const bool OPEN_DEBUG = true;
 const bool OPEN_NOTICE = true;
 const bool OPEN_WARNING = true;
 const bool OPEN_ERROR = true;
+const bool OPEN_LOCK = true;
 
 const char DEBUG_FNAME[] =  "/tmp/log/debug.txt";
 const char NOTICE_FNAME[] =  "/tmp/log/notice.txt";
@@ -22,11 +20,25 @@ void DEBUG(const char* buffer);
 void NOTICE(const char* buffer);
 void WARNING(const char* buffer);
 void ERROR(const char* buffer);
+void request_mutex(pthread_mutex_t* p_mutex);
+void release_mutex(pthread_mutex_t* p_mutex);
 
 pthread_mutex_t debug_file_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t notice_file_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t warn_file_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t error_file_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void request_mutex(pthread_mutex_t* p_mutex) {
+    if (OPEN_LOCK ) {
+        pthread_mutex_lock(p_mutex);
+    }
+}
+
+void release_mutex(pthread_mutex_t* p_mutex) {
+    if (OPEN_LOCK) {
+        pthread_mutex_unlock(p_mutex);
+    }
+}
 
 void DEBUG(const char* buffer) {
     FILE * fp;

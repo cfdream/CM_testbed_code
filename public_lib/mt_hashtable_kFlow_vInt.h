@@ -53,7 +53,7 @@ typedef struct hashtable_vi_s hashtable_vi_t;
 *
 * @return 
 */
-hashtable_vi_t *ht_vi_create();
+hashtable_vi_t *ht_vi_create(void);
 
 void ht_vi_destory( hashtable_vi_t *hashtable );
 

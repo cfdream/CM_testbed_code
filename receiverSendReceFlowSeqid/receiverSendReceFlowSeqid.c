@@ -11,6 +11,7 @@
 #include "../public_lib/senderFIFOsManager.h"
 #include "../tcpreplay/src/tcpr.h"
 #include "../public_lib/receiver_2_sender_proto.h"
+#include "../public_lib/debug_config.h"
 
 pcap_t *handle;			/* Session handle */
 
@@ -94,24 +95,24 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
             get_sender_fifo_handler(packet.srcip), 
             &packet);
 
-        /*DEBUG: print packet info*/
-        struct in_addr src_addr;
-        struct in_addr dst_addr;
-        char src_str[100];
-        char dst_str[100];
-        src_addr.s_addr = htonl(packet.srcip);
-        char* temp = (char*)inet_ntoa(src_addr);
-        memcpy(src_str, temp, strlen(temp));
-        src_str[strlen(temp)] = 0;
-        dst_addr.s_addr = htonl(packet.dstip);
-        temp = (char*)inet_ntoa(dst_addr);
-        memcpy(dst_str, temp, strlen(temp));
-        dst_str[strlen(temp)] = 0;
+        if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
+            packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
+            int fifo_idx = GET_SENDER_IDX(packet.srcip);
+            struct in_addr src_addr;
+            struct in_addr dst_addr;
+            char src_str[100];
+            char dst_str[100];
+            src_addr.s_addr = htonl(packet.srcip);
+            char* temp = inet_ntoa(src_addr);
+            memcpy(src_str, temp, strlen(temp));
+            dst_addr.s_addr = htonl(packet.dstip);
+            temp = inet_ntoa(dst_addr);
+            memcpy(dst_str, temp, strlen(temp));
 
-        printf("RECE: flow[%s-%s-%u-%u-%u], receive_seqid[%u]\n", 
-            src_str, dst_str, packet.src_port, packet.dst_port, 
-            packet.protocol, packet.rece_seqid);
-        /*DEBUG END: print packet info*/
+            printf("receiver: flow[%s-%s-%u-%u-%u-sendToSender%d]\n", 
+                src_str, dst_str, 
+                packet.src_port, packet.dst_port, packet.rece_seqid, fifo_idx);
+        }
 
     } else if (ip->ip_p == 0x11) {
         //UDP header

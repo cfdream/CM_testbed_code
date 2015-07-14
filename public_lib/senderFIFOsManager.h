@@ -20,7 +20,7 @@
 //...
 #define FIRST_SENDER_IP_PREFIX 0x0A000000
 
-#define GET_SENDER_IDX(ip) {(((ip&IP_MASK)>>24) - FIRST_SENDER_IP_PREFIX>>24)}
+#define GET_SENDER_IDX(ip) {(((ip&IP_MASK)>>24) - (FIRST_SENDER_IP_PREFIX>>24))}
 
 int fifo_handlers[NUM_SENDERS];
 
@@ -45,14 +45,14 @@ void get_sender_fifo_fname(int ith_sender, char* buffer, int buffer_len);
 */
 int sender_get_fifo_fname(char* buffer, int buffer_len );
 
-int createFIFOFiles();
+int createFIFOFiles(void);
 
 /**
 * @brief get the handler for all FIFO files for each sender
 *
 * @return 0:success, -1: fail
 */
-int open_fifos();
+int open_fifos(void);
 
 /**
 * @brief get the fifo_handler of the sender the srcip belonging to

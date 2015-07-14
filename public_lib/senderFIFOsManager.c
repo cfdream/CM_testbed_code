@@ -9,7 +9,7 @@
 */
 void get_sender_fifo_fname(int ith_sender, char* buffer, int buffer_len) {
     assert(buffer != NULL);
-    snprintf(buffer, buffer_len, "/tmp/h%d_fifo", ith_sender);
+    snprintf(buffer, buffer_len, "/tmp/fifo/h%d_fifo", ith_sender);
 }
 
 
@@ -32,12 +32,12 @@ int sender_get_fifo_fname(char* buffer, int buffer_len ) {
     }
     
     //2. get fifo name
-    snprintf(buffer, buffer_len, "%s_fifo", hostname);
+    snprintf(buffer, buffer_len, "/tmp/fifo/%s_fifo", hostname);
 
     return 0;
 }
 
-int createFIFOFiles() {
+int createFIFOFiles(void) {
     char fifo_fname[100];
     int i = 1;
     for (i = 1; i <= NUM_SENDERS; ++i) {
@@ -56,7 +56,7 @@ int createFIFOFiles() {
 *
 * @return 0:success, -1: fail
 */
-int open_fifos() {
+int open_fifos(void) {
     char fifo_fname[100];
     int i = 1;
     for (i = 1; i <= NUM_SENDERS; ++i) {
@@ -66,7 +66,7 @@ int open_fifos() {
             printf("FAIL:openFIFO for h%d\n", i);
             return -1;
         }
-        fifo_fname[i] = fifo_handler;
+        fifo_handlers[i-1] = fifo_handler;
     }
     return 0;
 }

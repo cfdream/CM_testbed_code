@@ -440,9 +440,9 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
                 temp = inet_ntoa(dst_addr);
                 memcpy(dst_str, temp, strlen(temp));
 
-                printf("flow[%s-%s-%u-%u-%u]\n", 
+                printf("sender: flow[%s-%s-%u-%u-%u-len:%u]\n", 
                     src_str, dst_str, 
-                    packet.src_port, packet.dst_port, seqid);
+                    packet.src_port, packet.dst_port, seqid,pkthdr->len);
             }
             break;
         default:

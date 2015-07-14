@@ -60,7 +60,7 @@ pkt_volume_t* new_pkt_volume(uint32_t seqid, uint32_t volume);
 *
 * @return 
 */
-hashtable_vl_t *ht_vl_create();
+hashtable_vl_t *ht_vl_create(void);
 
 void ht_vl_destory( hashtable_vl_t *hashtable );
 

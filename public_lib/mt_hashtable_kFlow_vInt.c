@@ -18,7 +18,7 @@
 *
 * @return 
 */
-hashtable_vi_t *ht_vi_create() {
+hashtable_vi_t *ht_vi_create(void) {
 
 	hashtable_vi_t *hashtable = NULL;
 	int i;
