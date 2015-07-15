@@ -283,7 +283,7 @@ class GenerateRulesIntoTables:
                     port_str+=("{0}" .format(ports[len(ports)-1]))
                     #add UDP pkts forwarding rules, high priority (condition packets are sent in udp format)
                     #multi-casting to all the next ports, flooding the condition packets in minimum spanning tree mode
-                    out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_dst={1},priority={priority},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], port_str, priority=GenerateRulesIntoTables.HIGH_PRIORITY)
+                    out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_src={1},priority={priority},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], port_str, priority=GenerateRulesIntoTables.HIGH_PRIORITY)
                     out_file.write(out_str + "\n")
                 else:
                     portid=1
@@ -292,7 +292,7 @@ class GenerateRulesIntoTables:
                         if neighbor.neigh_name == next_nodes[0]:
                             portid=neighbor.ethid
                     #add IP pkts forwarding rules
-                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
+                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_src={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
                     out_file.write(out_str + "\n")
         out_file.close()                    
 
@@ -304,10 +304,10 @@ class GenerateRulesIntoTables:
         path=self.get_forward_next_nodes('h1')
         print sorted(path.items(), key=lambda item:item[0])
 
-generator = GenerateRulesIntoTables()
-generator.read_eth_id_name_topo("eth_id_name_map.txt")
-generator.read_topo("b4_topo_ip_prefixes.txt")
-generator.generate_rules_for_normal_packets("rules_to_add_flow_table.sh")
-generator.generate_rules_for_condition_packets("rules_to_add_flow_table.sh")
+#generator = GenerateRulesIntoTables()
+#generator.read_eth_id_name_topo("eth_id_name_map.txt")
+#generator.read_topo("b4_topo_ip_prefixes.txt")
+#generator.generate_rules_for_normal_packets("rules_to_add_flow_table.sh")
+#generator.generate_rules_for_condition_packets("rules_to_add_flow_table.sh")
 
-generator.get_reverse_pre_forward_next_nodes_test()
+#generator.get_reverse_pre_forward_next_nodes_test()

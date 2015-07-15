@@ -30,3 +30,4 @@ class SenderManger():
                        '>', outfiles[ h ],
                        '2>', errfiles[ h ],
                        '&' )
+            print "start tcpreplay"

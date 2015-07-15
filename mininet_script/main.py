@@ -17,7 +17,9 @@ if __name__ == "__main__":
 
     #-----------create FIFO files for each sender
     commands.getstatusoutput('mkdir /tmp/fifo')
+    commands.getstatusoutput('mkdir /tmp/log')
     commands.getstatusoutput('mkdir /tmp/sender')
+    commands.getstatusoutput('mkdir /tmp/switch')
     commands.getstatusoutput('../public_lib/createFIFOFiles')
 
     #------------setup all receivers------------
@@ -26,10 +28,10 @@ if __name__ == "__main__":
 
     #------------setup all senders------------
     sender_manager = sender_manager.SenderManger(system_topo.net)
-    #sender_manager.setup()
+    sender_manager.setup()
 
     #------------wait for experiments to run------------
-    time.sleep(10); #600 seconds
+    time.sleep(60); #600 seconds
 
     #------------tear down the mininet------------
     system_topo.tearDown()
