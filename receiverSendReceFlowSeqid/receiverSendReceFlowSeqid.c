@@ -121,12 +121,14 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         }
 
     } else if (ip->ip_p == 0x11) {
-        //UDP header
-        char src_str[100];
-        memset(src_str, 0, sizeof(src_str));
-        char* temp = inet_ntoa(ip->ip_src);
-        memcpy(src_str, temp, strlen(temp));
-        printf("udp pkt, srcip-%s\n", src_str);
+        if (ENABLE_DEBUG) {
+            //UDP header
+            char src_str[100];
+            memset(src_str, 0, sizeof(src_str));
+            char* temp = inet_ntoa(ip->ip_src);
+            memcpy(src_str, temp, strlen(temp));
+            printf("udp pkt, srcip-%s\n", src_str);
+        }
     } else {
         //other protocols
         printf("other protocol pkt\n");
