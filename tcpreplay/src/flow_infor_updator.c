@@ -77,16 +77,10 @@ void* flow_infor_update(void* param_ptr) {
 
             if (ENABLE_DEBUG && recv_2_send_proto.srcip == DEBUG_SRCIP && recv_2_send_proto.dstip == DEBUG_DSTIP &&
                 recv_2_send_proto.src_port == DEBUG_SPORT && recv_2_send_proto.dst_port == DEBUG_DPORT) {
-                struct in_addr src_addr;
-                struct in_addr dst_addr;
                 char src_str[100];
                 char dst_str[100];
-                src_addr.s_addr = htonl(recv_2_send_proto.srcip);
-                char* temp = inet_ntoa(src_addr);
-                memcpy(src_str, temp, strlen(temp));
-                dst_addr.s_addr = htonl(recv_2_send_proto.dstip);
-                temp = inet_ntoa(dst_addr);
-                memcpy(dst_str, temp, strlen(temp));
+                ip_to_str(recv_2_send_proto.srcip, src_str, 100);
+                ip_to_str(recv_2_send_proto.dstip, dst_str, 100);
 
                 printf("receiver=>sender: flow[%s-%s-%u-%u-%u-volume:%d-lossVolume:%d-rate:%f]\n", 
                     src_str, dst_str, 

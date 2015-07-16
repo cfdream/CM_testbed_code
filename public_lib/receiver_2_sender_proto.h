@@ -9,7 +9,7 @@ typedef struct recv_2_send_proto_s {
     uint32_t dstip;
     uint16_t src_port;
     uint16_t dst_port;
-    uint16_t protocol;
+    uint8_t protocol;
     /*received seqid of the flow*/
     uint32_t rece_seqid;
 } recv_2_send_proto_t;

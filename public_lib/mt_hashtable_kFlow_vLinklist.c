@@ -6,6 +6,7 @@
  * ht_vl_get_rece_lost_volume(flow, seqid): get the <received volume, lost volume> of one flow. 
  */
 
+#include "general_functions.h"
 #include "mt_hashtable_kFlow_vLinklist.h"
 
 pkt_volume_t* new_pkt_volume(uint32_t seqid, uint32_t volume) {
@@ -132,7 +133,7 @@ receV_lostV_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key
 	entry_vl_t *pair;
     pkt_volume_t* temp;
     receV_lostV_t ans;
-    memset(&ans, 0, sizeof(pkt_volume_t));
+    memset(&ans, 0, sizeof(receV_lostV_t));
 
     if (NULL == hashtable) {
         return ans;
@@ -170,7 +171,16 @@ receV_lostV_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key
             iterator = iterator->next;
             free(temp);
         } else {
+            char src_str[100];
+            char dst_str[100];
+            ip_to_str(key->srcip, src_str, 100);
+            ip_to_str(key->dstip, dst_str, 100);
             printf("FATAL ERROR: packet received not set! debug it.\n");
+                
+            printf("FATAL: receiver=>sender: flow[%s-%s-%u-%u-%u-s-%u-d-%u] not sent\n", 
+                src_str, dst_str, 
+                key->src_port, key->dst_port, seqid,
+                key->srcip, key->dstip);
         }
 
         //updated newest_pkt, oldest_pkt

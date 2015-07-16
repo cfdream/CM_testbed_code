@@ -429,16 +429,10 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
             
             if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
                 packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
-                struct in_addr src_addr;
-                struct in_addr dst_addr;
                 char src_str[100];
                 char dst_str[100];
-                src_addr.s_addr = htonl(packet.srcip);
-                char* temp = inet_ntoa(src_addr);
-                memcpy(src_str, temp, strlen(temp));
-                dst_addr.s_addr = htonl(packet.dstip);
-                temp = inet_ntoa(dst_addr);
-                memcpy(dst_str, temp, strlen(temp));
+                ip_to_str(packet.srcip, src_str, 100);
+                ip_to_str(packet.dstip, dst_str, 100);
 
                 printf("sender: flow[%s-%s-%u-%u-%u-len:%u]\n", 
                     src_str, dst_str, 
@@ -456,7 +450,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
 void cm_send_condition_to_network() {
     pthread_t thread_handler;
     if (pthread_create(&thread_handler, NULL, send_condition_to_network, NULL)) {
-        errx(-1, "pthread_create for send_condition_to_network fail:%d", 1);
+        printf(-1, "FAIL: pthread_create for send_condition_to_network");
     }
 }
 
@@ -715,8 +709,8 @@ SEND_NOW:
         cm_handle_ipv4_packet(&pkthdr, &pktdata, datalink);
 
         /* check whether to send out condition information */
-        if (ctx->stats.flow_packets 
-            && ctx->stats.flow_packets % CM_NUM_PKTS_TO_SEND_CONDITION == 0) {
+        if (ctx->stats.flow_packets % CM_NUM_PKTS_TO_SEND_CONDITION == 0) {
+            printf("pkt sent:%lu\n", ctx->stats.flow_packets);
             cm_send_condition_to_network();
         }
 

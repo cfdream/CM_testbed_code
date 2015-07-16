@@ -4,6 +4,7 @@
 
 #include <pcap.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdlib.h>
@@ -12,8 +13,10 @@
 #include "../tcpreplay/src/tcpr.h"
 #include "../public_lib/receiver_2_sender_proto.h"
 #include "../public_lib/debug_config.h"
+#include "../public_lib/ip_prefix_setting.h"
 
 pcap_t *handle;			/* Session handle */
+uint32_t net_identity;
 
 /*
  * Function returns the Layer 3 protocol type of the given packet, or TCPEDIT_ERROR on error
@@ -75,6 +78,13 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 		printf("   * Invalid IP header length: %u bytes\n", size_ip);
 		return;
 	}
+
+    /*filter packets that sent out from this host*/
+    //printf("pkt net identity:%u, xor_net_identity:%u\n", GET_NET_IDENTITY(packet.srcip), GET_NET_IDENTITY(packet.srcip)^net_identity);
+    if (!(GET_NET_IDENTITY(packet.srcip) ^ net_identity)) {
+        return;
+    }
+
     if (ip->ip_p == 0x06) {
         //TCP header
         tcp = (struct tcpr_tcp_hdr *)(packet_buffer + ethernet_header_len + size_ip);
@@ -91,6 +101,8 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         packet.dst_port = ntohs(tcp->th_dport);
         packet.protocol = ip->ip_p;
         packet.rece_seqid = ntohl(tcp->th_seq);
+
+        /*write to the FIFO of related sender*/
         writeConditionToFIFO(
             get_sender_fifo_handler(packet.srcip), 
             &packet);
@@ -98,16 +110,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
             packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
             int fifo_idx = GET_SENDER_IDX(packet.srcip);
-            struct in_addr src_addr;
-            struct in_addr dst_addr;
             char src_str[100];
             char dst_str[100];
-            src_addr.s_addr = htonl(packet.srcip);
-            char* temp = inet_ntoa(src_addr);
-            memcpy(src_str, temp, strlen(temp));
-            dst_addr.s_addr = htonl(packet.dstip);
-            temp = inet_ntoa(dst_addr);
-            memcpy(dst_str, temp, strlen(temp));
+            ip_to_str(packet.srcip, src_str, 100);
+            ip_to_str(packet.dstip, dst_str, 100);
 
             printf("receiver: flow[%s-%s-%u-%u-%u-sendToSender%d]\n", 
                 src_str, dst_str, 
@@ -116,7 +122,11 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 
     } else if (ip->ip_p == 0x11) {
         //UDP header
-        printf("udp pkt\n");
+        char src_str[100];
+        memset(src_str, 0, sizeof(src_str));
+        char* temp = inet_ntoa(ip->ip_src);
+        memcpy(src_str, temp, strlen(temp));
+        printf("udp pkt, srcip-%s\n", src_str);
     } else {
         //other protocols
         printf("other protocol pkt\n");
@@ -130,7 +140,8 @@ int setup() {
    //char filter_exp[] = "port 23";	/* The filter expression */
    //char filter_exp[] = "tcp";	/* The filter expression */
    //only keep tcp packets, and dst (included in generated pcap files for senders)
-   char filter_exp[] = "tcp and ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
+   //char filter_exp[] = "tcp and ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
+   char filter_exp[] = "ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
    //char filter_exp[] = "";
    bpf_u_int32 mask;		/* Our netmask */
    bpf_u_int32 net;		/* Our IP */
@@ -175,15 +186,25 @@ void tearDown() {
 
 int main(int argc, char *argv[])
 {
+    if (argc != 2) {
+        printf("format: ./receiverSendReceFlowSeqid host_ip_prefix\n");
+        return -1;
+    }
+    /*get network identify for the host: 10.0.0.0/8=>10*/
+    char* ip_prefix_str = argv[1];
+    net_identity = atoi(ip_prefix_str);
+    printf("ip_prefix_str :%s, net_identity:%u\n", ip_prefix_str, net_identity);
+
     /*open_fifos*/
     if(open_fifos() != 0) {
         return -1;
     }
 
-    if (setup() < 0) {
+    if (setup(ip_prefix_str) < 0) {
         printf("setup failed\n");
         return -1;
     }
+
 
     pcap_loop(handle, 10000000, got_packet, NULL);
     tearDown();
