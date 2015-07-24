@@ -14,19 +14,21 @@ class SenderManger():
     def setup(self):
         hosts = self.net.hosts
         outfiles, errfiles = {}, {}
+        i = 0
         for h in hosts:
             #------debug------
-            if h.name != "h1":
+            if h.name != "h12":
                 continue
             #------debug------
 
+            i+=1
             outfiles[ h ] = '/tmp/log/%s.send.out' % h.name
             errfiles[ h ] = '/tmp/log/%s.send.err' % h.name
             #run the receiver detectPacketLossID
             h.cmd( 'echo >', outfiles[ h ] )
             h.cmd( 'echo >', errfiles[ h ] )
             # Start pings
-            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=8 -i {0}-eth0   ~/workspace/caida_data/sender1_head1w.pcap' .format(h.name),
+            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=3 -i {0}-eth0   ~/workspace/caida_data/s{1}_head1w.pcap' .format(h.name, i),
             #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   /home/cfdream/workspace/CM_testbed_code/pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
                        '>', outfiles[ h ],
                        '2>', errfiles[ h ],

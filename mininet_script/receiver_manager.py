@@ -22,8 +22,8 @@ class ReceiverManager():
         outfiles, errfiles = {}, {}
         for h in hosts:
             #------debug------
-            if h.name != "h1" and h.name != "h2":
-                continue
+            #if h.name != "h1" and h.name != "h2":
+            #    continue
             #------debug------
 
             outfiles[ h ] = '/tmp/log/%s.rece.out' % h.name

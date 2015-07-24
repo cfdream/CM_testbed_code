@@ -35,7 +35,7 @@ if __name__ == "__main__":
     sender_manager.setup()
 
     #------------wait for experiments to run------------
-    time.sleep(120); #600 seconds
+    time.sleep(1000); #600 seconds
 
     #------------tear down the mininet------------
     system_topo.tearDown()
