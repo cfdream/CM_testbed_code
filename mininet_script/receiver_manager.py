@@ -21,6 +21,11 @@ class ReceiverManager():
         hosts = self.net.hosts
         outfiles, errfiles = {}, {}
         for h in hosts:
+            #------debug------
+            if h.name != "h1" and h.name != "h2":
+                continue
+            #------debug------
+
             outfiles[ h ] = '/tmp/log/%s.rece.out' % h.name
             errfiles[ h ] = '/tmp/log/%s.rece.err' % h.name
             #run the receiver detectPacketLossID

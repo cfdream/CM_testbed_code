@@ -26,7 +26,8 @@ class SenderManger():
             h.cmd( 'echo >', outfiles[ h ] )
             h.cmd( 'echo >', errfiles[ h ] )
             # Start pings
-            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i h1-eth0   ~/workspace/caida_data/sender1_head1w.pcap',
+            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=8 -i {0}-eth0   ~/workspace/caida_data/sender1_head1w.pcap' .format(h.name),
+            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   /home/cfdream/workspace/CM_testbed_code/pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
                        '>', outfiles[ h ],
                        '2>', errfiles[ h ],
                        '&' )

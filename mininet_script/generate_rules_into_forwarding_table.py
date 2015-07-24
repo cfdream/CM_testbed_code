@@ -252,7 +252,7 @@ class GenerateRulesIntoTables:
                         if neighbor.neigh_name == next_nodes[0]:
                             portid=neighbor.ethid
                     #add IP pkts forwarding rules
-                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
+                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_dst={1},priority={priority},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid, priority=GenerateRulesIntoTables.LOW_PRIORITY)
                     out_file.write(out_str + "\n")
                     #add ARP pkts forwarding rules
                     out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0806,nw_dst={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
@@ -292,7 +292,7 @@ class GenerateRulesIntoTables:
                         if neighbor.neigh_name == next_nodes[0]:
                             portid=neighbor.ethid
                     #add IP pkts forwarding rules
-                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_src={1},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid)
+                    out_str = """sudo ovs-ofctl add-flow {0} 'dl_type=0x0800,nw_proto=17,nw_src={1},priority={priority},action=output:{2}'""" .format(entity, self.host_ipprefix_map[host], portid, priority=GenerateRulesIntoTables.HIGH_PRIORITY)
                     out_file.write(out_str + "\n")
         out_file.close()                    
 
