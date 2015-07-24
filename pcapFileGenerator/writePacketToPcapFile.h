@@ -36,11 +36,8 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     u_int srcip = p_packet->srcip;
     u_int dstip = p_packet->dstip;
     u_int seqid = 0;
-    //u_char src_mac[6] = {0x01, 0x01, 0x01, 0x02, 0x02, 0x02};
-    //u_char src_mac[6] = "abcdef";
     u_char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
     u_char dst_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
-    //u_char dst_mac[6] = {0x03, 0x03, 0x03, 0x04, 0x04, 0x04};
     
     struct tcpr_tcp_hdr tcp_header;
     struct tcpr_ipv4_hdr ip_header;
