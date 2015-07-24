@@ -17,6 +17,7 @@
 
 pcap_t *handle;			/* Session handle */
 uint32_t net_identity;
+uint32_t g_received_pkts = 0;
 
 /*
  * Function returns the Layer 3 protocol type of the given packet, or TCPEDIT_ERROR on error
@@ -106,7 +107,8 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         writeConditionToFIFO(
             get_sender_fifo_handler(packet.srcip), 
             &packet);
-
+        
+        /*
         if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
             packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
             int fifo_idx = GET_SENDER_IDX(packet.srcip);
@@ -119,7 +121,11 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
                 src_str, dst_str, 
                 packet.src_port, packet.dst_port, packet.rece_seqid, fifo_idx);
         }
-
+        */
+        ++g_received_pkts;
+        if (!(g_received_pkts % NUM_PKTS_TO_DEBUG)) {
+            printf("rece pkts:%u\n", g_received_pkts);
+        }
     } else if (ip->ip_p == 0x11) {
         if (ENABLE_DEBUG) {
             //UDP header
