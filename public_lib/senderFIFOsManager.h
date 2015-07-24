@@ -9,10 +9,9 @@
  */
 //#include <pcap.h>
 #include <string.h>
+#include "cm_experiment_setting.h"
 #include "multi_write_one_read_fifo.h"
 #include "get_mininet_host_name.h"
-
-#define NUM_SENDERS 12
 
 #define IP_MASK 0xFF000000
 //ip prefix of first sender is 10/24

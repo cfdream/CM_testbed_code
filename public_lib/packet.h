@@ -6,7 +6,6 @@
 
 #define MAX_MTU_SIZE 5000
 #define MAX_PAYLOAD_SIZE (5000-58)
-
 #define TAG_VLAN_VAL 0X01
 
 typedef struct packet {

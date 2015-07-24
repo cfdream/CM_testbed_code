@@ -28,9 +28,9 @@ int flow_compare(flow_s* flow1, flow_s* flow2) {
     }
 
     //srcip, dstip, src_port, dst_port equal, check protocol
-    if (flow1->protocol != flow2->protocol) {
-        return flow1->protocol - flow2->protocol;
-    }
+    //if (flow1->protocol != flow2->protocol) {
+    //    return flow1->protocol - flow2->protocol;
+    //}
     return 0;
 }
 

@@ -7,6 +7,6 @@
 #define DEBUG_SPORT 60826
 #define DEBUG_DPORT 1455
 
-#define NUM_PKTS_TO_DEBUG 1000
+#define NUM_PKTS_TO_DEBUG 300
 
 #endif
