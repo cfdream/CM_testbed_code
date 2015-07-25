@@ -22,6 +22,7 @@ if __name__ == "__main__":
     system_topo = mini_system_manager.SystemManager()
     system_topo.setup()
     system_topo.installForwardingRule()
+    system_topo.configuMTUSize()
 
     #-----------test connectivity------------
     #system_topo.testConnectivity()
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     sender_manager.setup()
 
     #------------wait for experiments to run------------
-    time.sleep(1000); #600 seconds
+    time.sleep(20); #600 seconds
 
     #------------tear down the mininet------------
     system_topo.tearDown()

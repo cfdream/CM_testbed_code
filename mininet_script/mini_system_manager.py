@@ -41,6 +41,19 @@ class SystemManager():
         #commands.getstatusoutput('rm eth_id_name_map.txt')
         #commands.getstatusoutput('rules_to_add_flow_table.sh')
 
+    def configuMTUSize(self):
+        for host in self.net.hosts:
+            host.cmd('sudo ifconfig {0}-eth0 mtu 9000' .format(host))
+            print 'sudo ifconfig {0}-eth0 mtu 9000' .format(host)
+
+        #generate rules_to_add_flow_table.sh
+        generator = generate_rules_into_forwarding_table.GenerateRulesIntoTables()
+        generator.read_eth_id_name_topo("eth_id_name_map.txt")
+        generator.read_topo("b4_topo_ip_prefixes.txt")
+        for switch_eth in generator.switch_eth_name_id_map:
+            commands.getstatusoutput('sudo ifconfig {0} mtu 9000' .format(switch_eth))
+            print 'sudo ifconfig {0} mtu 9000' .format(switch_eth)
+
     ##
     # @brief test the connectivity from host[0] to other hosts
     #
