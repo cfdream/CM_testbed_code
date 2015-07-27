@@ -17,8 +17,8 @@ class SenderManger():
         i = 0
         for h in hosts:
             #------debug------
-            if h.name != "h12":
-                continue
+            #if h.name != "h1":
+            #    continue
             #------debug------
 
             i+=1
@@ -28,8 +28,9 @@ class SenderManger():
             h.cmd( 'echo >', outfiles[ h ] )
             h.cmd( 'echo >', errfiles[ h ] )
             # Start pings
-            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=3 -i {0}-eth0   ~/workspace/caida_data/s{1}_head1w.pcap' .format(h.name, i),
-            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   /home/cfdream/workspace/CM_testbed_code/pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
+            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=100 -i {0}-eth0   /home/ericsson/workspace/caida_data/{1}.pcap' .format(h.name, h.name),
+            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=100 -i {0}-eth0   /home/ericsson/workspace/caida_data/s{1}_head1w.pcap' .format(h.name, i),
+            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   /home/ericsson/workspace/CM_testbed_code/pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
                        '>', outfiles[ h ],
                        '2>', errfiles[ h ],
                        '&' )

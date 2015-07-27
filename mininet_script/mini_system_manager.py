@@ -60,7 +60,9 @@ class SystemManager():
         ret_str = commands.getstatusoutput('sudo ovs-vsctl show')
         db_str = ret_str[1].split()[0]
         commands.getstatusoutput('ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(db_str, num_cores))
+        #commands.getstatusoutput('ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(db_str, 2))
         print 'ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(db_str, num_cores)
+        #print 'ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(db_str, 2)
 
     ##
     # @brief test the connectivity from host[0] to other hosts

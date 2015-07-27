@@ -20,10 +20,10 @@ if __name__ == "__main__":
 
     #------------setup the mininet------------
     system_topo = mini_system_manager.SystemManager()
+    system_topo.configUserspaceThreadNum()
     system_topo.setup()
     system_topo.installForwardingRule()
     system_topo.configuMTUSize()
-    system_topo.configUserspaceThreadNum()
 
     #-----------test connectivity------------
     #system_topo.testConnectivity()
