@@ -57,9 +57,10 @@ class SystemManager():
 
     def configUserspaceThreadNum(self):
         num_cores = multiprocessing.cpu_count()
-        vsctl_str = commands.getstatusoutput('sudo ovs-vsctl show')
-        commands.getstatusoutput('ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(vsctl_str, num_cores))
-        print 'ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(vsctl_str, num_cores)
+        ret_str = commands.getstatusoutput('sudo ovs-vsctl show')
+        db_str = ret_str[1].split()[0]
+        commands.getstatusoutput('ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(db_str, num_cores))
+        print 'ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(db_str, num_cores)
 
     ##
     # @brief test the connectivity from host[0] to other hosts
