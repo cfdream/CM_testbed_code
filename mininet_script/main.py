@@ -23,6 +23,7 @@ if __name__ == "__main__":
     system_topo.setup()
     system_topo.installForwardingRule()
     system_topo.configuMTUSize()
+    system_topo.configUserspaceThreadNum()
 
     #-----------test connectivity------------
     #system_topo.testConnectivity()

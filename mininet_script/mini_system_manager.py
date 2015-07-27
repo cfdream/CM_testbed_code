@@ -7,6 +7,7 @@ from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 from mininet.util import dumpNodeConnections
 from mininet.log import setLogLevel
+import multiprocessing
 import b4_topo_mininet
 import generate_rules_into_forwarding_table
 from test.multipoll import monitorFiles
@@ -53,6 +54,12 @@ class SystemManager():
         for switch_eth in generator.switch_eth_name_id_map:
             commands.getstatusoutput('sudo ifconfig {0} mtu 9000' .format(switch_eth))
             print 'sudo ifconfig {0} mtu 9000' .format(switch_eth)
+
+    def configUserspaceThreadNum(self):
+        num_cores = multiprocessing.cpu_count()
+        vsctl_str = commands.getstatusoutput('sudo ovs-vsctl show')
+        commands.getstatusoutput('ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(vsctl_str, num_cores))
+        print 'ovs-vsctl add Open_vSwitch {0} other_config n-handler-threads={1}' .format(vsctl_str, num_cores)
 
     ##
     # @brief test the connectivity from host[0] to other hosts
