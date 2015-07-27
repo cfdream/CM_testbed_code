@@ -5,7 +5,7 @@
 #define NUM_SWITCHES 12
 
 #define CM_TIME_INTERVAL 5
-#define CM_NUM_PKTS_TO_SEND_CONDITION 1000
+#define CM_NUM_PKTS_TO_SEND_CONDITION 10000
 #define CM_SENDER_TARGET_FLOW_FNAME_PREFIX "/tmp/sender/"
 #define CM_SENDER_TARGET_FLOW_FNAME_SUFFIX "_intervals_target_flows.txt"
 

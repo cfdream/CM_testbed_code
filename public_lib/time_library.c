@@ -27,7 +27,8 @@ void print_current_time_with_ms (void)
 uint64_t get_next_interval_start(int time_interval_secs) {
     struct timespec sleep_len;
     sleep_len.tv_sec = 0;
-    sleep_len.tv_nsec = 1000; //check the time every 1us = 1e3 nanoseconds
+    //sleep_len.tv_nsec = 1000; //check the time every 1us = 1e3 nanoseconds
+    sleep_len.tv_nsec = 1000000; //check the time every 1ms = 1e6 nanoseconds
 
     const struct timespec* c_sleep_len = &sleep_len;
 
