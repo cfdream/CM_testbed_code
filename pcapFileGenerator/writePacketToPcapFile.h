@@ -141,7 +141,7 @@ void generate_one_pcap_pkt(packet_s* p_packet) {
 //    pd = pcap_open_dead(DLT_EN10MB, 65535 /* snaplen */);
 //
 //    /* Create the output file. */
-//    pdumper = pcap_dump_open(pd, "/tmp/capture.pcap");
+//    pdumper = pcap_dump_open(pd, "data/capture.pcap");
 //
 //    char* packet_buffer = (char*) malloc(5000);
 //

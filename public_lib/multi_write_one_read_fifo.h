@@ -11,7 +11,7 @@
 
 #include "receiver_2_sender_proto.h"
 
-#define TEST_FIFO_FNAME "/tmp/fifo_test"
+#define TEST_FIFO_FNAME "data/fifo_test"
 
 /**
 * @brief 

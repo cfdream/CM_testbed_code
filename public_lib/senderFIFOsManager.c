@@ -9,7 +9,7 @@
 */
 void get_sender_fifo_fname(int ith_sender, char* buffer, int buffer_len) {
     assert(buffer != NULL);
-    snprintf(buffer, buffer_len, "/tmp/fifo/h%d_fifo", ith_sender);
+    snprintf(buffer, buffer_len, "data/fifo/h%d_fifo", ith_sender);
 }
 
 
@@ -32,7 +32,7 @@ int sender_get_fifo_fname(char* buffer, int buffer_len ) {
     }
     
     //2. get fifo name
-    snprintf(buffer, buffer_len, "/tmp/fifo/%s_fifo", hostname);
+    snprintf(buffer, buffer_len, "data/fifo/%s_fifo", hostname);
 
     return 0;
 }
