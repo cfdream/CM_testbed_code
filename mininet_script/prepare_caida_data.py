@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import commands
+import sys
 
 class CaidaData():
     NUM_FILE_PER_HOST = 1
