@@ -11,10 +11,10 @@
 #define OPEN_ERROR 1
 #define OPEN_LOCK 0
 
-#define DEBUG_FNAME "data/log/debug.txt"
-#define NOTICE_FNAME "data/log/notice.txt"
-#define WARNING_FNAME "data/log/warning.txt"
-#define ERROR_FNAME "data/log/error.txt"
+#define DEBUG_FNAME "/tmp/log/debug.txt"
+#define NOTICE_FNAME "/tmp/log/notice.txt"
+#define WARNING_FNAME "/tmp/log/warning.txt"
+#define ERROR_FNAME "/tmp/log/error.txt"
 
 void DEBUG(const char* buffer);
 void NOTICE(const char* buffer);

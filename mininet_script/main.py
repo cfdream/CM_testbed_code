@@ -8,14 +8,14 @@ import sender_manager
 
 if __name__ == "__main__":
     #-----------create FIFO files for each sender
-    commands.getstatusoutput('mkdir data/fifo')
-    commands.getstatusoutput('mkdir data/log')
-    commands.getstatusoutput('mkdir data/sender')
-    commands.getstatusoutput('mkdir data/switch')
-    commands.getstatusoutput('rm data/fifo/*')
-    commands.getstatusoutput('rm data/log/*')
-    commands.getstatusoutput('rm data/sender/*')
-    commands.getstatusoutput('rm data/switch/*')
+    commands.getstatusoutput('mkdir /tmp/fifo')
+    commands.getstatusoutput('mkdir /tmp/log')
+    commands.getstatusoutput('mkdir /tmp/sender')
+    commands.getstatusoutput('mkdir /tmp/switch')
+    commands.getstatusoutput('rm /tmp/fifo/*')
+    commands.getstatusoutput('rm /tmp/log/*')
+    commands.getstatusoutput('rm /tmp/sender/*')
+    commands.getstatusoutput('rm /tmp/switch/*')
     commands.getstatusoutput('../public_lib/createFIFOFiles')
 
     #------------setup the mininet------------
