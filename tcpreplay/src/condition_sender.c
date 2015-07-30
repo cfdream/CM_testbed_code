@@ -1,5 +1,11 @@
+#include <unistd.h>
+#include <config.h>
+#include <pthread.h>
 #include "tcpreplay_api.h"
 #include "condition_sender.h"
+#include "../public_lib/time_library.h"
+#include "../public_lib/general_functions.h"
+#include "../public_lib/cm_experiment_setting.h"
 
 char g_pkt_buffer[15000];   //1.5kb
 
@@ -61,20 +67,26 @@ int send_udp_condition_pkt(condition_t* p_condition) {
         printf("Unable to send packet\n");
         return -1;
     } 
-
-    printf("send_condition_pkt succeeded\n");
     return 0;
 }
 
 void* send_condition_to_network(void* param_ptr) {
-    hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
-    entry_kfs_vi_t ret_entry;
-    condition_t condition;
-    while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
-        //get one target flow, send to the network
-        condition.srcip = ret_entry.key->srcip;
-        send_udp_condition_pkt(&condition);
+    while (1) {
+        /* postpone till the next timestamp that condition should be sent */
+        uint64_t current_sec = get_next_interval_start(CM_CONDITION_TIME_INTERVAL);
+
+        int condition_pkt_num = 0;
+
+        hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+        entry_kfs_vi_t ret_entry;
+        condition_t condition;
+        while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
+            //get one target flow, send to the network
+            condition.srcip = ret_entry.key->srcip;
+            send_udp_condition_pkt(&condition);
+            ++condition_pkt_num;
+        }
+        printf("send_udp_condition_pkt, current_sec:%lu, condition_pkts_sent:%d\n", current_sec, condition_pkt_num);
     }
     return NULL;
 }
-

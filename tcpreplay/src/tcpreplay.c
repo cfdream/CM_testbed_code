@@ -70,6 +70,7 @@ main(int argc, char *argv[])
     char buf[1024];
     pthread_t flow_info_update_thread;
     pthread_t interval_rotate_thread;
+    pthread_t send_condition_thread;
 
     fflush(NULL);
 
@@ -153,11 +154,15 @@ main(int argc, char *argv[])
     }
     /* start the flow_infor_updator and interval_rotator threads */
     if (pthread_create(&flow_info_update_thread, NULL, flow_infor_update, NULL)) {
-        notice("\nFailed: pthread_create flow_info_update_thread %u \n", 1);
+        printf("Failed: pthread_create flow_info_update_thread\n");
         return 1;
     }
     if (pthread_create(&interval_rotate_thread, NULL, rotate_interval, NULL)) {
-        notice("\nFailed: pthread_create rotate_interval %u \n", 1);
+        printf("Failed: pthread_create rotate_interval\n");
+        return 1;
+    }
+    if (pthread_create(&send_condition_thread, NULL, send_condition_to_network, NULL)) {
+        printf("FAIL: pthread_create send_condition_to_network\n");
         return 1;
     }
 

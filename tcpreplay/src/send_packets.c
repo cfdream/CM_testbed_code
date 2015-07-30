@@ -450,7 +450,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
 void cm_send_condition_to_network() {
     pthread_t thread_handler;
     if (pthread_create(&thread_handler, NULL, send_condition_to_network, NULL)) {
-        printf(-1, "FAIL: pthread_create for send_condition_to_network");
+        printf("FAIL: pthread_create for send_condition_to_network\n");
     }
 }
 
@@ -708,11 +708,13 @@ SEND_NOW:
         /* record the flow's <5-tuple flow identity, packet seqid, packet length> in hashmap */
         cm_handle_ipv4_packet(&pkthdr, &pktdata, datalink);
 
-        /* check whether to send out condition information */
+        /* check whether to send out condition information 
+         * comment as the condition sender is in condition_sender.c, which is based on time, not #pkt sent
         if (ctx->stats.flow_packets % CM_NUM_PKTS_TO_SEND_CONDITION == 0) {
             printf("pkt sent:%lu\n", ctx->stats.flow_packets);
             cm_send_condition_to_network();
         }
+        */
 
         /* mark the time when we sent the last packet */
         if (!do_not_timestamp && !skip_length)
