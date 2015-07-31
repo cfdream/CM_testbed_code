@@ -10,6 +10,7 @@
  * */
 
 #include "mt_hashtable_kFlowSrc_vInt.h"
+#include "debug_output.h"
 
 /* 
 * @brief Create a new hashtable.
@@ -71,6 +72,38 @@ void ht_kfs_vi_destory( hashtable_kfs_vi_t *hashtable ) {
     }
 
     free(hashtable);
+}
+
+//Different from ht_kfs_vi_destory()
+//This will just clear the data in the hashtable, will not destory the hashmap
+void ht_kfs_vi_refresh( hashtable_kfs_vi_t *hashtable ) {
+    int i;
+    entry_kfs_vi_t* p_node;
+    entry_kfs_vi_t* next;
+
+    if (NULL == hashtable) {
+        DEBUG("hashtable == NULL");
+        return;
+    }
+    //free table
+    for (i = 0; i < hashtable->size; i++) {
+        // request lock
+        pthread_mutex_lock(&hashtable->mutexs[i]);
+
+        //delete all nodes in this bin
+        p_node = hashtable->table[i];
+        while (p_node) {
+            free(p_node->key);
+            next = p_node->next;
+            free(p_node);
+            p_node = next;
+        }
+        //set the bin to empty
+        hashtable->table[i] = NULL; 
+        //release lock
+        pthread_mutex_unlock(&hashtable->mutexs[i]);
+    }
+
 }
 
 /* Hash a string for a particular hash table. */
@@ -235,6 +268,10 @@ void ht_kfs_vi_del( hashtable_kfs_vi_t *hashtable, flow_src_t *key) {
 * @return 0-ret_entry is the next entry, -1:no more entries
 */
 int ht_kfs_vi_next(hashtable_kfs_vi_t *hashtable, entry_kfs_vi_t* ret_entry) {
+    if (NULL == hashtable) {
+        DEBUG("ht_kfs_vi_next(), hashtable==NULL");
+        return -1;
+    }
     if (hashtable->next_current_bin >= hashtable->size) {
         return -1;
     }
