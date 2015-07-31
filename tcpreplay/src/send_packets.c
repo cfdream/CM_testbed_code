@@ -414,6 +414,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
             packet.src_port = ntohs(tcp_hdr->th_sport);
             packet.dst_port = ntohs(tcp_hdr->th_dport);
             seqid = ntohl(tcp_hdr->th_seq);
+            packet.len = pkthdr->len;
 
             /* record the packet&seqid of the flow in hashmap *
              * This will be used to calculate flow volume & loss rate
