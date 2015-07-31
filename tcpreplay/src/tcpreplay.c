@@ -165,6 +165,7 @@ main(int argc, char *argv[])
         printf("FAIL: pthread_create send_condition_to_network\n");
         return 1;
     }
+    sleep(1);
 
     /* main loop */
     rcode = tcpreplay_replay(ctx);

@@ -71,9 +71,13 @@ int send_udp_condition_pkt(condition_t* p_condition) {
 }
 
 void* send_condition_to_network(void* param_ptr) {
+    struct timespec spec;
+    uint64_t sec;
+
     while (1) {
         /* postpone till the next timestamp that condition should be sent */
         uint64_t current_sec = get_next_interval_start(CM_CONDITION_TIME_INTERVAL);
+        printf("-----start send_condition_to_network, current_sec:%lu-----\n", current_sec);
 
         int condition_pkt_num = 0;
 
@@ -85,8 +89,13 @@ void* send_condition_to_network(void* param_ptr) {
             condition.srcip = ret_entry.key->srcip;
             send_udp_condition_pkt(&condition);
             ++condition_pkt_num;
+            printf("condition srcip:%lu\n", condition.srcip);
         }
-        printf("send_udp_condition_pkt, current_sec:%lu, condition_pkts_sent:%d\n", current_sec, condition_pkt_num);
+
+        clock_gettime(CLOCK_REALTIME, &spec);
+        sec = (intmax_t)((time_t)spec.tv_sec);
+
+        printf("-----end send_udp_condition_pkt, current_sec:%lu, condition_pkts_sent:%d-----\n", sec, condition_pkt_num);
     }
     return NULL;
 }
