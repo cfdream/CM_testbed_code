@@ -100,7 +100,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         if (!(GET_NET_IDENTITY(packet.srcip) ^ net_identity)) {
             return;
         }
-        printf("pkt net identity:%u, xor_net_identity:%u\n", GET_NET_IDENTITY(packet.srcip), GET_NET_IDENTITY(packet.srcip)^net_identity);
+        //printf("pkt net identity:%u, xor_net_identity:%u\n", GET_NET_IDENTITY(packet.srcip), GET_NET_IDENTITY(packet.srcip)^net_identity);
 
         /*write to the FIFO of related sender*/
         writeConditionToFIFO(
