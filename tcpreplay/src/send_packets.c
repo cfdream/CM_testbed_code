@@ -702,12 +702,13 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
 SEND_NOW:
         dbgx(2, "Sending packet #" COUNTER_SPEC, packetnum);
 
+        /* record the flow's <5-tuple flow identity, packet seqid, packet length> in hashmap */
+        /* SampleAtHost */
+        cm_handle_ipv4_packet(&pkthdr, &pktdata, datalink);
+
         /* write packet out on network */
         if (sendpacket(sp, pktdata, pktlen, &pkthdr) < (int)pktlen)
             warnx("Unable to send packet: %s", sendpacket_geterr(sp));
-
-        /* record the flow's <5-tuple flow identity, packet seqid, packet length> in hashmap */
-        cm_handle_ipv4_packet(&pkthdr, &pktdata, datalink);
 
         /* check whether to send out condition information 
          * comment as the condition sender is in condition_sender.c, which is based on time, not #pkt sent
