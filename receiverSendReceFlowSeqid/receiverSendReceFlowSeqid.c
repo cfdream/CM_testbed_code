@@ -68,7 +68,6 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         return;
     }
 
-
     //ethernet
 	ethernet = (struct tcpr_ethernet_hdr *)(packet_buffer);
 	
@@ -79,12 +78,6 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 		printf("   * Invalid IP header length: %u bytes\n", size_ip);
 		return;
 	}
-
-    /*filter packets that sent out from this host*/
-    //printf("pkt net identity:%u, xor_net_identity:%u\n", GET_NET_IDENTITY(packet.srcip), GET_NET_IDENTITY(packet.srcip)^net_identity);
-    if (!(GET_NET_IDENTITY(packet.srcip) ^ net_identity)) {
-        return;
-    }
 
     if (ip->ip_p == 0x06) {
         //TCP header
@@ -103,11 +96,17 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
         packet.protocol = ip->ip_p;
         packet.rece_seqid = ntohl(tcp->th_seq);
 
+        /*filter packets that sent out from this host*/
+        if (!(GET_NET_IDENTITY(packet.srcip) ^ net_identity)) {
+            return;
+        }
+        printf("pkt net identity:%u, xor_net_identity:%u\n", GET_NET_IDENTITY(packet.srcip), GET_NET_IDENTITY(packet.srcip)^net_identity);
+
         /*write to the FIFO of related sender*/
         writeConditionToFIFO(
             get_sender_fifo_handler(packet.srcip), 
             &packet);
-        
+
         /*
         if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
             packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
