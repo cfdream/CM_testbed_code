@@ -15,7 +15,7 @@ from test.multipoll import monitorFiles
 class SystemManager():
     def setup(self):
         self.topo = b4_topo_mininet.B4Topo()
-        self.net = Mininet(self.topo)
+        self.net = Mininet(self.topo, link=TCLink)
         self.net.start()
         print "Dumping host connections"
         dumpNodeConnections(self.net.hosts)

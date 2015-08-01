@@ -9,6 +9,11 @@ topology enables one to pass in '--topo=mytopo' from the command line.
 """
 
 from mininet.topo import Topo
+from mininet.net import Mininet
+from mininet.node import CPULimitedHost
+from mininet.link import TCLink
+from mininet.util import dumpNodeConnections
+from mininet.log import setLogLevel
 
 class B4Topo( Topo ):
     "Simple topology example."
@@ -73,7 +78,7 @@ class B4Topo( Topo ):
         self.addLink(s6, s7)
         self.addLink(s6, s8)
         self.addLink(s7, s8)
-        self.addLink(s7, s11)
+        self.addLink(s7, s11, loss=40)
         self.addLink(s8, s10)
         self.addLink(s9, s10)
         self.addLink(s9, s11)

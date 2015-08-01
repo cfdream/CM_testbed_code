@@ -28,9 +28,9 @@ class SenderManger():
             h.cmd( 'echo >', outfiles[ h ] )
             h.cmd( 'echo >', errfiles[ h ] )
             # Start pings
-            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=100 -i {0}-eth0   /home/ericsson/workspace/caida_data/{1}.pcap' .format(h.name, h.name),
-            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=100 -i {0}-eth0   /home/ericsson/workspace/caida_data/s{1}_head1w.pcap' .format(h.name, i),
-            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   /home/ericsson/workspace/CM_testbed_code/pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
+            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=100 -i {0}-eth0   ../../caida_data/{1}.pcap' .format(h.name, h.name),
+            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=5 -i {0}-eth0   ../../caida_data/s{1}_head1w.pcap' .format(h.name, i),
+            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   ../pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
                        '>', outfiles[ h ],
                        '2>', errfiles[ h ],
                        '&' )
