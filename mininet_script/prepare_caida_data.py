@@ -40,7 +40,7 @@ class CaidaData():
 
             #generate pcap file from the concatated file
             pcap_file="h{0}.pcap" .format(id_host)
-            pcap_cmd="/home/ericsson/workspace/CM_testbed_code/pcapFileGenerator/pcapFileGenerator {0} {1} {2}" .format(id_host, concated_file, pcap_file)
+            pcap_cmd="../CM_testbed_code/pcapFileGenerator/pcapFileGenerator {0} {1} {2}" .format(id_host, concated_file, pcap_file)
             commands.getstatusoutput(pcap_cmd)
             print "SUCC: {0}" .format(pcap_cmd)
 
