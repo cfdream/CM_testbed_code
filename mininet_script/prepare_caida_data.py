@@ -11,7 +11,7 @@ class CaidaData():
 
     def process(self, s_host_idx, e_host_idx):
         fileno = CaidaData.START_FILE_NO-CaidaData.DELTA_FILE_NO+(s_host_idx-1)*CaidaData.NUM_FILE_PER_HOST
-        for id_host in range(1, CaidaData.NUM_HOSTS+1):
+        for id_host in range(s_host_idx, e_host_idx+1):
             #for each host
             filenames=[]
             for id_file in range(1, CaidaData.NUM_FILE_PER_HOST+1):
