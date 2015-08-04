@@ -11,6 +11,9 @@
 * @brief 
 */
 typedef struct data_warehouse_s {
+    /* packet sender mutex */
+    pthread_mutex_t packet_send_mutex;
+
     /*This is the hashmap recording sent pkts for each flow, only one buffer*/
     /* 5-tuple flow */
     hashtable_vl_t* flow_recePktList_map;

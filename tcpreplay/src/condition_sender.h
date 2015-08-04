@@ -12,8 +12,6 @@
 #include "../../public_lib/condition.h"
 #include "data_warehouse.h"
 
-extern char g_pkt_buffer[15000];   //1.5kb
-
 extern tcpreplay_t* g_tcpreplay_ctx;
 
 int send_udp_condition_pkt(condition_t* p_condition);

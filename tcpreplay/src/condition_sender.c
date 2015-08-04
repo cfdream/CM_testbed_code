@@ -1,6 +1,5 @@
 #include <unistd.h>
 #include <config.h>
-#include <pthread.h>
 #include "tcpreplay_api.h"
 #include "condition_sender.h"
 #include "../public_lib/time_library.h"
@@ -27,7 +26,12 @@ int send_udp_condition_pkt(condition_t* p_condition) {
     struct tcpr_ipv4_hdr ip_header;
     struct tcpr_ethernet_hdr ethernet_header;
     int pkt_len;
-    
+   
+    if (g_tcpreplay_ctx == NULL || g_tcpreplay_ctx->intf1 == NULL) {
+        printf("g_tcpreplay_ctx or intf1 NULL");
+        return -1;
+    } 
+
     assert(p_condition != NULL);
     assert(g_tcpreplay_ctx != NULL);
     
@@ -75,7 +79,7 @@ void* send_condition_to_network(void* param_ptr) {
     uint64_t sec;
 
     while (1) {
-        /* postpone till the next timestamp that condition should be sent */
+        // postpone till the next timestamp that condition should be sent 
         uint64_t current_sec = get_next_interval_start(CM_CONDITION_TIME_INTERVAL);
         printf("-----start send_condition_to_network, current_sec:%lu-----\n", current_sec);
 
@@ -84,18 +88,22 @@ void* send_condition_to_network(void* param_ptr) {
         hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
         entry_kfs_vi_t ret_entry;
         condition_t condition;
+        //lock to send all condition packets
+        pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
             //get one target flow, send to the network
             condition.srcip = ret_entry.key->srcip;
             send_udp_condition_pkt(&condition);
             ++condition_pkt_num;
-            printf("condition srcip:%lu\n", condition.srcip);
+            printf("condition srcip:%u\n", condition.srcip);
         }
+        pthread_mutex_unlock(&data_warehouse.packet_send_mutex);
 
         clock_gettime(CLOCK_REALTIME, &spec);
         sec = (intmax_t)((time_t)spec.tv_sec);
 
         printf("-----end send_udp_condition_pkt, current_sec:%lu, condition_pkts_sent:%d-----\n", sec, condition_pkt_num);
     }
+
     return NULL;
 }

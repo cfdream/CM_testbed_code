@@ -29,7 +29,14 @@ void* flow_infor_update(void* param_ptr) {
         //printf("read:%u-%u\n", recv_2_send_proto.srcip, recv_2_send_proto.rece_seqid);
 
         //get the key of the 5-tuple flow
-        flow_t* p_flow = (flow_t*)(&recv_2_send_proto);
+        //flow_t* p_flow = (flow_t*)(&recv_2_send_proto);
+        flow_t flow;
+        flow.srcip = recv_2_send_proto.srcip;
+        flow.dstip = recv_2_send_proto.dstip;
+        flow.src_port = recv_2_send_proto.src_port;
+        flow.dst_port = recv_2_send_proto.dst_port;
+        flow.protocol = recv_2_send_proto.protocol;
+        flow_t* p_flow = &flow;
 
         //get <rece volume, loss volume> for the flow
         hashtable_vl_t* flow_recePktList_map = data_warehouse_get_flow_recePktList_map();

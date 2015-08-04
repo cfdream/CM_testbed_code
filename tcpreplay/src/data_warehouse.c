@@ -1,4 +1,5 @@
 #include "data_warehouse.h"
+#include <pthread.h>
 
 /**
 * @brief init the data warehouse, at the beginning, only the first buffer should be initiliazed
@@ -6,6 +7,8 @@
 * @return 0-succ -1:fail
 */
 int data_warehouse_init() {
+    pthread_mutex_init(&data_warehouse.packet_send_mutex, NULL);
+
     // create flow_recePktList_map
     data_warehouse.flow_recePktList_map = ht_vl_create();
     if (data_warehouse.flow_recePktList_map == NULL) {

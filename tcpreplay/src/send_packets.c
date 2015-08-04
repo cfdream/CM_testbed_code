@@ -706,9 +706,11 @@ SEND_NOW:
         /* SampleAtHost */
         cm_handle_ipv4_packet(&pkthdr, &pktdata, datalink);
 
+        pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         /* write packet out on network */
         if (sendpacket(sp, pktdata, pktlen, &pkthdr) < (int)pktlen)
             warnx("Unable to send packet: %s", sendpacket_geterr(sp));
+        pthread_mutex_unlock(&data_warehouse.packet_send_mutex);
 
         /* check whether to send out condition information 
          * comment as the condition sender is in condition_sender.c, which is based on time, not #pkt sent
@@ -717,6 +719,9 @@ SEND_NOW:
             cm_send_condition_to_network();
         }
         */
+        if (ctx->stats.flow_packets % NUM_PKTS_TO_DEBUG == 0) {
+            printf("pkt sent:%lu\n", ctx->stats.flow_packets);
+        }
 
         /* mark the time when we sent the last packet */
         if (!do_not_timestamp && !skip_length)
