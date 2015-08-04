@@ -90,3 +90,4 @@ pcapsend
 # ctags file
 tags
 src/tags
+cscope.*
