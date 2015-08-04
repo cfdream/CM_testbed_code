@@ -631,9 +631,7 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
 
             /* sometimes we should not send the packet */
             if (sp == TCPR_DIR_NOSEND)
-			{
                 continue;
-			}
         }
 
 #if defined TCPREPLAY && defined TCPREPLAY_EDIT
