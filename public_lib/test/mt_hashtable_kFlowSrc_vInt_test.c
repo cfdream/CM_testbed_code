@@ -105,15 +105,20 @@ int main( int argc, char **argv ) {
     pthread_join(set_thread1, NULL);
     pthread_join(next_thread1, NULL);
 */
+	//set
     flow_s flow;
     flow.srcip = 1;
     flow.dstip = 1;
     ht_kfs_vi_set(hashtable, &flow, 1);
     printf("srcip:1, v:%d\n", ht_kfs_vi_get(hashtable, &flow));
+    flow.srcip = 1 + HASH_MAP_SIZE;
+    flow.dstip = 1 + HASH_MAP_SIZE;
+    ht_kfs_vi_set(hashtable, &flow, 1 + HASH_MAP_SIZE);
+    printf("srcip:1+HASH_MAP_SIZE, v:%d\n", ht_kfs_vi_get(hashtable, &flow));
     flow.srcip = 2;
     flow.dstip = 2;
     ht_kfs_vi_set(hashtable, &flow, 2);
-    printf("srcip:3, v:%d\n", ht_kfs_vi_get(hashtable, &flow));
+    printf("srcip:2, v:%d\n", ht_kfs_vi_get(hashtable, &flow));
     flow.srcip = 3;
     flow.dstip = 3;
     ht_kfs_vi_set(hashtable, &flow, 3);
@@ -123,6 +128,22 @@ int main( int argc, char **argv ) {
     flow.srcip = 3;
     flow.dstip = 4;
     ht_kfs_vi_set(hashtable, &flow, 3);
+    printf("srcip:3, v:%d\n", ht_kfs_vi_get(hashtable, &flow));
+
+	//next + del
+    entry_kfs_vi_t entry;
+	if (ht_kfs_vi_next(hashtable, &entry) == 0) {
+		printf("next_srcip:%u, next_v:%d\n", entry.key->srcip, entry.value);
+		//del cur, next node
+		flow.srcip = 1;
+		ht_kfs_vi_del(hashtable, &flow);
+		flow.srcip = 1+HASH_MAP_SIZE;
+		ht_kfs_vi_del(hashtable, &flow);
+		if (ht_kfs_vi_next(hashtable, &entry) == 0) {
+			printf("next_srcip:%u, next_v:%d\n", entry.key->srcip, entry.value);
+		}
+	}
+
     int i = 1;
     for (i = 1; i < 65536*3; i++) {
         flow.srcip = i;
@@ -130,7 +151,6 @@ int main( int argc, char **argv ) {
         ht_kfs_vi_set(hashtable, &flow, i);
     }
 
-    entry_kfs_vi_t entry;
     int cnt =0;
     while (ht_kfs_vi_next(hashtable, &entry) == 0) {
         if (entry.value == 196607) {
