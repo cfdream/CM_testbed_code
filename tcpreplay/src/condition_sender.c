@@ -89,7 +89,7 @@ void* send_condition_to_network(void* param_ptr) {
             condition.srcip = ret_entry.key->srcip;
             send_udp_condition_pkt(&condition);
             ++condition_pkt_num;
-            printf("condition srcip:%lu\n", condition.srcip);
+            printf("condition srcip:%u\n", condition.srcip);
         }
 
         clock_gettime(CLOCK_REALTIME, &spec);
