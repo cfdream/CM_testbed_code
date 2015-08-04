@@ -218,6 +218,10 @@ void ht_vi_del( hashtable_vi_t *hashtable, flow_s *key) {
         } else {
             last->next = next->next;
         }
+		/* update for ht_vi_next(), if next_current_bin is deleted, update it to next node */
+		if (next == hashtable->next_last_visit_entry) {
+			hashtable->next_last_visit_entry = next->next;
+		}		
         free(next->key);
         free(next);
 	}
