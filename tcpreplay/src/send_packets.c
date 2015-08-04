@@ -631,7 +631,9 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
 
             /* sometimes we should not send the packet */
             if (sp == TCPR_DIR_NOSEND)
+			{
                 continue;
+			}
         }
 
 #if defined TCPREPLAY && defined TCPREPLAY_EDIT
@@ -720,7 +722,7 @@ SEND_NOW:
         }
         */
         if (ctx->stats.flow_packets % NUM_PKTS_TO_DEBUG == 0) {
-            printf("pkt sent:%lu\n", ctx->stats.flow_packets);
+            printf("pkt sent:%llu\n", ctx->stats.flow_packets);
         }
 
         /* mark the time when we sent the last packet */

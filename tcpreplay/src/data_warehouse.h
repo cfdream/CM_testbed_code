@@ -13,6 +13,8 @@
 typedef struct data_warehouse_s {
     /* packet sender mutex */
     pthread_mutex_t packet_send_mutex;
+	/* data_warehouse operate mutex */
+	pthread_mutex_t data_warehouse_mutex;
 
     /*This is the hashmap recording sent pkts for each flow, only one buffer*/
     /* 5-tuple flow */

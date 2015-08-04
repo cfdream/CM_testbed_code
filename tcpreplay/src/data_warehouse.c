@@ -8,6 +8,7 @@
 */
 int data_warehouse_init() {
     pthread_mutex_init(&data_warehouse.packet_send_mutex, NULL);
+    pthread_mutex_init(&data_warehouse.data_warehouse_mutex, NULL);
 
     // create flow_recePktList_map
     data_warehouse.flow_recePktList_map = ht_vl_create();

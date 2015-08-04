@@ -81,15 +81,19 @@ void* send_condition_to_network(void* param_ptr) {
     while (1) {
         // postpone till the next timestamp that condition should be sent 
         uint64_t current_sec = get_next_interval_start(CM_CONDITION_TIME_INTERVAL);
-        printf("-----start send_condition_to_network, current_sec:%lu-----\n", current_sec);
-
         int condition_pkt_num = 0;
+
+        //lock to send all condition packets
+        pthread_mutex_lock(&data_warehouse.packet_send_mutex);
+		//lock the data_warehouse.data_warehouse_mutex
+		//in order to avoid IntervalRotator thread destory the data
+        pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
+
+        printf("-----start send_condition_to_network, current_sec:%lu-----\n", current_sec);
 
         hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
         entry_kfs_vi_t ret_entry;
         condition_t condition;
-        //lock to send all condition packets
-        pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
             //get one target flow, send to the network
             condition.srcip = ret_entry.key->srcip;
@@ -97,11 +101,11 @@ void* send_condition_to_network(void* param_ptr) {
             ++condition_pkt_num;
             printf("condition srcip:%u\n", condition.srcip);
         }
+        pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);
         pthread_mutex_unlock(&data_warehouse.packet_send_mutex);
 
         clock_gettime(CLOCK_REALTIME, &spec);
         sec = (intmax_t)((time_t)spec.tv_sec);
-
         printf("-----end send_udp_condition_pkt, current_sec:%lu, condition_pkts_sent:%d-----\n", sec, condition_pkt_num);
     }
 

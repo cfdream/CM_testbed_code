@@ -57,6 +57,12 @@ void* rotate_interval(void* param_ptr) {
         /* postpone till switching to next time interval */
         uint64_t current_sec = get_next_interval_start(CM_TIME_INTERVAL);
 
+		//lock the data_warehouse.data_warehouse_mutex
+		//in order to avoid IntervalRotator thread destory the data
+        pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
+
+        printf("=====start rotate_interval, current_sec:%lu=====\n", current_sec);
+
         //1. rotate the data warehouse buffer
         data_ware_rotate_buffer();
 
@@ -65,6 +71,13 @@ void* rotate_interval(void* param_ptr) {
 
         //3. reset the idel buffer of data warehouse
         data_warehouse_reset_noactive_buf();
+
+        pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);
+
+		struct timespec spec;
+        clock_gettime(CLOCK_REALTIME, &spec);
+        uint64_t sec = (intmax_t)((time_t)spec.tv_sec);
+        printf("=====end rotate_interval, current_sec:%lu=====\n", sec);
     }
 
     //close file
