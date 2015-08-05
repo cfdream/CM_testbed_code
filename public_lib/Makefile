@@ -4,7 +4,7 @@ CFLAGS=-I$(IDIR)
 
 ODIR=obj
 LDIR =../lib
-LIBs=-lpthread libpcap-1.7.3/libpcap.a
+LIBs=-lpthread libpcap-1.7.3/libpcap.a -ltcmalloc
 
 #_DEPS = hellomake.h
 #DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))

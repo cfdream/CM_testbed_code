@@ -57,6 +57,8 @@ hashtable_kfs_vi_t *ht_kfs_vi_create(void);
 
 void ht_kfs_vi_destory( hashtable_kfs_vi_t *hashtable );
 
+void ht_kfs_vi_refresh( hashtable_kfs_vi_t *hashtable );
+
 /* Hash a string for a particular hash table. */
 int ht_kfs_vi_hash( hashtable_kfs_vi_t *hashtable, flow_src_t *key );
 
