@@ -9,10 +9,11 @@ def analyze(file_name):
             #21600000003,1035926474,752121276,80,49434,6,1460
             if items[5] == 'null':
                 continue;
-            timestamp = long(items[0])
+            #timestamp = long(items[0])
             srcip = int(items[1])
             dstip = int(items[2])
             length = int(items[6]) 
+            length += 58
             if srcip not in srcip_volume_map:
                 srcip_volume_map[srcip] = 0
             if dstip not in dstip_volume_map:
@@ -25,7 +26,7 @@ def analyze(file_name):
     
     oFile1 = open("srcip_volume_map.txt", 'w')
     srcip_volume_list = srcip_volume_map.iteritems()
-    for k, v in sort(srcip_volume_list, key=lambda pair: pair[1], reverse=True):
+    for k, v in sorted(srcip_volume_list, key=lambda pair: pair[1], reverse=True):
         #print(k,v)
         oFile1.write("{0}\t{1}\n" .format(k, v))
     oFile1.close()
