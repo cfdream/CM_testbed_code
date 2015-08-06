@@ -25,6 +25,8 @@ int sample_packet(packet_t* p_packet) {
     //rand number
     rand_num = rand() % RAND_MOD_NUMBER + 1;
 
+	//printf("pkt_len:%d, pkt_sample_rate:%f, pkt_sample_num:%d, rand_num:%d\n", p_packet->len, pkt_sample_rate, pkt_sample_num, rand_num);
+            
     if (rand_num <= pkt_sample_num) {
         //mark the flow as sampled
         hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();

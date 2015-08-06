@@ -423,11 +423,14 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
             ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, pkthdr->caplen);
 
             /* sample the packet at the sender side */
-            if (sample_packet(&packet)) {
+            int sampled = sample_packet(&packet);
+            if (sampled) {
                 //tag one VLAN bit to mark the packet as sampled
                 tag_packet_as_sampled(packet_buf, datalink);
             }
-            
+
+            //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
+
             if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
                 packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
                 char src_str[100];

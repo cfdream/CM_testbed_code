@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "data_warehouse.h"
-#include "sample_model.h"
 #include "../../public_lib/flow.h"
+#include "../../public_lib/sample_model.h"
 
 #define RAND_MOD_NUMBER 1000000
 

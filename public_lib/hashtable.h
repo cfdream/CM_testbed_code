@@ -2,6 +2,7 @@
 #define __HASHMAP_H__
 
 #define HASH_MAP_SIZE 65535
+#define HASH_MAP_MUTEX_SIZE 100
 
 #include <stdlib.h>
 #include <stdio.h>

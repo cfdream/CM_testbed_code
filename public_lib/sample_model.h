@@ -2,11 +2,9 @@
 #define SAMPLE_MODEL_H
 
 #include <stdbool.h>
-#include "../../public_lib/target_flow_setting.h"
-#include "../../public_lib/flow.h"
-
-#define OVER_SAMPLING_RATIO 4
-#define DEFAULT_BYTE_SAMPLE_RATE (1.0 / TARGET_FLOW_VOLUME * OVER_SAMPLING_RATIO)
+#include "target_flow_setting.h"
+#include "sample_setting.h"
+#include "flow.h"
 
 //traditional sample and hold
 double pkt_sample_rate_trad(flow_src_t* flow_key, packet_t* p_pkt);

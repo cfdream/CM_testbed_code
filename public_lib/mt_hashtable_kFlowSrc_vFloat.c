@@ -133,8 +133,9 @@ KEY_FLOAT_TYPE ht_kfs_vf_get( hashtable_kfs_vf_t *hashtable, flow_src_t* key ) {
 
 	} else {
         /* release mutex */
+        KEY_FLOAT_TYPE value = pair->value;
         pthread_mutex_unlock(&hashtable->mutexs[bin]);
-		return pair->value;
+		return value;
 	}
 }
 
