@@ -77,6 +77,19 @@ int send_udp_condition_pkt(condition_t* p_condition) {
 void* send_condition_to_network(void* param_ptr) {
     struct timespec spec;
     uint64_t sec;
+    condition_t condition;
+
+    /* debug */
+    /* condition packet */
+    /*
+    int i = 0;
+    for (; i < 500; i++) {
+        condition.srcip = 0x0a000001;
+        send_udp_condition_pkt(&condition);
+    }
+    */
+    /* end debug */
+
 
     while (1) {
         // postpone till the next timestamp that condition should be sent 
@@ -93,7 +106,6 @@ void* send_condition_to_network(void* param_ptr) {
 
         hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
         entry_kfs_vi_t ret_entry;
-        condition_t condition;
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
             //get one target flow, send to the network
             condition.srcip = ret_entry.key->srcip;

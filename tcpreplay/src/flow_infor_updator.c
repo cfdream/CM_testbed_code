@@ -23,6 +23,8 @@ void* flow_infor_update(void* param_ptr) {
     printf("SUCC-openFIFO:%s\n", fifo_fname);
 
     //1. read fifo
+    int total_lost_pkt_num = 0;
+    int pre_print_lost_pkt_num_times = 0;
     recv_2_send_proto_t recv_2_send_proto;
     while(readConditionFromFIFO(fifo_handler, &recv_2_send_proto) == 0)
     {
@@ -41,6 +43,10 @@ void* flow_infor_update(void* param_ptr) {
         //get <rece volume, loss volume> for the flow
         hashtable_vl_t* flow_recePktList_map = data_warehouse_get_flow_recePktList_map();
         receV_lostV_t receV_lostV = ht_vl_get_rece_lost_volume(flow_recePktList_map, p_flow, recv_2_send_proto.rece_seqid);
+        if (receV_lostV.lost_pkt_num > 100) {
+            printf("one time lost pkt num:%d, %u,%u,%u,%u\n", receV_lostV.lost_pkt_num, p_flow->srcip, p_flow->dstip, p_flow->src_port, p_flow->dst_port);
+        }
+        total_lost_pkt_num += receV_lostV.lost_pkt_num;
 
         hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
         hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
@@ -93,6 +99,12 @@ void* flow_infor_update(void* param_ptr) {
                     src_str, dst_str, 
                     recv_2_send_proto.src_port, recv_2_send_proto.dst_port, recv_2_send_proto.rece_seqid,
                     volume, loss_volume, loss_rate);
+            }
+            if (ENABLE_DEBUG && 
+                (total_lost_pkt_num > pre_print_lost_pkt_num_times*NUM_LOST_PKTS_TO_DEBUG) &&
+                (total_lost_pkt_num / NUM_LOST_PKTS_TO_DEBUG != pre_print_lost_pkt_num_times)) {
+                pre_print_lost_pkt_num_times= total_lost_pkt_num / NUM_LOST_PKTS_TO_DEBUG;
+                printf("lost packets:%d\n", total_lost_pkt_num);
             }
         }
     }
