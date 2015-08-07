@@ -9,7 +9,7 @@ int flow_src_already_sampled(flow_src_t* p_flow_src) {
     return 0;
 }
 
-int sample_packet(packet_t* p_packet) {
+int sample_packet(packet_t* p_packet, int total_pkt_len) {
     double pkt_sample_rate;
     int pkt_sample_num;
     int rand_num;
@@ -20,7 +20,7 @@ int sample_packet(packet_t* p_packet) {
         return 1;
     }
     //packet sample rate
-    pkt_sample_rate = pkt_sample_rate_trad(p_flow_src, p_packet);
+    pkt_sample_rate = pkt_sample_rate_trad(total_pkt_len);
     pkt_sample_num = (int)(pkt_sample_rate * RAND_MOD_NUMBER);
     //rand number
     rand_num = rand() % RAND_MOD_NUMBER + 1;

@@ -365,7 +365,7 @@ fast_edit_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata,
 * @param datalink
 */
 static inline void
-cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink)
+cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pkt_len, int datalink)
 {
     uint16_t ether_type;
     vlan_hdr_t *vlan_hdr;
@@ -423,7 +423,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int datalink
             ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, pkthdr->caplen);
 
             /* sample the packet at the sender side */
-            int sampled = sample_packet(&packet);
+            int sampled = sample_packet(&packet, total_pkt_len);
             if (sampled) {
                 //tag one VLAN bit to mark the packet as sampled
                 tag_packet_as_sampled(packet_buf, datalink);
@@ -618,6 +618,7 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
         }
         */
         /* just use 4 bytes in the payload to record the total len of the packet(including the packet header) */
+        int total_pkt_len = pkthdr.len;
         memcpy(g_pkt_temporary_buffer, pktdata, pkthdr.caplen);
         memcpy(g_pkt_temporary_buffer+pkthdr.caplen, &pkthdr.len, sizeof(pkthdr.len));
         pktdata = g_pkt_temporary_buffer;
@@ -716,7 +717,7 @@ SEND_NOW:
 
         /* record the flow's <5-tuple flow identity, packet seqid, packet length> in hashmap */
         /* SampleAtHost */
-        cm_handle_ipv4_packet(&pkthdr, &pktdata, datalink);
+        cm_handle_ipv4_packet(&pkthdr, &pktdata, total_pkt_len, datalink);
 
         pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         /* write packet out on network */
@@ -931,7 +932,6 @@ send_dual_packets(tcpreplay_t *ctx, pcap_t *pcap1, int cache_file_idx1, pcap_t *
             /* edit packet to ensure every pass is unique */
             fast_edit_packet(pkthdr_ptr, &pktdata, ctx->iteration,
                     options->file_cache[cache_file_idx].cached, datalink);
-        cm_handle_ipv4_packet(pkthdr_ptr, &pktdata, datalink);
 
         /* update flow stats */
         if (options->flow_stats && !options->file_cache[cache_file_idx].cached)

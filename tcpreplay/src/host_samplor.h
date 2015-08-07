@@ -11,6 +11,6 @@
 
 int flow_src_already_sampled(flow_src_t* p_flow_src);
 
-int sample_packet(packet_t* p_packet);
+int sample_packet(packet_t* p_packet, int total_pkt_len);
 
 #endif
