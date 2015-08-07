@@ -15,9 +15,10 @@
 #include "../public_lib/debug_config.h"
 #include "../public_lib/ip_prefix_setting.h"
 
-pcap_t *handle;			/* Session handle */
+pcap_t *handle;            /* Session handle */
 uint32_t net_identity;
 uint32_t g_received_pkts = 0;
+uint32_t g_received_condition_pkts = 0;
 
 /*
  * Function returns the Layer 3 protocol type of the given packet, or TCPEDIT_ERROR on error
@@ -49,17 +50,17 @@ get_ethernet_header_len(const u_char *packet)
 }
 
 void got_packet(u_char *args, const struct pcap_pkthdr *header,
-	const u_char *packet_buffer) 
+    const u_char *packet_buffer) 
 {
     struct tcpr_tcp_hdr *tcp;
     struct tcpr_ipv4_hdr *ip;
     struct tcpr_ethernet_hdr *ethernet;
 
-	const char *payload; /* Packet payload */
+    const char *payload; /* Packet payload */
     recv_2_send_proto_t packet;
 
-	u_int size_ip;
-	u_int size_tcp;
+    u_int size_ip;
+    u_int size_tcp;
     u_char protocol;
     u_int seqid;
     int ethernet_header_len = get_ethernet_header_len(packet_buffer);
@@ -69,15 +70,15 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
     }
 
     //ethernet
-	ethernet = (struct tcpr_ethernet_hdr *)(packet_buffer);
-	
+    ethernet = (struct tcpr_ethernet_hdr *)(packet_buffer);
+    
     //IP header
     ip = (struct tcpr_ipv4_hdr *)(packet_buffer + ethernet_header_len);
-	size_ip = (ip->ip_hl)*4;
-	if (size_ip < 20) {
-		printf("   * Invalid IP header length: %u bytes\n", size_ip);
-		return;
-	}
+    size_ip = (ip->ip_hl)*4;
+    if (size_ip < 20) {
+        printf("   * Invalid IP header length: %u bytes\n", size_ip);
+        return;
+    }
 
     if (ip->ip_p == 0x06) {
         //TCP header
@@ -126,6 +127,11 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
             printf("rece pkts:%u\n", g_received_pkts);
         }
     } else if (ip->ip_p == 0x11) {
+        ++g_received_condition_pkts;
+        if (!(g_received_condition_pkts % NUM_CONDITION_PKTS_TO_DEBUG)) {
+            printf("rece condition pkts:%u\n", g_received_condition_pkts);
+        }
+        /*
         if (ENABLE_DEBUG) {
             //UDP header
             char src_str[100];
@@ -134,6 +140,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
             memcpy(src_str, temp, strlen(temp));
             printf("udp pkt, srcip-%s\n", src_str);
         }
+        */
     } else {
         //other protocols
         printf("other protocol pkt\n");
@@ -141,18 +148,18 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 }
 
 int setup() {
-   char *dev;			/* The device to sniff on */
-   char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
-   struct bpf_program fp;		/* The compiled filter */
-   //char filter_exp[] = "port 23";	/* The filter expression */
-   //char filter_exp[] = "tcp";	/* The filter expression */
+   char *dev;            /* The device to sniff on */
+   char errbuf[PCAP_ERRBUF_SIZE];    /* Error string */
+   struct bpf_program fp;        /* The compiled filter */
+   //char filter_exp[] = "port 23";    /* The filter expression */
+   //char filter_exp[] = "tcp";    /* The filter expression */
    //only keep tcp packets, and dst (included in generated pcap files for senders)
-   //char filter_exp[] = "tcp and ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
-   char filter_exp[] = "ether dst 7c:7a:91:86:b3:e8";	/* The filter expression */
+   //char filter_exp[] = "tcp and ether dst 7c:7a:91:86:b3:e8";    /* The filter expression */
+   char filter_exp[] = "ether dst 7c:7a:91:86:b3:e8";    /* The filter expression */
    //char filter_exp[] = "";
-   bpf_u_int32 mask;		/* Our netmask */
-   bpf_u_int32 net;		/* Our IP */
-   struct pcap_pkthdr header;	/* The header that pcap gives us */
+   bpf_u_int32 mask;        /* Our netmask */
+   bpf_u_int32 net;        /* Our IP */
+   struct pcap_pkthdr header;    /* The header that pcap gives us */
 
    /* Define the device */
    dev = pcap_lookupdev(errbuf);

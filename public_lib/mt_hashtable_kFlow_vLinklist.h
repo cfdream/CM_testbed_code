@@ -24,6 +24,7 @@
 typedef struct receV_lostV_s {
     uint32_t received_volume;
     uint32_t lost_volume;
+    uint32_t lost_pkt_num;
 } receV_lostV_t;
 
 typedef struct pkt_volume_s {

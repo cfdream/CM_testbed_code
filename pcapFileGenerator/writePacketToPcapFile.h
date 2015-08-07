@@ -10,6 +10,7 @@
 hashtable_kf_t *flow_seqid_hashmap;
 pcap_t *pd;
 pcap_dumper_t *pdumper;
+FILE* fp;
 
 u_int get_seqid_of_flow(packet_s* p_packet) {
     if (ht_kf_get(flow_seqid_hashmap, p_packet) < 0) {
@@ -57,7 +58,7 @@ int generate_one_packet(packet_s* p_packet, char* packet_buff) {
     //ip header
     ip_header.ip_v = 0x4;
     ip_header.ip_hl = 0x5;
-    ip_header.ip_len = htons(payload_len + sizeof(tcp_header) + sizeof(ip_header));
+    ip_header.ip_len = htons(sizeof(tcp_header) + sizeof(ip_header));
     ip_header.ip_off = 0x4000;
     ip_header.ip_ttl = 0x40;
     ip_header.ip_p = 0x06;  //TCP-0x06, UDP-0x11
@@ -101,6 +102,10 @@ int init_generate_pcpa_file(const char* out_pcap_fname) {
     if (pdumper == NULL) {
         return -1;
     }
+    fp = fopen("trace.csv", "w");
+    if (fp == NULL) {
+        return -1;
+    }
     return 0;
 }
 
@@ -109,6 +114,7 @@ void close_generate_pcpa_file() {
 
     pcap_close(pd);
     pcap_dump_close(pdumper);
+    fclose(fp);
 }
 
 void generate_one_pcap_pkt(packet_s* p_packet) {
@@ -126,7 +132,9 @@ void generate_one_pcap_pkt(packet_s* p_packet) {
     pcap_header.len = pkt_pcap_len + p_packet->len;
 
     pcap_dump(pdumper, &pcap_header, packet_buffer);
-    
+   
+    fprintf(fp, ",%u,%u,%u,%u,%d,%d\n", p_packet->srcip, p_packet->dstip, p_packet->src_port, p_packet->dst_port, p_packet->protocol, p_packet->len);
+
     free(packet_buffer);
 }
 

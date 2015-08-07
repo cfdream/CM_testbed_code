@@ -9,5 +9,6 @@
 
 #define NUM_PKTS_TO_DEBUG 10000
 #define NUM_CONDITION_PKTS_TO_DEBUG 100
+#define NUM_LOST_PKTS_TO_DEBUG 50  //just for tcpreplay
 
 #endif

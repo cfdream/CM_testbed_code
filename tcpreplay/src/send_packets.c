@@ -609,12 +609,21 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
         /* add payload in the fly.
          * reallocate memory to pktdata if pkthdr_ptr->len > pkthdr_ptr->caplen
          */
+        /*
         if (pkthdr.len > pkthdr.caplen) {
             memcpy(g_pkt_temporary_buffer, pktdata, pkthdr.caplen);
             memset(g_pkt_temporary_buffer+pkthdr.caplen, '\0', pkthdr.len - pkthdr.caplen);
             pktdata = g_pkt_temporary_buffer;
             pkthdr.caplen = pkthdr.len;
         }
+        */
+        /* just use 4 bytes in the payload to record the total len of the packet(including the packet header) */
+        memcpy(g_pkt_temporary_buffer, pktdata, pkthdr.caplen);
+        memcpy(g_pkt_temporary_buffer+pkthdr.caplen, &pkthdr.len, sizeof(pkthdr.len));
+        pktdata = g_pkt_temporary_buffer;
+        //printf("len:%d, caplen:%d, payload_content:%d\n", pkthdr.len, pkthdr.caplen, *(int*)(pktdata+pkthdr.caplen));
+        pkthdr.caplen += sizeof(pkthdr.len);
+        pkthdr.len = pkthdr.caplen;
 
 #if defined TCPREPLAY || defined TCPREPLAY_EDIT
         /* do we use the snaplen (caplen) or the "actual" packet len? */

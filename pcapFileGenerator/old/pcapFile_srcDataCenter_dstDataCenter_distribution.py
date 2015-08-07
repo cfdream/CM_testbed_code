@@ -3,13 +3,14 @@ def analyze(file_name):
     iFile = open(file_name, 'r')
     srcip_volume_map = {}
     dstip_volume_map = {}
+    dstip_pktnum_map = {}
     for line in iFile:
         items=line.split(',')
         if len(items) == 7:
             #21600000003,1035926474,752121276,80,49434,6,1460
             if items[5] == 'null':
                 continue;
-            timestamp = long(items[0])
+            #timestamp = long(items[0])
             srcip = int(items[1])
             srcip &= 0xFF000000
             srcip = srcip>>24
@@ -21,9 +22,12 @@ def analyze(file_name):
                 srcip_volume_map[srcip] = 0
             if dstip not in dstip_volume_map:
                 dstip_volume_map[dstip] = 0
+            if dstip not in dstip_pktnum_map:
+                dstip_pktnum_map[dstip] = 0
 
             srcip_volume_map[srcip] += length
             dstip_volume_map[dstip] += length
+            dstip_pktnum_map[dstip] += 1 
             #print(dstip, srcip, dstip_volume_map[dstip])
     
     oFile1 = open("srcip_volume_map.txt", 'w')
@@ -33,7 +37,7 @@ def analyze(file_name):
         oFile1.write("{0}\t{1}\n" .format(k, v))
     for k, v in dstip_volume_map.iteritems():
         #print(k,v)
-        oFile2.write("{0}\t{1}\n" .format(k, v))
+        oFile2.write("{0}\t{1}\t{2}\n" .format(k, v, dstip_pktnum_map[k]))
     iFile.close()
     oFile1.close()
     oFile2.close()

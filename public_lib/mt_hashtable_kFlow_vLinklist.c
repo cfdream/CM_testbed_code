@@ -159,6 +159,7 @@ receV_lostV_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key
         while (iterator && iterator->seqid < seqid) {
             //packets between [oldest_pkt.seqid, seqid) not received
             ans.lost_volume += iterator->volume;
+            ++ans.lost_pkt_num;
             temp = iterator;
             iterator = iterator->next;
             free(temp);
