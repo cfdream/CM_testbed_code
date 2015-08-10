@@ -3,14 +3,15 @@
 #ifndef __HASHMAP_FLOW_H__
 #define __HASHMAP_FLOW_H__
 
-#define _XOPEN_SOURCE 500 /* Enable certain library functions (strdup) on linux.  See feature_test_macros(7) */
-#define HASH_MAP_SIZE 655350
+//#define _XOPEN_SOURCE 500 /* Enable certain library functions (strdup) on linux.  See feature_test_macros(7) */
+//#define HASH_MAP_SIZE 655350
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
 #include "flow.h"
+#include "hashtable.h"
 
 struct entry_kf_s {
 	flow_s *key;

@@ -90,3 +90,6 @@ pcapsend
 # 
 .out
 .pcap
+old/*.csv
+old/*.txt
+*.csv

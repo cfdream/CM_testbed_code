@@ -19,7 +19,7 @@
 //...
 #define FIRST_SENDER_IP_PREFIX 0x0A000000
 
-#define GET_SENDER_IDX(ip) {(((ip&IP_MASK)>>24) - (FIRST_SENDER_IP_PREFIX>>24))}
+#define GET_SENDER_IDX(ip) (((ip&IP_MASK)>>24) - (FIRST_SENDER_IP_PREFIX>>24))
 
 int fifo_handlers[NUM_SENDERS];
 

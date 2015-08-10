@@ -9,22 +9,38 @@ flow_s* deep_copy_flow(flow_s* input) {
 int flow_compare(flow_s* flow1, flow_s* flow2) {
     //srcip not equal
     if (flow1->srcip != flow2->srcip) {
-        return flow1->srcip - flow2->srcip;
+        if (flow1->srcip > flow2->srcip) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 
     //srcip equal, check dstip
     if (flow1->dstip != flow2->dstip) {
-        return flow1->dstip - flow2->dstip;
+        if (flow1->dstip > flow2->dstip) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 
     //srcip, dstip equal, check src_port
     if (flow1->src_port != flow2->src_port) {
-        return flow1->src_port - flow2->src_port;
+        if(flow1->src_port > flow2->src_port) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 
     //srcip, dstip, src_port equal, check dst_port
     if (flow1->dst_port != flow2->dst_port) {
-        return flow1->dst_port - flow2->dst_port;
+        if (flow1->dst_port > flow2->dst_port) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 
     //srcip, dstip, src_port, dst_port equal, check protocol
@@ -35,5 +51,11 @@ int flow_compare(flow_s* flow1, flow_s* flow2) {
 }
 
 int flow_src_compare(flow_src_t* flow1, flow_src_t* flow2) {
-    return flow1->srcip - flow2->srcip;
+    if (flow1->srcip == flow2->srcip) {
+        return 0;
+    } else if (flow1->srcip > flow2->srcip) {
+        return 1;
+    } else {
+        return -1;
+    }
 }

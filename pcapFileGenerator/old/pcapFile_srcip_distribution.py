@@ -2,6 +2,7 @@ import sys
 def analyze(file_name):
     iFile = open(file_name, 'r')
     srcip_volume_map = {}
+    srcip_pktnum_map = {}
     dstip_volume_map = {}
     for line in iFile:
         items=line.split(',')
@@ -16,10 +17,13 @@ def analyze(file_name):
             length += 58
             if srcip not in srcip_volume_map:
                 srcip_volume_map[srcip] = 0
+            if srcip not in srcip_pktnum_map:
+                srcip_pktnum_map[srcip] = 0
             if dstip not in dstip_volume_map:
                 dstip_volume_map[dstip] = 0
 
             srcip_volume_map[srcip] += length
+            srcip_pktnum_map[srcip] += 1
             dstip_volume_map[dstip] += length
             #print(dstip, srcip, dstip_volume_map[dstip])
     iFile.close()
@@ -28,7 +32,7 @@ def analyze(file_name):
     srcip_volume_list = srcip_volume_map.iteritems()
     for k, v in sorted(srcip_volume_list, key=lambda pair: pair[1], reverse=True):
         #print(k,v)
-        oFile1.write("{0}\t{1}\n" .format(k, v))
+        oFile1.write("{0}\t{1}\t{2}\n" .format(k, v, srcip_pktnum_map[k]))
     oFile1.close()
 
 if len(sys.argv) < 2:
