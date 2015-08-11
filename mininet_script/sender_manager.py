@@ -14,24 +14,26 @@ class SenderManger():
     def setup(self):
         hosts = self.net.hosts
         outfiles, errfiles = {}, {}
-        i = 0
         for h in hosts:
-            #------debug------
+            #------debug------ 4 senders
             #if h.name != "h1":
-            #    continue
+            #if h.name != "h1" and h.name != "h5" and h.name != "h8" and h.name != "h12":
+                continue
             #------debug------
+            print h.name
 
-            i+=1
             outfiles[ h ] = '/tmp/log/%s.send.out' % h.name
             errfiles[ h ] = '/tmp/log/%s.send.err' % h.name
             #run the receiver detectPacketLossID
             h.cmd( 'echo >', outfiles[ h ] )
             h.cmd( 'echo >', errfiles[ h ] )
             # Start pings
-            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=100 -i {0}-eth0   ../../caida_data/{1}.pcap' .format(h.name, h.name),
-            h.cmdPrint('sudo ../tcpreplay/src/tcpreplay --mbps=5 -i {0}-eth0   ../../caida_data/s{1}_head1w.pcap' .format(h.name, i),
-            #h.cmdPrint('sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   ../pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name),
+            cmdstr = 'sudo ../tcpreplay/src/tcpreplay --mbps=4 -i {0}-eth0   ../../caida_data/{1}.pcap' .format(h.name, h.name)
+            #cmdstr = 'sudo ../tcpreplay/src/tcpreplay --mbps=4 -i {0}-eth0   ../../caida_data/s{1}_head100w.pcap' .format(h.name, int(h.name[1:]))
+            #cmdstr = 'sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   ../pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name)
+            h.cmdPrint( cmdstr,
                        '>', outfiles[ h ],
                        '2>', errfiles[ h ],
                        '&' )
-            print "start tcpreplay"
+            print cmdstr
+
