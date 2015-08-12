@@ -12,7 +12,6 @@
 #define CM_CONDITION_TIME_INTERVAL_POSTPOINE_FOR_SWITCH 1
 
 //packet dropping model
-#define RAND_MOD_NUMBER 1000000
 #define CM_SWITCH_DROP_RATE 0.01
 
 #define CM_SENDER_TARGET_FLOW_FNAME_PREFIX "/tmp/sender/"
