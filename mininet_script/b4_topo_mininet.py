@@ -78,7 +78,7 @@ class B4Topo( Topo ):
         self.addLink(s6, s7)
         self.addLink(s6, s8)
         self.addLink(s7, s8)
-        self.addLink(s7, s11, loss=40)
+        self.addLink(s7, s11)
         self.addLink(s8, s10)
         self.addLink(s9, s10)
         self.addLink(s9, s11)
