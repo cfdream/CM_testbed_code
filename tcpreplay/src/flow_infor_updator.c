@@ -2,6 +2,7 @@
 #include <netinet/in.h>
 #include "../../public_lib/flow.h"
 #include "../../public_lib/debug_config.h"
+#include "../../public_lib/general_functions.h"
 #include "flow_infor_updator.h"
 
 void* flow_infor_update(void* param_ptr) {

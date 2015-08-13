@@ -65,6 +65,7 @@ extern tcpedit_t *tcpedit;
 #include "../public_lib/flow.h"
 #include "../public_lib/cm_experiment_setting.h"
 #include "../public_lib/debug_config.h"
+#include "../public_lib/general_functions.h"
 #include "vlan_tag.h"
 #include "host_samplor.h"
 #include "condition_sender.h"

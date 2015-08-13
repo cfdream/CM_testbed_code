@@ -1,6 +1,8 @@
 #include "../../public_lib/time_library.h"
 #include "interval_rotator.h"
 
+extern cm_experiment_setting_t cm_experiment_setting;
+
 FILE* init_target_flow_file() {
     FILE* fp;
     //1. get hostname
@@ -55,7 +57,7 @@ void* rotate_interval(void* param_ptr) {
     while (true) {
         /* all hosts/senders start/end at the nearby timestamp for intervals */
         /* postpone till switching to next time interval */
-        uint64_t current_sec = get_next_interval_start(CM_TIME_INTERVAL);
+        uint64_t current_sec = get_next_interval_start(cm_experiment_setting.interval_sec_len);
 
 		//lock the data_warehouse.data_warehouse_mutex
 		//in order to avoid IntervalRotator thread destory the data

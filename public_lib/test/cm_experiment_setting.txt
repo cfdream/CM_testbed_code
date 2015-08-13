@@ -1,0 +1,18 @@
+interval_sec_len:75
+condition_sec_freq:3
+replacement:0
+#UNIFORM:0 DIVERSE:1
+switch_mem_type:0
+switch_drop_rate:0.01
+switch1_interval_volume:1984790681
+switch2_interval_volume:1988689498
+switch3_interval_volume:2776070563
+switch4_interval_volume:3515022898
+switch5_interval_volume:3316511998
+switch6_interval_volume:3551106010
+switch7_interval_volume:3388837575
+switch8_interval_volume:3603160505
+switch9_interval_volume:1967389765
+switch10_interval_volume:3286722650
+switch11_interval_volume:2970855180
+switch12_interval_volume:1751315193

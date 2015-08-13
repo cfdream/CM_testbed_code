@@ -1,6 +1,5 @@
 #include "get_mininet_host_name.h"
-
-#define PCAP_ERRBUF_SIZE 1000
+#include <pcap.h>
 
 int get_mininet_host_name(char* buffer, int buffer_len) {
     //1. get NIC name

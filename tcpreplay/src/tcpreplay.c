@@ -59,6 +59,7 @@ int debug = 0;
 #endif
 
 tcpreplay_t *ctx;
+extern cm_experiment_setting_t cm_experiment_setting;
 
 void flow_stats(const tcpreplay_t *ctx, bool unique_ip);
 
@@ -144,7 +145,7 @@ main(int argc, char *argv[])
     g_tcpreplay_ctx = ctx;
     
     /* all hosts/senders start/end at the nearby timestamp for intervals */
-    uint64_t current_sec =  get_next_interval_start(CM_TIME_INTERVAL);
+    uint64_t current_sec =  get_next_interval_start(cm_experiment_setting.interval_sec_len);
     printf("current_sec:%lu\n", current_sec);
 
     /* initialize the data_warehouse */

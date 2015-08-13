@@ -9,6 +9,7 @@
 char g_pkt_buffer[15000];   //1.5kb
 
 tcpreplay_t* g_tcpreplay_ctx;
+extern cm_experiment_setting_t cm_experiment_setting;
 
 /**
 * @brief 
@@ -93,7 +94,7 @@ void* send_condition_to_network(void* param_ptr) {
 
     while (1) {
         // postpone till the next timestamp that condition should be sent 
-        uint64_t current_sec = get_next_interval_start(CM_CONDITION_TIME_INTERVAL);
+        uint64_t current_sec = get_next_interval_start(cm_experiment_setting.condition_sec_freq);
         int condition_pkt_num = 0;
 
         //lock to send all condition packets
