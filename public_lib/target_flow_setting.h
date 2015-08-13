@@ -1,7 +1,0 @@
-#ifndef __TARGET_FLOW_SETTING_H__
-#define __TARGET_FLOW_SETTING_H__
-
-#define TARGET_FLOW_LOSS_RATE 0.01
-#define TARGET_FLOW_VOLUME 60000
-
-#endif

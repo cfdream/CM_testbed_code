@@ -139,7 +139,10 @@ main(int argc, char *argv[])
     }
 
     /* init the signal handlers */
-    init_signal_handlers();
+    if(init_cm_experiment_setting() != 0) {
+        printf("FAIL: init_cm_experiment_setting()\n");
+        return 1;
+    }
 
     /* send the udp packet through thread */
     g_tcpreplay_ctx = ctx;

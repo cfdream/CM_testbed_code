@@ -2,8 +2,7 @@
 #define SAMPLE_MODEL_H
 
 #include <stdbool.h>
-#include "target_flow_setting.h"
-#include "sample_setting.h"
+#include "cm_experiment_setting.h"
 #include "flow.h"
 
 //traditional sample and hold

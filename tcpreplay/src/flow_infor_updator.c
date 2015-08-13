@@ -1,9 +1,12 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include "../../public_lib/cm_experiment_setting.h"
 #include "../../public_lib/flow.h"
 #include "../../public_lib/debug_config.h"
 #include "../../public_lib/general_functions.h"
 #include "flow_infor_updator.h"
+
+extern cm_experiment_setting_t cm_experiment_setting;
 
 void* flow_infor_update(void* param_ptr) {
     /*---- 1. read FIFO to get received seqid for each flow ----*/
@@ -80,7 +83,8 @@ void* flow_infor_update(void* param_ptr) {
 
             //3. update target flows
             hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
-            if (volume >= TARGET_FLOW_VOLUME && loss_rate >= TARGET_FLOW_LOSS_RATE) {
+            if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
+                && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold) {
                 //this is a target flow
                 ht_kfs_vi_set(target_flow_map, p_flow, 1);
             } else {

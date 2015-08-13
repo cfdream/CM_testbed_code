@@ -25,12 +25,27 @@
 #define CM_RECEIVER_TARGET_FLOW_FNAME_PREFIX "/tmp/switch/"
 #define CM_RECEIVER_TARGET_FLOW_FNAME_SUFFIX "_intervals_target_flows.txt"
 
-#define CM_EXPERIMENT_SETTING_FNAME "cm_experiment_setting.txt"
+#define CM_EXPERIMENT_SETTING_FNAME "/home/ubuntu/workspace/CM_testbed_code/mininet_script/cm_experiment_setting.txt"
 
 enum switch_mem_type_e {
     UNIFORM,
     DIVERSE
 };
+
+enum host_switch_sample_e {
+    HOST_SAMPLE,
+    SWITCH_SAMPLE
+};
+
+typedef struct sample_hold_setting_s {
+    uint64_t switches_interval_volume[NUM_SWITCHES]; //for setting hold hashtable size
+    float default_byte_sampling_rate;
+} sample_hold_setting_t;
+
+typedef struct target_flow_setting_s {
+    int volume_threshold;
+    float loss_rate_threshold;
+}target_flow_setting_t;
 
 typedef struct cm_experiment_setting_s {
     int interval_sec_len;
@@ -38,9 +53,15 @@ typedef struct cm_experiment_setting_s {
     bool replacement;
     enum switch_mem_type_e switch_mem_type;
     float switch_drop_rate;
-    uint64_t switches_interval_volume[NUM_SWITCHES];
+    enum host_switch_sample_e host_or_switch_sample;
+
+    sample_hold_setting_t sample_hold_setting;
+    target_flow_setting_t target_flow_setting;
+
 } cm_experiment_setting_t;
 
+int init_cm_experiment_setting(void);
 int read_cm_experiment_setting_from_file(void);
+int init_other_experiment_setting(void);
 
 #endif

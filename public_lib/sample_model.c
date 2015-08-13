@@ -1,10 +1,12 @@
 #include "sample_model.h"
 
+extern cm_experiment_setting_t cm_experiment_setting;
+
 //double (*get_pkt_sample_rate)(flow_src_t*, packet_t*) = &pkt_sample_rate_trad;
 
 //traditional sample and hold
 double pkt_sample_rate_trad(int total_pkt_len) {
-    double rate = DEFAULT_BYTE_SAMPLE_RATE * total_pkt_len;            
+    double rate = cm_experiment_setting.sample_hold_setting.default_byte_sampling_rate * total_pkt_len;            
     return rate > 1 ? 1 : rate;
 }
 

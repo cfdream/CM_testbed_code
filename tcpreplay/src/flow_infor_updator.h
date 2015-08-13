@@ -2,7 +2,6 @@
 #define __FLOW_INFOR_UPDATOR_H__
 
 #include "data_warehouse.h"
-#include "../../public_lib/target_flow_setting.h"
 #include "../../public_lib/senderFIFOsManager.h"
 
 void* flow_infor_update(void* param_ptr);
