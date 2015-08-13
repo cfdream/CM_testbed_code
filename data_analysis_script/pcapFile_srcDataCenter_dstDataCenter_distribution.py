@@ -30,8 +30,8 @@ def analyze(file_name):
             dstip_pktnum_map[dstip] += 1 
             #print(dstip, srcip, dstip_volume_map[dstip])
     
-    oFile1 = open("srcip_volume_map.txt", 'w')
-    oFile2 = open("dstip_volume_map.txt", 'w')
+    oFile1 = open("{0}_srcDC_statistics.txt" .format(file_name), 'w')
+    oFile2 = open("{0}_dstDC_statistics.txt" .format(file_name), 'w')
     for k, v in srcip_volume_map.iteritems():
         #print(k,v)
         oFile1.write("{0}\t{1}\n" .format(k, v))
@@ -43,7 +43,7 @@ def analyze(file_name):
     oFile2.close()
 
 if len(sys.argv) < 2:
-        print 'usage: pcapFile_srcip_dstip_distribution.py caida_trace_file'
+        print 'usage: pcapFile_srcip_dstip_distribution.py caida_trace_file(.csv)'
         exit(0)
 
 analyze(sys.argv[1])

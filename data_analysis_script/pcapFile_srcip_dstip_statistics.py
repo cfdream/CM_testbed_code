@@ -44,7 +44,7 @@ def analyze(file_name):
     oFile2 = open("{0}_dstip_flow_statistics.txt" .format(file_name), 'w')
     oFile2.write("dstip\tvolume\tpacket_num\n")
     dstip_volume_list = dstip_volume_map.iteritems()
-    for k, v in sorted(dstip_volume_list, key=lambda pair: pair[1], reverse=True)
+    for k, v in sorted(dstip_volume_list, key=lambda pair: pair[1], reverse=True):
         oFile2.write("{0}\t{1}\t{2}\n" .format(k, v, dstip_pktnum_map[k]))
     oFile2.close()
 
