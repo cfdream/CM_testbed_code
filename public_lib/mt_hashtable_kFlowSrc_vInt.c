@@ -103,7 +103,8 @@ void ht_kfs_vi_refresh( hashtable_kfs_vi_t *hashtable ) {
         //release lock
         pthread_mutex_unlock(&hashtable->mutexs[i]);
     }
-
+    hashtable->next_current_bin = -1;
+    hashtable->next_last_visit_entry = NULL;
 }
 
 /* Hash a string for a particular hash table. */
@@ -266,6 +267,7 @@ void ht_kfs_vi_del( hashtable_kfs_vi_t *hashtable, flow_src_t *key) {
 *
 * @param hashtable
 * @param ret_entry iteratored entry will be copied to this pointer
+*   NOTE: ret_entry.key should be free by call function
 *
 * @return 0-ret_entry is the next entry, -1:no more entries
 */
@@ -317,4 +319,18 @@ int ht_kfs_vi_next(hashtable_kfs_vi_t *hashtable, entry_kfs_vi_t* ret_entry) {
         pthread_mutex_unlock(&hashtable->mutexs[hashtable->next_current_bin]);
     }
     return 0;
+}
+
+hashtable_kfs_vi_t* ht_kfs_vi_copy(hashtable_kfs_vi_t *source_hashtable) {
+    hashtable_kfs_vi_t* ret_hashtable = ht_kfs_vi_create();
+    if (ret_hashtable == NULL) {
+        return NULL;
+    }
+
+    entry_kfs_vi_t ret_entry;
+    while(ht_kfs_vi_next(source_hashtable, &ret_entry) != -1) {
+        ht_kfs_vi_set(ret_hashtable, ret_entry.key, ret_entry.value);
+        free(ret_entry.key);
+    }
+    return ret_hashtable;
 }

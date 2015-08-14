@@ -25,6 +25,9 @@ typedef flow_s flow_t;
  */
 typedef flow_s flow_src_t;
 
+/*
+ * the return value should be released by the call function
+ */
 flow_s* deep_copy_flow(flow_s* input);
 
 int flow_compare(flow_s* flow1, flow_s* flow2);

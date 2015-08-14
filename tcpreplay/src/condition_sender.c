@@ -116,7 +116,9 @@ void* send_condition_to_network(void* param_ptr) {
             condition.srcip = ret_entry.key->srcip;
             send_udp_condition_pkt(&condition);
             ++condition_pkt_num;
-            printf("condition srcip:%u\n", condition.srcip);
+            ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
+            //printf("condition srcip:%u\n", condition.srcip);
+            free(ret_entry.key);
         }
         pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);
         pthread_mutex_unlock(&data_warehouse.packet_send_mutex);

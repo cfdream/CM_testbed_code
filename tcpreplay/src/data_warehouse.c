@@ -40,6 +40,10 @@ int data_warehouse_init() {
         if (data_warehouse.flow_sample_map[a_idx] == NULL) {
             return -1;
         }
+
+        data_warehouse.pkt_num_sent[a_idx] = 0;
+        data_warehouse.volume_sent[a_idx] = 0;
+        data_warehouse.condition_pkt_num_sent[a_idx] = 0;
     }
 
     data_warehouse.active_idx = 0;
@@ -91,6 +95,11 @@ int data_warehouse_reset_noactive_buf() {
     if (data_warehouse.flow_sample_map[na_idx] == NULL) {
         return -1;
     }
+    /* interval infor */
+    data_warehouse.pkt_num_sent[na_idx] = 0;
+    data_warehouse.volume_sent[na_idx] = 0;
+    data_warehouse.condition_pkt_num_sent[na_idx] = 0;
+
     return 0;
 }
 

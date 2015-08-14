@@ -30,9 +30,12 @@ typedef struct data_warehouse_s {
     hashtable_kfs_vi_t* flow_loss_volume_map[BUFFER_NUM];
     hashtable_kfs_vf_t* flow_loss_rate_map[BUFFER_NUM];
     hashtable_kfs_vi_t* target_flow_map[BUFFER_NUM];
-
     /* 1 hashtable for sample and hold*/
     hashtable_kfs_vi_t* flow_sample_map[BUFFER_NUM];
+    /* interval infor */
+    uint64_t pkt_num_sent[BUFFER_NUM];
+    uint64_t volume_sent[BUFFER_NUM];
+    uint64_t condition_pkt_num_sent[BUFFER_NUM];
 }data_warehouse_t;
 
 data_warehouse_t data_warehouse;

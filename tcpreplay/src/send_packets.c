@@ -421,7 +421,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pk
              * This will be used to calculate flow volume & loss rate
              */
             hashtable_vl_t* flow_recePktList_map = data_warehouse_get_flow_recePktList_map();
-            ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, pkthdr->caplen);
+            ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, packet.len);
 
             /* sample the packet at the sender side */
             if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
@@ -435,6 +435,9 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pk
                 //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
             }
 
+            ++data_warehouse.pkt_num_sent[data_warehouse.active_idx];
+            data_warehouse.volume_sent[data_warehouse.active_idx] += packet.len;
+
             if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
                 packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
                 char src_str[100];
@@ -444,7 +447,7 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pk
 
                 printf("sender: flow[%s-%s-%u-%u-%u-len:%u]\n", 
                     src_str, dst_str, 
-                    packet.src_port, packet.dst_port, seqid,pkthdr->len);
+                    packet.src_port, packet.dst_port, seqid, packet.len);
             }
             break;
         default:
@@ -723,9 +726,6 @@ SEND_NOW:
         /* SampleAtHost */
         cm_handle_ipv4_packet(&pkthdr, &pktdata, total_pkt_len, datalink);
 
-        if (ctx->stats.flow_packets > 1500000) {
-            return;
-        }
         pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         /* write packet out on network */
         if (sendpacket(sp, pktdata, pktlen, &pkthdr) < (int)pktlen)

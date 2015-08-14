@@ -91,4 +91,6 @@ void ht_kfs_vi_del( hashtable_kfs_vi_t *hashtable, flow_src_t *key);
 */
 int ht_kfs_vi_next(hashtable_kfs_vi_t *hashtable, entry_kfs_vi_t* ret_entry);
 
+hashtable_kfs_vi_t* ht_kfs_vi_copy(hashtable_kfs_vi_t *source_hashtable);
+
 #endif
