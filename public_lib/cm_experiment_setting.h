@@ -60,6 +60,8 @@ typedef struct cm_experiment_setting_s {
 
 } cm_experiment_setting_t;
 
+extern cm_experiment_setting_t cm_experiment_setting;
+
 int init_cm_experiment_setting(void);
 int read_cm_experiment_setting_from_file(void);
 int init_other_experiment_setting(void);

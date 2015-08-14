@@ -1,6 +1,8 @@
 #include "data_warehouse.h"
 #include <pthread.h>
 
+struct drand48_data g_rand_buffer;
+
 /**
 * @brief init the data warehouse, at the beginning, only the first buffer should be initiliazed
 *

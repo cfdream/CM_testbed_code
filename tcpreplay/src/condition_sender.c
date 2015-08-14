@@ -80,6 +80,10 @@ void* send_condition_to_network(void* param_ptr) {
     uint64_t sec;
     condition_t condition;
 
+    if (cm_experiment_setting.host_or_switch_sample != HOST_SAMPLE) {
+        return NULL;
+    }
+
     /* debug */
     /* condition packet */
     /*

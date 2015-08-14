@@ -66,8 +66,8 @@ extern tcpedit_t *tcpedit;
 #include "../public_lib/cm_experiment_setting.h"
 #include "../public_lib/debug_config.h"
 #include "../public_lib/general_functions.h"
+#include "../public_lib/sample_packet.h"
 #include "vlan_tag.h"
-#include "host_samplor.h"
 #include "condition_sender.h"
 
 #ifdef DEBUG
@@ -424,13 +424,16 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pk
             ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, pkthdr->caplen);
 
             /* sample the packet at the sender side */
-            int sampled = sample_packet(&packet, total_pkt_len);
-            if (sampled) {
-                //tag one VLAN bit to mark the packet as sampled
-                tag_packet_as_sampled(packet_buf, datalink);
-            }
+            if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
+                hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
+                int sampled = sample_packet(&packet, total_pkt_len, &g_rand_buffer, flow_sample_map);
+                if (sampled) {
+                    //tag one VLAN bit to mark the packet as sampled
+                    tag_packet_as_sampled(packet_buf, datalink);
+                }
 
-            //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
+                //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
+            }
 
             if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
                 packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
@@ -720,6 +723,9 @@ SEND_NOW:
         /* SampleAtHost */
         cm_handle_ipv4_packet(&pkthdr, &pktdata, total_pkt_len, datalink);
 
+        if (ctx->stats.flow_packets > 1500000) {
+            return;
+        }
         pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         /* write packet out on network */
         if (sendpacket(sp, pktdata, pktlen, &pkthdr) < (int)pktlen)

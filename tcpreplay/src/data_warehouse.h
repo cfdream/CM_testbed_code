@@ -7,6 +7,8 @@
 
 #define BUFFER_NUM 2
 
+extern struct drand48_data g_rand_buffer;
+
 /**
 * @brief 
 */

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "../public_lib/senderFIFOsManager.h"
 #include "../public_lib/general_functions.h"
 #include "srcip_dstip_to_b4_srcip_dstip.h"
@@ -70,7 +71,7 @@ int main(int argc, char** argv) {
     char in_fname[LINE_BUFFER_LEN];
     size_t line_len = 1024;
     char* line_buffer = (char*)malloc(LINE_BUFFER_LEN);
-    int read_num_lines = 0;
+    uint64_t read_num_lines = 0;
     int fileno;
     in_fpath = argv[1];
     out_fpath = argv[2];
@@ -83,14 +84,17 @@ int main(int argc, char** argv) {
     packet_s packet;
     fileno = START_FILE_NO - DELTA_FILE_NO;
     while (true) {
+        if (fileno > 140000) {
+            break;
+        }
         /* 1. open one following file in csv_input_filepath */
         fileno += DELTA_FILE_NO;
         printf("%d\n", fileno);
         snprintf(in_fname, LINE_BUFFER_LEN, "%s/equinix-sanjose.dirA.20120920-%d.UTC.anon.pcap.csv", in_fpath, fileno);
         in_file = fopen(in_fname, "r");
         if (NULL == in_file) {
-            printf("cannot open in_file:%s\n", in_fname);
-            break;
+            //printf("cannot open in_file:%s\n", in_fname);
+            continue;
         }
 
         /* 2. for each line in one pcap file */
@@ -98,7 +102,7 @@ int main(int argc, char** argv) {
             ++read_num_lines;
             if (read_num_lines%1000000 == 0) {
                 fflush(stdout);
-                printf("%2d*10^4 lines read\n", read_num_lines/10000);
+                printf("%lu*10^4 lines read\n", read_num_lines/10000);
             }
 
             /* 2.1 parse the packet */
@@ -130,7 +134,7 @@ int main(int argc, char** argv) {
     }
 
     printf("unique ip num:%lu\n", unique_ip_num);
-    printf("\ncompleted, %d lines processed\n", read_num_lines);
+    printf("\ncompleted, %lu lines processed\n", read_num_lines);
 
     destory();
 
