@@ -10,7 +10,10 @@ int init_cm_experiment_setting(void) {
     if (read_cm_experiment_setting_from_file() != 0) {
         return -1;
     }
-    if (init_other_experiment_setting()) {
+    if (init_other_experiment_setting() != 0) {
+        return -1;
+    }
+    if (check_value_correct() != 0) {
         return -1;
     }
     return 0;
@@ -132,5 +135,34 @@ int read_cm_experiment_setting_from_file(void) {
 int init_other_experiment_setting(void) {
     cm_experiment_setting.sample_hold_setting.default_byte_sampling_rate 
         = 1.0 / cm_experiment_setting.target_flow_setting.volume_threshold * OVER_SAMPLING_RATIO;
+    return 0;
+}
+
+int check_value_correct(void) {
+    if (cm_experiment_setting.interval_sec_len == 0) {
+        printf("interval_sec_len not correct\n");
+        return -1;
+    }
+    if (cm_experiment_setting.condition_sec_freq == 0) {
+        printf("condition_sec_freq\n");
+        return -1;
+    }
+    if (cm_experiment_setting.target_flow_setting.volume_threshold == 0) {
+        printf("volume_threshold not correct\n");
+        return -1;
+    }
+    int switch_idx = 0;
+    for (switch_idx = 0; switch_idx < NUM_SWITCHES; ++switch_idx) {
+        if (cm_experiment_setting.sample_hold_setting.switches_interval_volume[switch_idx] == 0) {
+            printf("switch %d interval volume not correct\n", switch_idx+1);
+            return -1;
+        }
+    }
+    if (cm_experiment_setting.switch_drop_rate == 0) {
+        printf("WARNING: cm_experiment_setting.switch_drop_rate == 0\n");
+    }
+    if (cm_experiment_setting.target_flow_setting.loss_rate_threshold == 0) {
+        printf("WARNING: cm_experiment_setting.target_flow_setting.loss_rate_threshold== 0\n");
+    }
     return 0;
 }
