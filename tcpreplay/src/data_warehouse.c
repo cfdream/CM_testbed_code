@@ -88,6 +88,7 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
     hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
     hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+    data_warehouse.volume_lost[data_warehouse.active_idx] += added_loss_volume;
 
     if (added_loss_volume > 0) {
         //get total volume of flow

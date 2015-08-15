@@ -46,18 +46,10 @@ void write_interval_info_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     fprintf(fp_target_flow, "pkt_num_sent:%lu\n", data_warehouse.pkt_num_sent[na_idx]);
     fprintf(fp_target_flow, "volume_sent:%lu\n", data_warehouse.volume_sent[na_idx]);
     fprintf(fp_target_flow, "volume_lost_detected:%lu\n", data_warehouse.volume_lost[na_idx]);
-    fprintf(fp_target_flow, "condition_pkt_num_sent:%lu\n", data_warehouse.condition_pkt_num_sent[na_idx]);
-    
-    int volume_ok_flow_num = 0;
-    hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
-    entry_kfs_vi_t ret_entry;
-    while(ht_kfs_vi_next(flow_volume_map_pre_interval, &ret_entry) == 0){
-        if (ret_entry.value > cm_experiment_setting.target_flow_setting.volume_threshold) {
-            ++volume_ok_flow_num;
-        }
-        free(ret_entry.key);
+    if (data_warehouse.volume_sent[na_idx] > 0) {
+        fprintf(fp_target_flow, "volume_lost_rate_detected:%f\n", 1.0*data_warehouse.volume_lost[na_idx] / data_warehouse.volume_sent[na_idx]);
     }
-    fprintf(fp_target_flow, "volume_ok_flow_num:%d\n", volume_ok_flow_num);
+    fprintf(fp_target_flow, "condition_pkt_num_sent:%lu\n", data_warehouse.condition_pkt_num_sent[na_idx]);
 
     int loss_rate_ok_flow_num = 0;
     hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
@@ -69,6 +61,20 @@ void write_interval_info_to_file(uint64_t current_sec, FILE* fp_target_flow) {
         free(ret_vf_entry.key);
     }
     fprintf(fp_target_flow, "loss_rate_ok_flow_num:%d\n", loss_rate_ok_flow_num);
+    
+    int volume_ok_flow_num = 0;
+    int unique_flow_num_sent = 0;
+    hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
+    entry_kfs_vi_t ret_entry;
+    while(ht_kfs_vi_next(flow_volume_map_pre_interval, &ret_entry) == 0){
+        if (ret_entry.value > cm_experiment_setting.target_flow_setting.volume_threshold) {
+            ++volume_ok_flow_num;
+        }
+        ++unique_flow_num_sent;
+        free(ret_entry.key);
+    }
+    fprintf(fp_target_flow, "volume_ok_flow_num:%d\n", volume_ok_flow_num);
+    fprintf(fp_target_flow, "unique_flow_num_sent:%d\n", unique_flow_num_sent);
 }
 
 void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {

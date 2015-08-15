@@ -55,7 +55,6 @@ void* flow_infor_update(void* param_ptr) {
         // 2. update <srcip> flow infor
         if (receV_lostV.lost_volume > 0) {
             update_flow_loss_volume(p_flow, receV_lostV.lost_volume);
-            data_warehouse.volume_lost[data_warehouse.active_idx] += receV_lostV.lost_volume;
         }
 
         // flow_volume_map, flow_lost_volume_map, flow_loss_rate_map

@@ -729,10 +729,12 @@ SEND_NOW:
         /* record the flow's <5-tuple flow identity, packet seqid, packet length> in hashmap */
         /* and SampleAtHost */
         cm_handle_ipv4_packet(&pktdata, total_pkt_len, datalink);
-
-        if (ctx->stats.flow_packets > 150000) {
+        
+        /*
+        if (ctx->stats.flow_packets > 1500000) {
             return;
         }
+        */
 
         pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         /* write packet out on network */
