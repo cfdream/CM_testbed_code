@@ -366,7 +366,7 @@ fast_edit_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata,
 * @param datalink
 */
 static inline void
-cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pkt_len, int datalink)
+cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
 {
     uint16_t ether_type;
     vlan_hdr_t *vlan_hdr;
@@ -382,8 +382,8 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pk
     u_char *packet_buf = *pktdata;
     int l2_len;
 
-    if (pkthdr->caplen < (bpf_u_int32)TCPR_IPV4_H) {
-        dbgx(2, "Packet too short for Unique IP feature: %u", pkthdr->caplen);
+    if (total_pkt_len < (bpf_u_int32)TCPR_IPV4_H) {
+        dbgx(2, "Packet too short for Unique IP feature: %u", total_pkt_len);
         return;
     }
 
@@ -415,13 +415,17 @@ cm_handle_ipv4_packet(struct pcap_pkthdr *pkthdr, u_char **pktdata, int total_pk
             packet.src_port = ntohs(tcp_hdr->th_sport);
             packet.dst_port = ntohs(tcp_hdr->th_dport);
             seqid = ntohl(tcp_hdr->th_seq);
-            packet.len = pkthdr->len;
+            packet.len = total_pkt_len;
 
             /* record the packet&seqid of the flow in hashmap *
              * This will be used to calculate flow volume & loss rate
              */
             hashtable_vl_t* flow_recePktList_map = data_warehouse_get_flow_recePktList_map();
             ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, packet.len);
+
+            flow_src_t flow_src;
+            flow_src.srcip = packet.srcip;
+            update_flow_normal_volume(&flow_src, total_pkt_len);
 
             /* sample the packet at the sender side */
             if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
@@ -624,8 +628,8 @@ send_packets(tcpreplay_t *ctx, pcap_t *pcap, int idx)
             pkthdr.caplen = pkthdr.len;
         }
         */
-        /* just use 4 bytes in the payload to record the total len of the packet(including the packet header) */
-        int total_pkt_len = pkthdr.len;
+        /* xuemei: just use 4 bytes in the payload to record the total len of the packet(including the packet header) */
+        int total_pkt_len = pkthdr.len;   //pkt len including the packet header
         memcpy(g_pkt_temporary_buffer, pktdata, pkthdr.caplen);
         memcpy(g_pkt_temporary_buffer+pkthdr.caplen, &pkthdr.len, sizeof(pkthdr.len));
         pktdata = g_pkt_temporary_buffer;
@@ -723,8 +727,12 @@ SEND_NOW:
         dbgx(2, "Sending packet #" COUNTER_SPEC, packetnum);
 
         /* record the flow's <5-tuple flow identity, packet seqid, packet length> in hashmap */
-        /* SampleAtHost */
-        cm_handle_ipv4_packet(&pkthdr, &pktdata, total_pkt_len, datalink);
+        /* and SampleAtHost */
+        cm_handle_ipv4_packet(&pktdata, total_pkt_len, datalink);
+
+        if (ctx->stats.flow_packets > 150000) {
+            return;
+        }
 
         pthread_mutex_lock(&data_warehouse.packet_send_mutex);
         /* write packet out on network */

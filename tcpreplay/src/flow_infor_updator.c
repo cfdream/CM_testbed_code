@@ -52,47 +52,14 @@ void* flow_infor_update(void* param_ptr) {
         }
         total_lost_pkt_num += receV_lostV.lost_pkt_num;
 
-        hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
-        hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
-        hashtable_kfs_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
-
         // 2. update <srcip> flow infor
+        if (receV_lostV.lost_volume > 0) {
+            update_flow_loss_volume(p_flow, receV_lostV.lost_volume);
+            data_warehouse.volume_lost[data_warehouse.active_idx] += receV_lostV.lost_volume;
+        }
+
         // flow_volume_map, flow_lost_volume_map, flow_loss_rate_map
         if (receV_lostV.received_volume + receV_lostV.lost_volume) {
-
-            //update total volume of flow, account for receV, lostV 
-            int volume = ht_kfs_vi_get(flow_volume_map, p_flow);
-            if (volume < 0) {
-                volume = 0;
-            }
-            volume += (receV_lostV.received_volume + receV_lostV.lost_volume);
-            ht_kfs_vi_set(flow_volume_map, p_flow, volume);
-
-            //update loss volume if necessary
-            int loss_volume = ht_kfs_vi_get(flow_loss_volume_map, p_flow);
-            if (loss_volume < 0) {
-                loss_volume = 0;
-            }
-            if (receV_lostV.lost_volume) {
-                loss_volume += receV_lostV.lost_volume;
-                ht_kfs_vi_set(flow_loss_volume_map, p_flow, loss_volume);
-            }
-            //update loss rate
-            float loss_rate = 1.0 * loss_volume / volume;
-            ht_kfs_vf_set(flow_loss_rate_map, p_flow, loss_rate);
-
-            //3. update target flows
-            hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
-            if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
-                && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold) {
-                //this is a target flow
-                ht_kfs_vi_set(target_flow_map, p_flow, 1);
-            } else {
-                //this is not a target flow.
-                //to simplity, just del the flow from target_flow_map
-                ht_kfs_vi_del(target_flow_map, p_flow);
-            }
-
             if (ENABLE_DEBUG && recv_2_send_proto.srcip == DEBUG_SRCIP && recv_2_send_proto.dstip == DEBUG_DSTIP &&
                 recv_2_send_proto.src_port == DEBUG_SPORT && recv_2_send_proto.dst_port == DEBUG_DPORT) {
                 char src_str[100];
@@ -100,10 +67,10 @@ void* flow_infor_update(void* param_ptr) {
                 ip_to_str(recv_2_send_proto.srcip, src_str, 100);
                 ip_to_str(recv_2_send_proto.dstip, dst_str, 100);
 
-                printf("receiver=>sender: flow[%s-%s-%u-%u-%u-volume:%d-lossVolume:%d-rate:%f]\n", 
+                printf("receiver=>sender: flow[%s-%s-%u-%u-%u-volume:%d-lossVolume:%d]\n", 
                     src_str, dst_str, 
                     recv_2_send_proto.src_port, recv_2_send_proto.dst_port, recv_2_send_proto.rece_seqid,
-                    volume, loss_volume, loss_rate);
+                    receV_lostV.received_volume, receV_lostV.lost_volume);
             }
             if (ENABLE_DEBUG && 
                 (total_lost_pkt_num > pre_print_lost_pkt_num_times*NUM_LOST_PKTS_TO_DEBUG) &&

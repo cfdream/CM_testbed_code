@@ -207,6 +207,8 @@ main(int argc, char *argv[])
         printf("\nFailed: pthread_join\n");
     }
 
+    data_warehouse_destroy();
+
     tcpreplay_close(ctx);
 
     printf("main thread exit\n");

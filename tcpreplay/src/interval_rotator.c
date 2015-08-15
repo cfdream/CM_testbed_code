@@ -45,7 +45,30 @@ void write_interval_info_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     int na_idx = (data_warehouse.active_idx+1)%BUFFER_NUM;
     fprintf(fp_target_flow, "pkt_num_sent:%lu\n", data_warehouse.pkt_num_sent[na_idx]);
     fprintf(fp_target_flow, "volume_sent:%lu\n", data_warehouse.volume_sent[na_idx]);
+    fprintf(fp_target_flow, "volume_lost_detected:%lu\n", data_warehouse.volume_lost[na_idx]);
     fprintf(fp_target_flow, "condition_pkt_num_sent:%lu\n", data_warehouse.condition_pkt_num_sent[na_idx]);
+    
+    int volume_ok_flow_num = 0;
+    hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
+    entry_kfs_vi_t ret_entry;
+    while(ht_kfs_vi_next(flow_volume_map_pre_interval, &ret_entry) == 0){
+        if (ret_entry.value > cm_experiment_setting.target_flow_setting.volume_threshold) {
+            ++volume_ok_flow_num;
+        }
+        free(ret_entry.key);
+    }
+    fprintf(fp_target_flow, "volume_ok_flow_num:%d\n", volume_ok_flow_num);
+
+    int loss_rate_ok_flow_num = 0;
+    hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
+    entry_kfs_vf_t ret_vf_entry;
+    while(ht_kfs_vf_next(flow_loss_rate_map_pre_interval, &ret_vf_entry) == 0) {
+        if (ret_vf_entry.value > cm_experiment_setting.target_flow_setting.loss_rate_threshold) {
+            ++loss_rate_ok_flow_num;
+        }
+        free(ret_vf_entry.key);
+    }
+    fprintf(fp_target_flow, "loss_rate_ok_flow_num:%d\n", loss_rate_ok_flow_num);
 }
 
 void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {
@@ -56,11 +79,18 @@ void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     }
     fflush(fp_target_flow);
     hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
+    hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
+    hashtable_kfs_vi_t* flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_flow_loss_volume_map();
+    hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
+
     entry_kfs_vi_t ret_entry;
     while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
         //get one target flow, output to file
-        flow_s* p_flow = ret_entry.key;
-        fprintf(fp_target_flow, "%u\n", p_flow->srcip);
+        flow_src_t* p_flow = ret_entry.key;
+        int volume = ht_kfs_vi_get(flow_volume_map_pre_interval, p_flow);
+        float loss_rate = ht_kfs_vf_get(flow_loss_rate_map_pre_interval, p_flow);
+        int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
+        fprintf(fp_target_flow, "%u\t%u\t%f\t%u\n", p_flow->srcip, volume, loss_rate, loss_volume);
         fflush(fp_target_flow);
         //ret_entry.key
         free(ret_entry.key);
