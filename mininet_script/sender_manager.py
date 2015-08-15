@@ -28,8 +28,8 @@ class SenderManger():
             h.cmd( 'echo >', outfiles[ h ] )
             h.cmd( 'echo >', errfiles[ h ] )
             # Start pings
-            #cmdstr = 'sudo ../tcpreplay/src/tcpreplay --mbps=4 -i {0}-eth0   ../../caida_data/{1}.pcap' .format(h.name, h.name)
-            cmdstr = 'sudo ../tcpreplay/src/tcpreplay --mbps=1 -i {0}-eth0   ../../caida_data/s{1}_head100w.pcap' .format(h.name, int(h.name[1:]))
+            cmdstr = 'sudo ../tcpreplay/src/tcpreplay --mbps=1 -i {0}-eth0   ../../caida_data/output/{1}.pcap' .format(h.name, h.name)
+            #cmdstr = 'sudo ../tcpreplay/src/tcpreplay --mbps=1 -i {0}-eth0   ../../caida_data/s{1}_head100w.pcap' .format(h.name, int(h.name[1:]))
             #cmdstr = 'sudo ../tcpreplay/src/tcpreplay -i {0}-eth0   ../pcapFileGenerator/three_pkt_repeat.pcap' .format(h.name)
             h.cmdPrint( cmdstr,
                        '>', outfiles[ h ],
