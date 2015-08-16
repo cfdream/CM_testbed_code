@@ -95,6 +95,7 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
         int volume = ht_kfs_vi_get(flow_volume_map, p_flow);
         if (volume < 0) {
             printf("FATAL: flow_volume = 0 while loss_volume > 0 \n");
+            pthread_mutex_unlock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
             return;
         }
 
