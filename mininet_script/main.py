@@ -21,6 +21,7 @@ def run_one_round():
     print 'SUCC: rm dir and mkdir'
 
     #------------restart ovs------------
+    commands.getstatusoutput('sudo mn -c')
     ret, cmd = commands.getstatusoutput('cd ../../openvswitch-2.3.2/; sudo python autobuild_ovs_mininet.py 2')
     #ret, cmd = commands.getstatusoutput('sudo python ../../openvswitch-2.3.2/autobuild_ovs_mininet.py 2')
     print'{0} {1}' .format(ret, cmd)
