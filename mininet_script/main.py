@@ -22,7 +22,8 @@ def run_one_round():
 
     #------------restart ovs------------
     commands.getstatusoutput('sudo mn -c')
-    ret, cmd = commands.getstatusoutput('cd ../../openvswitch-2.3.2/; sudo python autobuild_ovs_mininet.py 2')
+    ret, cmd = commands.getstatusoutput('cd ../../openvswitch-2.3.2/; sudo python autobuild_ovs_mininet.py 4')
+    ret, cmd = commands.getstatusoutput('cd ../../openvswitch-2.3.2/; sudo python autobuild_ovs_mininet.py 1')
     #ret, cmd = commands.getstatusoutput('sudo python ../../openvswitch-2.3.2/autobuild_ovs_mininet.py 2')
     print'{0} {1}' .format(ret, cmd)
     if ret != 0:
@@ -51,6 +52,10 @@ def run_one_round():
 
     #------------tear down the mininet------------
     system_topo.tearDown()
+
+    #------------stop all senders and receivers------------
+    commands.getstatusoutput('sudo pkill tcpreplay')
+    commands.getstatusoutput('sudo pkill receiver')
 
 def config_experiment_setting_file(host_switch_sample, replace, memory_type, freq):
     config_fname = '../public_lib/cm_experiment_setting.txt'
@@ -111,10 +116,14 @@ def move_one_round_data(host_switch_sample, replace, memory_type, freq):
     print "SUCC: move_one_round_data"
 
 if __name__ == "__main__":
+    #for host_switch_sample in [0, 1]:
+    #    for replace in [0, 1]:
+    #        for memory_type in [0, 1]:
+    #            for freq in [5, 10, 20, 40, 60]:
     for host_switch_sample in [0]:
         for replace in [0]:
-            for memory_type in [0,1]:
-                for freq in [5,20,60]:
+            for memory_type in [1]:
+                for freq in [5, 20, 60]:
     #for host_switch_sample in [0]:
     #    for replace in [0]:
     #        for memory_type in [0]:
