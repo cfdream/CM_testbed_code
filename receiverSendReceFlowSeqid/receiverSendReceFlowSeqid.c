@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     }
 
 
-    pcap_loop(handle, 10000000, got_packet, NULL);
+    pcap_loop(handle, 90000000, got_packet, NULL);
     tearDown();
 
     //TODO: should close the FIFO, not sure whether they would be closed automatically after the program exits
