@@ -101,7 +101,7 @@ class one_setting_result_calculator_c():
     def read_global_rounds_target_flows(self, one_setting_path, global_rounds_target_flows, one_setting_result):
         sender_path = "{0}/sender" .format(one_setting_path)
         round_start_pattern = re.compile("=====time-(\d+) seconds=====")
-        target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)\t(\d+)")
+        target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)\t([-]*\d+)")
         raw_host_sample_switch_hold_accuracy = 0
         raw_host_sample_switch_hold_accuracy_cnt = 0
 

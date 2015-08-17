@@ -84,6 +84,11 @@ void* send_condition_to_network(void* param_ptr) {
         return NULL;
     }
 
+    if (!cm_experiment_setting.replacement) {
+        //if replament is not setup, no need to send condition packets
+        return NULL;
+    }
+
     /* debug */
     /* condition packet */
     /*
