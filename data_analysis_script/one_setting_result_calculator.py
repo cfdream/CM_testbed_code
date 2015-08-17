@@ -138,7 +138,7 @@ class one_setting_result_calculator_c():
     def read_rounds_per_switch_flow_info(self, one_setting_path, switches_rounds_flow_info):
         switch_path = "{0}/switch" .format(one_setting_path)
         round_start_pattern = re.compile("=====time-(\d+) seconds=====")
-        flow_info_pattern = re.compile("^(\d+)\t(\d+)\t(\d+)\t([-]*\d+)")
+        flow_info_pattern = re.compile("^(\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)")
         sample_map_size_pattern = re.compile("^sample_hashmap_size:(\d+)")
         condition_map_size_pattern = re.compile("^condition_hashmap_size:(\d+)")
         for switch_idx in range(1, CONSTANTS.NUM_SWITCH+1):
@@ -153,6 +153,8 @@ class one_setting_result_calculator_c():
             in_file.close()
             #2. get per round flow info for the switch
             cur_round_sec = 0
+            cur_round_flow_num = 0
+            line_num = 0
             signed_target_num = 0
             for line in lines:
                 #get memory sizes
@@ -172,9 +174,16 @@ class one_setting_result_calculator_c():
                     #print("switch:{0}, cur_round_sec:{1}" .format(switch_idx, cur_round_sec))
                     #print("pre interval signed_target_num:{0}" .format(signed_target_num))
                     signed_target_num = 0
+                    print("cur_round_flow_num:{0}, line_num:{1}" .format(cur_round_flow_num, line_num))
+                    cur_round_flow_num=0
+                    line_num = 0
                 else:
                     match = flow_info_pattern.match(line)
+                    line_num += 1
+                    #print(line)
                     if match != None:
+                        #print("matched")
+                        cur_round_flow_num += 1
                         #print(line)
                         #one target flow
                         srcip = match.group(1)
