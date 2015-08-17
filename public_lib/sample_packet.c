@@ -14,12 +14,13 @@ int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_
     flow_src_t* p_flow_src = p_packet;
 
     if (flow_src_already_sampled(p_flow_src, flow_sample_map)) {
+        //printf("srcip:%u already in flow_sample_map\n", p_flow_src->srcip);
         return 1;
     }
     //packet sample rate
     pkt_sample_rate = pkt_sample_rate_trad(total_pkt_len);
-    rand_float = drand48_r(p_rand_buffer, &rand_float);    //[0,1)
-            
+    drand48_r(p_rand_buffer, &rand_float);    //[0,1)
+    //printf("pkt_sample_rate:%f, rand_float:%f\n", pkt_sample_rate, rand_float);        
     if (rand_float < pkt_sample_rate) {
         //mark the flow as sampled
         ht_kfs_vi_set(flow_sample_map, p_flow_src, 1);
