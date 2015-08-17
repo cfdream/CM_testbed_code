@@ -40,6 +40,10 @@ int data_warehouse_init() {
         if (data_warehouse.flow_sample_map[a_idx] == NULL) {
             return -1;
         }
+        data_warehouse.flow_not_sampled_volume_map[a_idx] = ht_kfs_vi_create();
+        if (data_warehouse.flow_not_sampled_volume_map[a_idx] == NULL) {
+            return -1;
+        }
 
         data_warehouse.pkt_num_sent[a_idx] = 0;
         data_warehouse.volume_sent[a_idx] = 0;
@@ -71,6 +75,7 @@ void data_warehouse_destroy() {
         ht_kfs_vf_destory(data_warehouse.flow_loss_rate_map[a_idx]);
         ht_kfs_vi_destory(data_warehouse.target_flow_map[a_idx]);
         ht_kfs_vi_destory(data_warehouse.flow_sample_map[a_idx]);
+        ht_kfs_vi_destory(data_warehouse.flow_not_sampled_volume_map[a_idx]);
     }
 
     int i = 0;
@@ -180,6 +185,23 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
     pthread_mutex_unlock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
 }
 
+void update_flow_not_sampled_volume_map(flow_src_t* p_flow) {
+    hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
+    hashtable_kfs_vi_t* flow_not_sampled_volume_map = data_warehouse_get_flow_not_sampled_volume_map();
+
+    //check whether flow_src is in flow_not_sampled_volume_map
+    if (ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow) < 0) {
+        //not in flow_not_sampled_volume_map
+        //add the not_sampled_volume into the map
+        int volume = ht_kfs_vi_get(flow_volume_map, p_flow);
+        if (volume < 0) {
+            volume = 0;
+        }
+        ht_kfs_vi_set(flow_not_sampled_volume_map, p_flow, volume);
+    }
+
+}
+
 /**
 * @brief call when need to switch to another buffer
 */
@@ -202,6 +224,7 @@ int data_warehouse_reset_noactive_buf() {
     ht_kfs_vi_destory(data_warehouse.target_flow_map[na_idx]);
     ht_kfs_vf_destory(data_warehouse.flow_loss_rate_map[na_idx]);
     ht_kfs_vi_destory(data_warehouse.flow_sample_map[na_idx]);
+    ht_kfs_vi_destory(data_warehouse.flow_not_sampled_volume_map[na_idx]);
     //recreate the hashmaps
     data_warehouse.flow_volume_map[na_idx] = ht_kfs_vi_create();
     if (data_warehouse.flow_volume_map[na_idx] == NULL) {
@@ -221,6 +244,10 @@ int data_warehouse_reset_noactive_buf() {
     }
     data_warehouse.flow_sample_map[na_idx] = ht_kfs_vi_create();
     if (data_warehouse.flow_sample_map[na_idx] == NULL) {
+        return -1;
+    }
+    data_warehouse.flow_not_sampled_volume_map[na_idx] = ht_kfs_vi_create();
+    if (data_warehouse.flow_not_sampled_volume_map[na_idx] == NULL) {
         return -1;
     }
     /* interval infor */
@@ -256,6 +283,10 @@ hashtable_kfs_vi_t* data_warehouse_get_flow_sample_map() {
     return data_warehouse.flow_sample_map[data_warehouse.active_idx];
 }
 
+hashtable_kfs_vi_t* data_warehouse_get_flow_not_sampled_volume_map() {
+    return data_warehouse.flow_not_sampled_volume_map[data_warehouse.active_idx];
+}
+
 hashtable_kfs_vi_t* data_warehouse_get_unactive_target_flow_map() {
     return data_warehouse.target_flow_map[(data_warehouse.active_idx+1)%BUFFER_NUM];
 }
@@ -270,4 +301,8 @@ hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_loss_volume_map() {
 
 hashtable_kfs_vf_t* data_warehouse_get_unactive_flow_loss_rate_map() {
     return data_warehouse.flow_loss_rate_map[(data_warehouse.active_idx+1)%BUFFER_NUM];
+}
+
+hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_not_sampled_volume_map() {
+    return data_warehouse.flow_not_sampled_volume_map[(data_warehouse.active_idx+1)%BUFFER_NUM];
 }

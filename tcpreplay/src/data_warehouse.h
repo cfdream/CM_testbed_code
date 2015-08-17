@@ -33,6 +33,8 @@ typedef struct data_warehouse_s {
     hashtable_kfs_vi_t* target_flow_map[BUFFER_NUM];
     /* 1 hashtable for sample and hold*/
     hashtable_kfs_vi_t* flow_sample_map[BUFFER_NUM];
+    hashtable_kfs_vi_t* flow_not_sampled_volume_map[BUFFER_NUM];
+
     /* interval infor */
     uint64_t pkt_num_sent[BUFFER_NUM];
     uint64_t volume_sent[BUFFER_NUM];
@@ -79,6 +81,8 @@ hashtable_kfs_vi_t* data_warehouse_get_target_flow_map();
 
 hashtable_kfs_vi_t* data_warehouse_get_flow_sample_map();
 
+hashtable_kfs_vi_t* data_warehouse_get_flow_not_sampled_volume_map();
+
 hashtable_kfs_vi_t* data_warehouse_get_unactive_target_flow_map();
 
 hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_volume_map();
@@ -87,8 +91,11 @@ hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_loss_volume_map();
 
 hashtable_kfs_vf_t* data_warehouse_get_unactive_flow_loss_rate_map();
 
+hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_not_sampled_volume_map();
+
 void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume);
 
 void update_flow_normal_volume(flow_src_t* p_flow, int added_volume);
 
+void update_flow_not_sampled_volume_map(flow_src_t* flow_src);
 #endif

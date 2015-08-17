@@ -425,7 +425,6 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
 
             flow_src_t flow_src;
             flow_src.srcip = packet.srcip;
-            update_flow_normal_volume(&flow_src, total_pkt_len);
 
             /* sample the packet at the sender side */
             if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
@@ -434,11 +433,13 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                 if (sampled) {
                     //tag one VLAN bit to mark the packet as sampled
                     tag_packet_as_sampled(packet_buf, datalink);
+                    //set not_sampled_volume for the flow
+                    update_flow_not_sampled_volume_map(&flow_src);
                 }
-
                 //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
             }
 
+            update_flow_normal_volume(&flow_src, total_pkt_len);
             ++data_warehouse.pkt_num_sent[data_warehouse.active_idx];
             data_warehouse.volume_sent[data_warehouse.active_idx] += packet.len;
 
