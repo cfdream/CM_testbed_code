@@ -434,7 +434,7 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                     //tag one VLAN bit to mark the packet as sampled
                     tag_packet_as_sampled(packet_buf, datalink);
                     //set not_sampled_volume for the flow
-                    update_flow_not_sampled_volume_map(&flow_src);
+                    update_flow_not_sampled_volume(&flow_src);
                 }
                 //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
             }
