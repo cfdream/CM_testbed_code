@@ -34,19 +34,19 @@ class avg_switch_result_one_setting_c():
 class one_setting_result_c():
     def __init__(self):
         self.avg_fn = 0
-        self.min_fn = 1
+        self.min_fn = 0
         self.max_fn = 0
         self.stdv_fn = 0
         self.avg_fp = 0
-        self.min_fp = 1
+        self.min_fp = 0
         self.max_fp = 0
         self.stdv_fp = 0
         self.avg_accuracy = 0
-        self.min_accuracy = 1
+        self.min_accuracy = 0
         self.min_accuracy = 0
         self.stdv_accuracy = 0
         self.avg_sample_map_size = 0
-        self.min_sample_map_size = 999999
+        self.min_sample_map_size = 0
         self.max_sample_map_size = 0
         self.avg_condition_map_size = 0
         self.max_condition_map_size = 0
@@ -182,6 +182,10 @@ class one_setting_result_calculator_c():
                         captured_volume = int(match.group(3))
                         signed_target = int(match.group(4))
                         flow_info = switch_flow_info_c(real_volume, captured_volume, signed_target)
+                        if cur_round_sec not in one_switch_rounds_info:
+                            print("FATAL: switch_idx:{0}, cur_round_sec:{1} not exist in one_switch_rounds_info" \
+                                .format(switch_idx, cur_round_sec))
+                            continue
                         one_switch_one_round_info = one_switch_rounds_info[cur_round_sec]
                         one_switch_one_round_info[srcip] = flow_info
                         if signed_target == 1:
@@ -250,11 +254,14 @@ class one_setting_result_calculator_c():
                 all_to_report_target_flow_accuracy = 0
                 all_to_report_target_flow_num = 0
                 for srcip, flow_info in switch_flow_info_map.items():
-                    if srcip in global_rounds_target_flows \
+                    if srcip in global_target_flow_map \
                         and (flow_info.captured_volume > 0) \
                         and (flow_info.signed_target > 0):
-                        all_flow_accuracy += (1.0 * flow_info.captured_volume / flow_info.real_volume)
+                        one_flow_accuracy = (1.0 * flow_info.captured_volume / flow_info.real_volume)
+                        all_to_report_target_flow_accuracy += one_flow_accuracy
                         all_to_report_target_flow_num += 1
+                        #print("srcip:{0}, real_v:{1}, captured_v:{2}, accuracy:{3}" \
+                        #    .format(srcip, flow_info.real_volume, flow_info.captured_volume, one_flow_accuracy))
                 accuracy = 0
                 if all_to_report_target_flow_num > 0:
                     accuracy = all_to_report_target_flow_accuracy / all_to_report_target_flow_num
@@ -277,7 +284,7 @@ class one_setting_result_calculator_c():
             fp_list = []
             accuracy_list = []
             for sec, one_round_result in rounds_result_map.items():
-                print("fn-fp-accuracy:{0}-{1}-{2}" .format(one_round_result.fn, one_round_result.fp, one_round_result.accuracy))
+                #print("fn-fp-accuracy:{0}-{1}-{2}" .format(one_round_result.fn, one_round_result.fp, one_round_result.accuracy))
                 fn_list.append(one_round_result.fn)
                 fp_list.append(one_round_result.fp)
                 accuracy_list.append(one_round_result.accuracy)
