@@ -143,8 +143,8 @@ class one_setting_result_calculator_c():
         print("num_rounds:{0}" .format(len(global_rounds_target_flows)))
         if len(global_rounds_target_flows) > 0:
             for sec, one_round_result in global_rounds_target_flows.items():
-                print("one round target flow num:{0}" .format(len(one_round_result)))
-                break
+                print("one round sec:{0}, target flow num:{1}" .format(sec, len(one_round_result)))
+                #break
         print("end read {0}" .format(sender_fname))
 
     def read_rounds_per_switch_flow_info(self, one_setting_path, switches_rounds_flow_info):
@@ -179,6 +179,8 @@ class one_setting_result_calculator_c():
 
                 match = round_start_pattern.match(line)
                 if match != None:
+                    #print previous round info
+                    #print("sec:{0}, cur_round_flow_num:{1}, line_num:{2}" .format(cur_round_sec, cur_round_flow_num, line_num))
                     #new round start
                     cur_round_sec = match.group(1)
                     one_switch_one_round_info = {}
@@ -186,7 +188,6 @@ class one_setting_result_calculator_c():
                     #print("switch:{0}, cur_round_sec:{1}" .format(switch_idx, cur_round_sec))
                     #print("pre interval signed_target_num:{0}" .format(signed_target_num))
                     signed_target_num = 0
-                    print("cur_round_flow_num:{0}, line_num:{1}" .format(cur_round_flow_num, line_num))
                     cur_round_flow_num=0
                     line_num = 0
                 else:
@@ -217,8 +218,8 @@ class one_setting_result_calculator_c():
         if len(switches_rounds_flow_info) > 0:
             for switch_idx, one_switch_rounds_info in switches_rounds_flow_info.items():
                 for sec, one_switch_one_round_info in one_switch_rounds_info.items():
-                    print("one switch flow num:{0}" .format(len(one_switch_one_round_info)))
-                    break
+                    print("sec:{0}, switch:{1}, flow num:{2}" .format(sec, switch_idx, len(one_switch_one_round_info)))
+                    
 
     def calculate_rounds_per_switch_result(self, global_rounds_target_flows, switches_rounds_flow_info, switches_rounds_result):
         #switches_rounds_result
