@@ -80,14 +80,19 @@ void* send_condition_to_network(void* param_ptr) {
     uint64_t sec;
     condition_t condition;
 
+    /* switch_sample needs to now the target flows as well
     if (cm_experiment_setting.host_or_switch_sample != HOST_SAMPLE) {
         return NULL;
     }
+    */
 
+    /* no replament needs to now the target flows as well
+     * as switches needs to know which are the target flows
     if (!cm_experiment_setting.replacement) {
         //if replament is not setup, no need to send condition packets
         return NULL;
     }
+    */
 
     /* debug */
     /* condition packet */
