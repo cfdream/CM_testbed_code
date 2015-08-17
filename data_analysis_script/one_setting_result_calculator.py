@@ -51,6 +51,7 @@ class one_setting_result_c():
         self.avg_condition_map_size = 0
         self.max_condition_map_size = 0
         self.max_condition_map_size = 0
+        self.raw_host_sample_switch_hold_accuracy = 0
 
 class one_setting_result_calculator_c():
     def __init__(self):
@@ -63,11 +64,13 @@ class one_setting_result_calculator_c():
         self.switches_condition_map_size = [None] * (CONSTANTS.NUM_SWITCH+1)
     
     def get_one_setting_result(self, one_setting_path):
+        one_setting_result = one_setting_result_c()
+
         print(one_setting_path)
         #1. read all target flows for each round
         #format: {{sec, {flow}},{sec, {flow}},{sec, {flow}}}
         global_rounds_target_flows = {}
-        self.read_global_rounds_target_flows(one_setting_path, global_rounds_target_flows)
+        self.read_global_rounds_target_flows(one_setting_path, global_rounds_target_flows, one_setting_result)
         
         #2. read flow infor for per switch per each round
         #pair: key-switch_id, value-{{sec, {flow info}},{sec, {flow info}},{sec, {flow info}}}
@@ -90,16 +93,18 @@ class one_setting_result_calculator_c():
 
         #5. calculate_one_setting_result
         print("START calculate_one_setting_result()")
-        one_setting_result = one_setting_result_c()
         self.calculate_one_setting_result(avg_switches_result_one_setting, one_setting_result)
         print("END calculate_one_setting_result()")
 
         return one_setting_result
 
-    def read_global_rounds_target_flows(self, one_setting_path, global_rounds_target_flows):
+    def read_global_rounds_target_flows(self, one_setting_path, global_rounds_target_flows, one_setting_result):
         sender_path = "{0}/sender" .format(one_setting_path)
         round_start_pattern = re.compile("=====time-(\d+) seconds=====")
-        target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)")
+        target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)\t(\d+)")
+        raw_host_sample_switch_hold_accuracy = 0
+        raw_host_sample_switch_hold_accuracy_cnt = 0
+
         for sender_idx in range(1, CONSTANTS.NUM_SENDER+1):
             sender_fname = "{0}/h{1}_intervals_target_flows.txt" .format(sender_path, sender_idx)
             print("start read {0}" .format(sender_fname))
@@ -125,9 +130,16 @@ class one_setting_result_calculator_c():
                         volume = match.group(2)
                         loss_rate = match.group(3)
                         loss_volume = match.group(4)
+                        not_sampled_volume = match.group(5)
 
                         one_round_result = global_rounds_target_flows[cur_round_sec]
                         one_round_result[srcip] = 1
+
+                        raw_host_sample_switch_hold_accuracy_cnt += 1
+                        raw_host_sample_switch_hold_accuracy += (1 - 1.0 * int(not_sampled_volume) / int(volume))
+        if raw_host_sample_switch_hold_accuracy_cnt > 0:
+            raw_host_sample_switch_hold_accuracy /= raw_host_sample_switch_hold_accuracy_cnt
+        one_setting_result.raw_host_sample_switch_hold_accuracy = raw_host_sample_switch_hold_accuracy
         print("num_rounds:{0}" .format(len(global_rounds_target_flows)))
         if len(global_rounds_target_flows) > 0:
             for sec, one_round_result in global_rounds_target_flows.items():
