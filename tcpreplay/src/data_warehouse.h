@@ -97,5 +97,5 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume);
 
 void update_flow_normal_volume(flow_src_t* p_flow, int added_volume);
 
-void update_flow_not_sampled_volume_map(flow_src_t* flow_src);
+void update_flow_not_sampled_volume(flow_src_t* flow_src);
 #endif

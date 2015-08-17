@@ -185,7 +185,7 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
     pthread_mutex_unlock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
 }
 
-void update_flow_not_sampled_volume_map(flow_src_t* p_flow) {
+void update_flow_not_sampled_volume(flow_src_t* p_flow) {
     hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
     hashtable_kfs_vi_t* flow_not_sampled_volume_map = data_warehouse_get_flow_not_sampled_volume_map();
 
