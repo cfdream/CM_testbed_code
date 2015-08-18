@@ -25,7 +25,7 @@ class results_analyzer_c():
     def output_one_setting_result(self, host_switch_sample, replace, memory_type, freq, one_setting_result):
         with open('result_query1_diff_setting.txt', 'a') as out_file:
             #setting info
-            out_file.write("{host_switch_sample}\t{replace}\t{memory_type}\t{freq}\t{avg_fn}\t{min_fn}\t{max_fn}\t{stdv_fn}\t{avg_fp}\t{min_fp}\t{max_fp}\t{stdv_fp}\t{avg_accuracy}\t{min_accuracy}\t{max_accuracy}\t{stdv_accuracy}\t{avg_sample_map_size}\t{min_sample_map_size}\t{max_sample_map_size}\t{avg_condition_map_size}\t{min_condition_map_size}\t{max_sample_map_size}\t{raw_host_sample_switch_hold_accuracy}\n" \
+            out_file.write("{host_switch_sample}\t{replace}\t{memory_type}\t{freq}\t{avg_fn}\t{min_fn}\t{max_fn}\t{stdv_fn}\t{avg_fp}\t{min_fp}\t{max_fp}\t{stdv_fp}\t{avg_accuracy}\t{min_accuracy}\t{max_accuracy}\t{stdv_accuracy}\t{avg_sample_map_size}\t{min_sample_map_size}\t{max_sample_map_size}\t{avg_condition_map_size}\t{min_condition_map_size}\t{max_sample_map_size}\t{raw_host_sample_switch_hold_accuracy}\t{avg_real_target_flow_num}\t{avg_fn_num}\t{avg_fn_num_not_targetflow}\t{avg_fn_num_not_captured}\n" \
             .format(host_switch_sample=host_switch_sample, \
                 replace=replace, memory_type=memory_type, freq=freq, \
                 avg_fn = one_setting_result.avg_fn, \
@@ -46,7 +46,11 @@ class results_analyzer_c():
                 avg_condition_map_size = one_setting_result.avg_condition_map_size, \
                 min_condition_map_size = one_setting_result.max_condition_map_size, \
                 max_condition_map_size = one_setting_result.max_condition_map_size, \
-                raw_host_sample_switch_hold_accuracy = one_setting_result.raw_host_sample_switch_hold_accuracy 
+                raw_host_sample_switch_hold_accuracy = one_setting_result.raw_host_sample_switch_hold_accuracy, \
+                avg_real_target_flow_num = one_setting_result.avg_real_target_flow_num, \
+                avg_fn_num = one_setting_result.avg_fn_num, \
+                avg_fn_num_not_targetflow = one_setting_result.avg_fn_num_not_targetflow, \
+                avg_fn_num_not_captured = one_setting_result.avg_fn_num_not_captured
             )) 
 
 if __name__ == '__main__':

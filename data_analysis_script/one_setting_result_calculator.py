@@ -13,10 +13,14 @@ class switch_flow_info_c():
         self.signed_target = signed_target
 
 class switch_one_round_result_c():
-    def __init__(self, fn, fp, accuracy):
+    def __init__(self, fn, fp, accuracy, real_target_flow_num, fn_num, fn_num_not_targetflow, fn_num_not_captured):
         self.fn = fn
         self.fp = fp
         self.accuracy = accuracy
+        self.real_target_flow_num = real_target_flow_num
+        self.fn_num = fn_num
+        self.fn_num_not_targetflow = fn_num_not_targetflow
+        self.fn_num_not_captured  = fn_num_not_captured
         self.sample_map_size = 0
         self.condition_map_size = 0
 
@@ -30,6 +34,10 @@ class avg_switch_result_one_setting_c():
         self.stdv_accuracy = 0
         self.sample_map_size = 0
         self.condition_map_size = 0
+        self.avg_real_target_flow_num = 0
+        self.avg_fn_num = 0
+        self.avg_fn_num_not_targetflow = 0
+        self.avg_fn_num_not_captured = 0
 
 class one_setting_result_c():
     def __init__(self):
@@ -37,6 +45,10 @@ class one_setting_result_c():
         self.min_fn = 0
         self.max_fn = 0
         self.stdv_fn = 0
+        self.avg_targetflow_num = 0
+        self.avg_fn_num = 0
+        self.avg_fn_num_not_targetflow = 0
+        self.avg_fn_num_not_captured = 0
         self.avg_fp = 0
         self.min_fp = 0
         self.max_fp = 0
@@ -245,11 +257,17 @@ class one_setting_result_calculator_c():
                 all_flow_num  = len(switch_flow_info_map)
                 real_target_flow_num = 0
                 false_negative_num = 0
+                fn_num_not_targetflow = 0
+                fn_num_not_captured = 0
                 #print("all_flow_num:{0}" .format(all_flow_num))
                 for srcip, flow_info in switch_flow_info_map.items():
                     if srcip in global_target_flow_map:
                         #the target flow goes through the switch
                         real_target_flow_num += 1
+                        if flow_info.signed_target < 0:
+                            fn_num_not_captured += 1
+                        if flow_info.captured_volume < 0:
+                            fn_num_not_targetflow += 1
                         if flow_info.captured_volume < 0 or flow_info.signed_target < 0:
                             #not captured flow
                             false_negative_num += 1
@@ -289,13 +307,15 @@ class one_setting_result_calculator_c():
                     accuracy = all_to_report_target_flow_accuracy / all_to_report_target_flow_num
   
                 #2.4 one round result of the switch
-                one_result = switch_one_round_result_c(false_negative_ratio, false_positive_ratio, accuracy)
+                one_result = switch_one_round_result_c(false_negative_ratio, false_positive_ratio, accuracy, \
+                        real_target_flow_num, false_negative_num, fn_num_not_targetflow, fn_num_not_captured)
                 switches_rounds_result[switch_id][sec] = one_result
                 #print("fn-fp-accuracy:{0}-{1}-{2}" .format(one_result.fn, one_result.fp, one_result.accuracy))
 
     def calculate_switches_one_setting_result(self, switches_rounds_result, avg_switches_result_one_setting):
         #switches_rounds_result
         #pair: key-switch_id, value-{{sec, switch_one_round_result_c},{sec, switch_one_round_result_c}}
+        switches_avg_real_targetflow_num = []
         for switch_id, rounds_result_map in switches_rounds_result.items():
             avg_switch_one_setting = avg_switch_result_one_setting_c()
             avg_switches_result_one_setting[switch_id] = avg_switch_one_setting
@@ -305,18 +325,47 @@ class one_setting_result_calculator_c():
             fn_list = []
             fp_list = []
             accuracy_list = []
+            real_target_flow_num_list = []
+            fn_num_list = []
+            fn_num_not_targetflow_list = []
+            fn_num_not_captured_list = []
             for sec, one_round_result in rounds_result_map.items():
                 #print("fn-fp-accuracy:{0}-{1}-{2}" .format(one_round_result.fn, one_round_result.fp, one_round_result.accuracy))
                 fn_list.append(one_round_result.fn)
                 fp_list.append(one_round_result.fp)
                 accuracy_list.append(one_round_result.accuracy)
+                real_target_flow_num_list.append(one_round_result.real_target_flow_num)
+                fn_num_list.append(one_round_result.fn_num)
+                fn_num_not_targetflow_list.append(one_round_result.fn_num_not_targetflow)
+                fn_num_not_captured_list.append(one_round_result.fn_num_not_captured)
+
             avg_switch_one_setting.avg_fn = statistics.mean(fn_list)
             avg_switch_one_setting.avg_fp = statistics.mean(fp_list)
             avg_switch_one_setting.avg_accuracy = statistics.mean(accuracy_list)
+            avg_switch_one_setting.avg_real_target_flow_num = statistics.mean(real_target_flow_num_list)
+            switches_avg_real_targetflow_num.append(avg_switch_one_setting.avg_real_target_flow_num)
+            avg_switch_one_setting.avg_fn_num = statistics.mean(fn_num_list)
+            avg_switch_one_setting.avg_fn_num_not_targetflow = statistics.mean(fn_num_not_targetflow_list)
+            avg_switch_one_setting.avg_fn_num_not_captured = statistics.mean(fn_num_not_captured_list)
             if len(rounds_result_map) > 1:
                 avg_switch_one_setting.stdv_fn =statistics.stdev(fn_list)
                 avg_switch_one_setting.stdv_fp =statistics.stdev(fp_list)
                 avg_switch_one_setting.stdv_accuracy =statistics.stdev(accuracy_list)
+        print("real_targt_flow_num distribution among all swtiches:")
+        print(switches_avg_real_targetflow_num)
+        print("ratio to the maximum real_targt_flow_num among all switches:")
+        ratio_list = []
+        for avg_targetflow_num in switches_avg_real_targetflow_num:
+            ratio_list.append(1.0 * avg_targetflow_num / max(switches_avg_real_targetflow_num) )
+        print(ratio_list)
+        #print switches avg_fn
+        switches_avg_fn = []
+        print("switches avg false negative")
+        for switch_id in range(1, CONSTANTS.NUM_SWITCH+1):
+            switches_avg_fn.append(avg_switches_result_one_setting[switch_id].avg_fn)
+        print(switches_avg_fn)
+
+
     def calculate_one_setting_result(self, avg_switches_result_one_setting, one_setting_result):
         #avg_switches_result_one_setting = {}
         #format:key-switch_id, value-avg_switch_result_one_setting_c
@@ -325,16 +374,30 @@ class one_setting_result_calculator_c():
         accuracy_list = []
         sample_map_size_list = []
         condition_map_size_list = []
+
+        real_target_flow_num_list = []
+        fn_num_list = []
+        fn_num_not_targetflow_list = []
+        fn_num_not_captured_list = []
+
         for switch_id, avg_switch_one_setting in avg_switches_result_one_setting.items():
             fn_list.append(avg_switch_one_setting.avg_fn)
             fp_list.append(avg_switch_one_setting.avg_fp)
             accuracy_list.append(avg_switch_one_setting.avg_accuracy)
             sample_map_size_list.append(avg_switch_one_setting.sample_map_size)
             condition_map_size_list.append(avg_switch_one_setting.condition_map_size)
+            real_target_flow_num_list.append(avg_switch_one_setting.avg_real_target_flow_num)
+            fn_num_list.append(avg_switch_one_setting.avg_fn_num)
+            fn_num_not_targetflow_list.append(avg_switch_one_setting.avg_fn_num_not_targetflow)
+            fn_num_not_captured_list.append(avg_switch_one_setting.avg_fn_num_not_captured)
 
         one_setting_result.avg_fn = statistics.mean(fn_list)
         one_setting_result.min_fn = min(fn_list)
         one_setting_result.max_fn = max(fn_list)
+        one_setting_result.avg_real_target_flow_num = statistics.mean(real_target_flow_num_list)
+        one_setting_result.avg_fn_num = statistics.mean(fn_num_list)
+        one_setting_result.avg_fn_num_not_targetflow = statistics.mean(fn_num_not_targetflow_list)
+        one_setting_result.avg_fn_num_not_captured = statistics.mean(fn_num_not_captured_list)
         one_setting_result.stdv_fn =statistics.stdev(fn_list)
         one_setting_result.avg_fp = statistics.mean(fp_list)
         one_setting_result.min_fp = min(fp_list)
