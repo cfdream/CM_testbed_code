@@ -18,6 +18,11 @@ int data_warehouse_init() {
         return -1;
     }
 
+    data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
+    if (data_warehouse.last_sent_target_flow_map == NULL) {
+        return -1;
+    }
+
     int a_idx = 0;
     for (; a_idx < BUFFER_NUM; ++a_idx) {
         data_warehouse.flow_volume_map[a_idx] = ht_kfs_vi_create();
@@ -67,6 +72,7 @@ void data_warehouse_destroy() {
 
     // create flow_recePktList_map
     ht_vl_destory(data_warehouse.flow_recePktList_map);
+    ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
 
     int a_idx = 0;
     for (; a_idx < BUFFER_NUM; ++a_idx) {

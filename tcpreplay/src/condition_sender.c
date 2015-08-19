@@ -118,6 +118,11 @@ void* send_condition_to_network(void* param_ptr) {
         pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
 
         printf("-----start send_condition_to_network, current_sec:%lu-----\n", current_sec);
+        ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
+        data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
+        if (data_warehouse.last_sent_target_flow_map == NULL) {
+            return NULL;
+        }
 
         hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
         entry_kfs_vi_t ret_entry;
@@ -128,6 +133,8 @@ void* send_condition_to_network(void* param_ptr) {
             ++condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("condition srcip:%u\n", condition.srcip);
+            //add the flow into last_sent_target_flow_map
+            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, ret_entry.key, 1);
             free(ret_entry.key);
         }
         pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);
