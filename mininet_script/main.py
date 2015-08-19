@@ -131,7 +131,7 @@ if __name__ == "__main__":
     #        for memory_type in [0, 1]:
     #            for memory_times in [1, 2, 4, 8, 16]:
     #                for freq in [5, 10, 20, 40, 60]:
-    #for experiment of HSSH +- replace +- memory_type += memory_times += freq
+    #for experiment of HSSH +- replace +- memory_type +- memory_times +- freq
     for host_switch_sample in [0]:
         for replace in [0, 1]:
             for memory_type in [0, 1]:
