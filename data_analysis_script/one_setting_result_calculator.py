@@ -66,6 +66,7 @@ class one_setting_result_c():
         self.raw_host_sample_switch_hold_accuracy = 0
 
 class one_setting_result_calculator_c():
+    CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY = "CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY"
     def __init__(self):
         #setting
         self.host_switch_sample = 0
@@ -82,7 +83,8 @@ class one_setting_result_calculator_c():
         #1. read all target flows for each round
         #format: {{sec, {flow}},{sec, {flow}},{sec, {flow}}}
         global_rounds_target_flows = {}
-        self.read_global_rounds_target_flows(one_setting_path, global_rounds_target_flows, one_setting_result)
+        global_rounds_not_sent_out_targetflows = {}
+        self.read_global_rounds_target_flows(one_setting_path, global_rounds_target_flows, global_rounds_not_sent_out_targetflows, one_setting_result)
         
         #2. read flow infor for per switch per each round
         #pair: key-switch_id, value-{{sec, {flow info}},{sec, {flow info}},{sec, {flow info}}}
@@ -93,7 +95,7 @@ class one_setting_result_calculator_c():
         print("START calculate_rounds_per_switch_result()")
         #pair: key-switch_id, value-{{sec, switch_one_round_result_c},{sec, switch_one_round_result_c}}
         switches_rounds_result = {}     #switches_rounds_result_c
-        self.calculate_rounds_per_switch_result(global_rounds_target_flows, switches_rounds_flow_info, switches_rounds_result)
+        self.calculate_rounds_per_switch_result(global_rounds_target_flows, switches_rounds_flow_info, global_rounds_not_sent_out_targetflows, switches_rounds_result)
         print("END calculate_rounds_per_switch_result()")
 
         #4. calculate one_settig_result
@@ -110,10 +112,10 @@ class one_setting_result_calculator_c():
 
         return one_setting_result
 
-    def read_global_rounds_target_flows(self, one_setting_path, global_rounds_target_flows, one_setting_result):
+    def read_global_rounds_target_flows(self, one_setting_path, global_rounds_target_flows, global_rounds_not_sent_out_targetflows, one_setting_result):
         sender_path = "{0}/sender" .format(one_setting_path)
         round_start_pattern = re.compile("=====time-(\d+) seconds=====")
-        target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)\t([-]*\d+)")
+        target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)")
         raw_host_sample_switch_hold_accuracy = 0
         raw_host_sample_switch_hold_accuracy_cnt = 0
 
@@ -131,9 +133,13 @@ class one_setting_result_calculator_c():
                 if match != None:
                     #new round start
                     cur_round_sec = match.group(1)
+                    if cur_round_sec == '1439973225':
+                        break
                     if cur_round_sec not in global_rounds_target_flows:
                         one_round_result = {}
                         global_rounds_target_flows[cur_round_sec] = one_round_result
+                        not_sent_map= {}
+                        global_rounds_not_sent_out_targetflows[cur_round_sec] = not_sent_map
                 else:
                     match = target_flow_pattern.match(line)
                     if match != None:
@@ -143,9 +149,12 @@ class one_setting_result_calculator_c():
                         loss_rate = match.group(3)
                         loss_volume = match.group(4)
                         not_sampled_volume = match.group(5)
+                        sent_out = int(match.group(6))
 
                         one_round_result = global_rounds_target_flows[cur_round_sec]
                         one_round_result[srcip] = 1
+                        if sent_out < 0:
+                            global_rounds_not_sent_out_targetflows[cur_round_sec][srcip] = 1
 
                         raw_host_sample_switch_hold_accuracy_cnt += 1
                         raw_host_sample_switch_hold_accuracy += (1 - 1.0 * int(not_sampled_volume) / int(volume))
@@ -165,6 +174,7 @@ class one_setting_result_calculator_c():
         flow_info_pattern = re.compile("^(\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)")
         sample_map_size_pattern = re.compile("^sample_hashmap_size:(\d+)")
         condition_map_size_pattern = re.compile("^condition_hashmap_size:(\d+)")
+        condition_map_last_round_collision_num = re.compile("^condition_hashmap last rotate collision times:(\d+)")
         for switch_idx in range(1, CONSTANTS.NUM_SWITCH+1):
             switch_fname = "{0}/s{1}.result" .format(switch_path, switch_idx)
             print("start read {0}" .format(switch_fname))
@@ -188,7 +198,10 @@ class one_setting_result_calculator_c():
                 match = condition_map_size_pattern.match(line)
                 if match != None:
                     self.switches_condition_map_size[switch_idx] = int(match.group(1))
-
+                match = condition_map_last_round_collision_num.match(line)
+                if match != None:
+                    one_switch_rounds_info[cur_round_sec][one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY] \
+                        = int(match.group(1))
                 match = round_start_pattern.match(line)
                 if match != None:
                     #print previous round info
@@ -233,7 +246,7 @@ class one_setting_result_calculator_c():
                     print("sec:{0}, switch:{1}, flow num:{2}" .format(sec, switch_idx, len(one_switch_one_round_info)))
                     
 
-    def calculate_rounds_per_switch_result(self, global_rounds_target_flows, switches_rounds_flow_info, switches_rounds_result):
+    def calculate_rounds_per_switch_result(self, global_rounds_target_flows, switches_rounds_flow_info, global_rounds_not_sent_out_targetflows, switches_rounds_result):
         #switches_rounds_result
         #pair: key-switch_id, value-{{sec, switch_one_round_result_c},{sec, switch_one_round_result_c}}
         #switches_rounds_flow_info = {}
@@ -250,6 +263,7 @@ class one_setting_result_calculator_c():
                     #one_setting experiment has not started yet.
                     continue
                 global_target_flow_map = global_rounds_target_flows[sec]
+                global_not_sent_out_targetflow_map = global_rounds_not_sent_out_targetflows[sec]
                 
                 #2.1. FNR
                 #switch_flow_info_map = {}
@@ -259,29 +273,52 @@ class one_setting_result_calculator_c():
                 false_negative_num = 0
                 fn_num_not_targetflow = 0
                 fn_num_not_captured = 0
+                fn_num_not_sent_out_at_sender = 0
+                fn_num_sent_not_receive_or_hashmap_collision = 0
+                fn_num_condition_map_last_round_collision = \
+                    switch_flow_info_map[one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY]
                 #print("all_flow_num:{0}" .format(all_flow_num))
                 for srcip, flow_info in switch_flow_info_map.items():
+                    if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
+                        continue
                     if srcip in global_target_flow_map:
                         #the target flow goes through the switch
                         real_target_flow_num += 1
                         if flow_info.signed_target < 0:
                             fn_num_not_targetflow += 1
+                            if srcip in global_not_sent_out_targetflow_map:
+                                fn_num_not_sent_out_at_sender += 1
+                            else:
+                                #fn_num_sent_out_at_sender_not_receive_at_switch and hashmap_collision
+                                fn_num_sent_not_receive_or_hashmap_collision += 1
                         if flow_info.captured_volume < 0:
                             fn_num_not_captured += 1
                         if flow_info.captured_volume < 0 or flow_info.signed_target < 0:
                             #not captured flow
                             false_negative_num += 1
+                fn_num_sent_out_not_receive = \
+                    fn_num_sent_not_receive_or_hashmap_collision - \
+                    fn_num_condition_map_last_round_collision
                 false_negative_ratio=0.0
                 if real_target_flow_num > 0:
                     false_negative_ratio = 1.0 * false_negative_num / real_target_flow_num 
                 #print("real_target_flow_num:{0}" .format(real_target_flow_num))
                 #print("false_negative_num:{0}" .format(false_negative_num))
                 #print("false_negative_ratio:{0}" .format(false_negative_ratio))
+                print("switch_id:{0}, sec:{secc},target_flow_num:{1}, fn_num:{2}, fn_num_not_targetflow:{3}(not_sent_accurate-{not_sent}, not_receiv_not_accurate-{not_receiv}, collision_all_accurate-{collision}), fn_num_not_captured:{4}" \
+                        .format(switch_id, real_target_flow_num, false_negative_num,\
+                        fn_num_not_targetflow, fn_num_not_captured, \
+                        not_sent = fn_num_not_sent_out_at_sender, \
+                        collision = fn_num_condition_map_last_round_collision, \
+                        not_receiv=fn_num_sent_out_not_receive, \
+                        secc=sec))
                             
                 #2.2. FPR
                 not_target_flow_num = all_flow_num - real_target_flow_num
                 false_positive_num = 0
                 for srcip, flow_info in switch_flow_info_map.items():
+                    if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
+                        continue
                     if (srcip not in global_target_flow_map) \
                         and (flow_info.captured_volume > 0) \
                         and (flow_info.signed_target > 0):
@@ -294,6 +331,8 @@ class one_setting_result_calculator_c():
                 all_to_report_target_flow_accuracy = 0
                 all_to_report_target_flow_num = 0
                 for srcip, flow_info in switch_flow_info_map.items():
+                    if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
+                        continue
                     if srcip in global_target_flow_map \
                         and (flow_info.captured_volume > 0) \
                         and (flow_info.signed_target > 0):
@@ -358,6 +397,7 @@ class one_setting_result_calculator_c():
         for avg_targetflow_num in switches_avg_real_targetflow_num:
             ratio_list.append(1.0 * avg_targetflow_num / max(switches_avg_real_targetflow_num) )
         print(ratio_list)
+
         #print switches avg_fn
         switches_avg_fn = []
         print("switches avg false negative")
