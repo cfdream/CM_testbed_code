@@ -25,6 +25,24 @@ FILE* init_target_flow_file() {
     return fp;
 }
 
+void write_last_sent_target_flow_map_lost_target_flow(FILE* fp_target_flow) {
+    hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
+    hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
+
+    int final_target_flow_num = 0;
+    int final_lost_num_in_last_sent_target_flow_map = 0;
+    entry_kfs_vi_t ret_entry;
+    while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
+        ++final_target_flow_num;
+        flow_src_t* p_flow = ret_entry.key;
+        if (ht_kfs_vi_get(last_sent_target_flow_map, p_flow) < 0) {
+                ++ final_lost_num_in_last_sent_target_flow_map;
+        }
+    }
+    fprintf(fp_target_flow, "target_flow_num:%d, lost_target_flow_num_last_sent_conditionmap:%d\n", 
+          final_target_flow_num, final_lost_num_in_last_sent_target_flow_map);
+}
+
 void write_interval_info_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     if (fp_target_flow == NULL) {
         printf("fp_target_flow == NULL\n");
@@ -135,6 +153,8 @@ void* rotate_interval(void* param_ptr) {
         write_interval_info_to_file(current_sec, fp_target_flow);
         //2.2
         write_target_flows_to_file(current_sec, fp_target_flow);
+        //2.3 
+        write_last_sent_target_flow_map_lost_target_flow(fp_target_flow);
 
         //3. reset the idel buffer of data warehouse
         data_warehouse_reset_noactive_buf();
