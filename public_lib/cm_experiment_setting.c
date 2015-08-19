@@ -57,6 +57,10 @@ int read_cm_experiment_setting_from_file(void) {
             if (strcmp(*(tokens+0), "switch_mem_type") == 0 && *(tokens+1)) {
                 cm_experiment_setting.switch_mem_type = (enum switch_mem_type_e)strtol(*(tokens+1), NULL, 10);
             }
+            //switch_memory_times
+            if (strcmp(*(tokens+0), "switch_memory_times") == 0 && *(tokens+1)) {
+                cm_experiment_setting.switch_memory_times = strtol(*(tokens+1), NULL, 10);
+            }
             //switch_drop_rate
             if (strcmp(*(tokens+0), "switch_drop_rate") == 0 && *(tokens+1)) {
                 cm_experiment_setting.switch_drop_rate = strtof(*(tokens+1), NULL);
@@ -145,6 +149,10 @@ int check_value_correct(void) {
     }
     if (cm_experiment_setting.condition_sec_freq == 0) {
         printf("condition_sec_freq\n");
+        return -1;
+    }
+    if (cm_experiment_setting.switch_memory_times == 0) {
+        printf("switch_memory_times = 0\n");
         return -1;
     }
     if (cm_experiment_setting.target_flow_setting.volume_threshold == 0) {

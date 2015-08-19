@@ -6,6 +6,7 @@ condition_sec_freq:5
 replacement:1
 #UNIFORM:0 DIVERSE:1
 switch_mem_type:0
+switch_memory_times:1
 switch_drop_rate:0.0035
 #HOST_SAMPLE:0, SWITCH_SAMPLE:1
 host_or_switch_sample:0
