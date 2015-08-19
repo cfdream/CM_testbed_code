@@ -265,9 +265,9 @@ class one_setting_result_calculator_c():
                         #the target flow goes through the switch
                         real_target_flow_num += 1
                         if flow_info.signed_target < 0:
-                            fn_num_not_captured += 1
-                        if flow_info.captured_volume < 0:
                             fn_num_not_targetflow += 1
+                        if flow_info.captured_volume < 0:
+                            fn_num_not_captured += 1
                         if flow_info.captured_volume < 0 or flow_info.signed_target < 0:
                             #not captured flow
                             false_negative_num += 1
