@@ -305,7 +305,7 @@ class one_setting_result_calculator_c():
                 #print("real_target_flow_num:{0}" .format(real_target_flow_num))
                 #print("false_negative_num:{0}" .format(false_negative_num))
                 #print("false_negative_ratio:{0}" .format(false_negative_ratio))
-                print("switch_id:{0}, sec:{secc},target_flow_num:{1}, fn_num:{2}, fn_num_not_targetflow:{3}(not_sent_accurate-{not_sent}, not_receiv_not_accurate-{not_receiv}, collision_all_accurate-{collision}), fn_num_not_captured:{4}" \
+                print("switch_id:{0}, sec:{secc},target_flow_num:{1}, fn_num:{2}, fn_num_not_targetflow:{3}(not_sent_accurate-{not_sent}, not_receiv_not_accurate- >={not_receiv}, collision_all_accurate-{collision}), fn_num_not_captured:{4}" \
                         .format(switch_id, real_target_flow_num, false_negative_num,\
                         fn_num_not_targetflow, fn_num_not_captured, \
                         not_sent = fn_num_not_sent_out_at_sender, \
