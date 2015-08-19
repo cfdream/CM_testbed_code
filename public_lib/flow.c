@@ -1,3 +1,4 @@
+#include "stdio.h"
 #include "flow.h"
 #include "murmur3.h"
 
@@ -65,5 +66,7 @@ int flow_src_compare(flow_src_t* flow1, flow_src_t* flow2) {
 uint32_t flow_src_hash_bin(flow_src_t* p_flow_src, uint32_t map_size) {
     uint32_t hash;
     MurmurHash3_x86_32((void*)(&(p_flow_src->srcip)), sizeof(p_flow_src->srcip), 42, &hash);
-    return hash - map_size * (hash / map_size); // A % B <=> A – B * (A / B)
+    hash = hash - map_size * (hash / map_size); // A % B <=> A – B * (A / B)
+    printf("srcip:%u, hash_bin:%u, map_size:%u\n", p_flow_src->srcip, hash, map_size);
+    return hash;
 }

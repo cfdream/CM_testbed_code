@@ -107,6 +107,7 @@ void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {
     hashtable_kfs_vi_t* flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
     hashtable_kfs_vi_t* flow_not_sampled_volume_map = data_warehouse_get_unactive_flow_not_sampled_volume_map();
+    hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
 
     entry_kfs_vi_t ret_entry;
     while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
@@ -116,7 +117,8 @@ void write_target_flows_to_file(uint64_t current_sec, FILE* fp_target_flow) {
         float loss_rate = ht_kfs_vf_get(flow_loss_rate_map_pre_interval, p_flow);
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
         int not_sampled_volume = ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow);
-        fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume);
+        int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
+        fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
         fflush(fp_target_flow);
         //ret_entry.key
         free(ret_entry.key);
@@ -151,10 +153,10 @@ void* rotate_interval(void* param_ptr) {
         //2. store the target flow identities of the past interval into file
         //2.1
         write_interval_info_to_file(current_sec, fp_target_flow);
-        //2.2
-        write_target_flows_to_file(current_sec, fp_target_flow);
-        //2.3 
+        //2.2 
         write_last_sent_target_flow_map_lost_target_flow(fp_target_flow);
+        //2.3
+        write_target_flows_to_file(current_sec, fp_target_flow);
 
         //3. reset the idel buffer of data warehouse
         data_warehouse_reset_noactive_buf();
