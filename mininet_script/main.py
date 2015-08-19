@@ -132,12 +132,28 @@ if __name__ == "__main__":
     #            for memory_times in [1, 2, 4, 8, 16]:
     #                for freq in [5, 10, 20, 40, 60]:
     #for experiment of HSSH +- replace +- memory_type +- memory_times +- freq
+    
+    #for experiment of HSSH +- replace +- memory_type +- memory_times + freq:5s
+    #2.1. HSSH+fixed memory
+    #2.2. HSSH+fixed memory + replace
+    #2.2. HSSH+diverse memory
+    #2.3. HSSH+diverse memory + replace
     for host_switch_sample in [0]:
-        for replace in [0, 1]:
+        for replace in [0,1]:
             for memory_type in [0, 1]:
                 for memory_times in [1, 2, 4, 8, 16]:
-                    for freq in [5, 10, 20, 40, 80]:
+                    for freq in [5]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
                         run_one_round()
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
 
+    #for experiment of SH +- no replace + memory_type:1-diverse +- memory_times + freq:5s
+    #2.4 No-coord
+    for host_switch_sample in [0]:
+        for replace in [0]:
+            for memory_type in [1]:
+                for memory_times in [1, 2, 4, 8, 16]:
+                    for freq in [5]:
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
+                        run_one_round()
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
