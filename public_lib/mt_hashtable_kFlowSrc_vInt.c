@@ -107,13 +107,6 @@ void ht_kfs_vi_refresh( hashtable_kfs_vi_t *hashtable ) {
     hashtable->next_last_visit_entry = NULL;
 }
 
-/* Hash a string for a particular hash table. */
-int ht_kfs_vi_hash( hashtable_kfs_vi_t *hashtable, flow_src_t *key ) {
-	/* generate a 64-bit integer from srcip and dstip */
-	unsigned long long int hashval = key->srcip;
-	return hashval % hashtable->size;
-}
-
 /* Create a key-value pair. */
 entry_kfs_vi_t *ht_kfs_vi_newpair( flow_src_t *key, KEY_INT_TYPE value ) {
 	entry_kfs_vi_t *newpair;
@@ -147,7 +140,7 @@ int ht_kfs_vi_get( hashtable_kfs_vi_t *hashtable, flow_src_t* key ) {
         return -1;
     }
 
-	bin = ht_kfs_vi_hash( hashtable, key );
+    bin = flow_src_hash_bin(key, hashtable->size);
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -182,7 +175,7 @@ void ht_kfs_vi_set( hashtable_kfs_vi_t *hashtable, flow_src_t *key, KEY_INT_TYPE
         return;
     }
 
-	bin = ht_kfs_vi_hash( hashtable, key );
+    bin = flow_src_hash_bin(key, hashtable->size);
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);
@@ -231,7 +224,7 @@ void ht_kfs_vi_del( hashtable_kfs_vi_t *hashtable, flow_src_t *key) {
         return;
     }
 
-	bin = ht_kfs_vi_hash( hashtable, key );
+    bin = flow_src_hash_bin(key, hashtable->size);
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin]);

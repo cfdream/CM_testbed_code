@@ -1,4 +1,5 @@
 #include "flow.h"
+#include "murmur3.h"
 
 flow_s* deep_copy_flow(flow_s* input) {
     flow_s* output = malloc(sizeof(flow_s));
@@ -58,4 +59,11 @@ int flow_src_compare(flow_src_t* flow1, flow_src_t* flow2) {
     } else {
         return -1;
     }
+}
+
+
+uint32_t flow_src_hash_bin(flow_src_t* p_flow_src, uint32_t map_size) {
+    uint32_t hash;
+    MurmurHash3_x86_32((void*)(&(p_flow_src->srcip)), sizeof(p_flow_src->srcip), 42, &hash);
+    return hash - map_size * (hash / map_size); // A % B <=> A – B * (A / B)
 }

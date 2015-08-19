@@ -106,14 +106,6 @@ void ht_kfs_vi_fixSize_refresh( hashtable_kfs_vi_fixSize_t *hashtable ) {
     hashtable->next_current_bin = -1;
 }
 
-/* Hash a string for a particular hash table. */
-int ht_kfs_vi_fixSize_hash( hashtable_kfs_vi_fixSize_t *hashtable, flow_src_t *key ) {
-    /* generate a 64-bit integer from srcip and dstip */
-    unsigned long long int hashval = key->srcip;
-
-    return hashval % hashtable->size;
-}
-
 /* Create a key-value pair. */
 entry_kfs_vi_fixSize_t *ht_kfs_vi_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value ) {
     entry_kfs_vi_fixSize_t *newpair;
@@ -145,7 +137,7 @@ int ht_kfs_vi_fixSize_get( hashtable_kfs_vi_fixSize_t *hashtable, flow_src_t* ke
         return -1;
     }
 
-    bin = ht_kfs_vi_fixSize_hash( hashtable, key );
+    bin = flow_src_hash_bin(key, hashtable->size);
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
@@ -174,7 +166,7 @@ void ht_kfs_vi_fixSize_set(hashtable_kfs_vi_fixSize_t *hashtable, hashtable_kfs_
         return;
     }
 
-    bin = ht_kfs_vi_fixSize_hash( hashtable, key );
+    bin = flow_src_hash_bin(key, hashtable->size);
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
@@ -222,7 +214,7 @@ void ht_kfs_vi_fixSize_del( hashtable_kfs_vi_fixSize_t *hashtable, flow_src_t *k
         return;
     }
 
-    bin = ht_kfs_vi_fixSize_hash( hashtable, key );
+    bin = flow_src_hash_bin(key, hashtable->size);
 
     /* request mutex */
     pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);

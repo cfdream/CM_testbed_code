@@ -2,8 +2,8 @@
 interval_sec_len:750
 # test:per sender sends 150k packets
 #interval_sec_len:75
-condition_sec_freq:3
-replacement:0
+condition_sec_freq:5
+replacement:1
 #UNIFORM:0 DIVERSE:1
 switch_mem_type:0
 switch_drop_rate:0.0035

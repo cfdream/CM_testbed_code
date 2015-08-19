@@ -39,5 +39,9 @@ int flow_compare(flow_s* flow1, flow_s* flow2);
 
 int flow_src_compare(flow_src_t* flow1, flow_src_t* flow2);
 
+uint32_t flow_src_hash(flow_src_t* p_flow, uint32_t map_size);
+
+uint32_t flow_5tuple_hash(flow_t* p_flow);
+
 #endif
 
