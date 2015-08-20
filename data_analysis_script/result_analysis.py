@@ -45,7 +45,7 @@ class results_analyzer_c():
                 min_sample_map_size = one_setting_result.min_sample_map_size, \
                 max_sample_map_size = one_setting_result.max_sample_map_size, \
                 avg_condition_map_size = one_setting_result.avg_condition_map_size, \
-                min_condition_map_size = one_setting_result.max_condition_map_size, \
+                min_condition_map_size = one_setting_result.min_condition_map_size, \
                 max_condition_map_size = one_setting_result.max_condition_map_size, \
                 raw_host_sample_switch_hold_accuracy = one_setting_result.raw_host_sample_switch_hold_accuracy, \
                 avg_real_target_flow_num = one_setting_result.avg_real_target_flow_num, \
