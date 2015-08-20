@@ -64,6 +64,7 @@ void ht_kfs_vf_destory( hashtable_kfs_vf_t *hashtable ) {
             p_node = next;
         }
     }
+    free(hashtable->table);
 
     /* free mutexs */
     for (i = 0; i < HASH_MAP_SIZE; ++i) {

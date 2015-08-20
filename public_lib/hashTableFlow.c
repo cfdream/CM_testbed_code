@@ -45,6 +45,7 @@ void ht_kf_destory(hashtable_kf_t *hashtable, int size) {
             p_node = next;
         }
     }
+    free(hashtable->table);
 }
 
 /* Hash a string for a particular hash table. */

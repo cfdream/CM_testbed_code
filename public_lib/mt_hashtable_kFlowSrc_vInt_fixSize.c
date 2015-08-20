@@ -65,6 +65,7 @@ void ht_kfs_vi_fixSize_destory( hashtable_kfs_vi_fixSize_t *hashtable ) {
             free(p_node);
         }
     }
+    free(hashtable->table);
 
     /* free mutexs */
     for (i = 0; i < HASH_MAP_MUTEX_SIZE; ++i) {
