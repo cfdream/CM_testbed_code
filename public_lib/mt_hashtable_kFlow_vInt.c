@@ -64,7 +64,6 @@ void ht_vi_destory( hashtable_vi_t *hashtable ) {
             p_node = next;
         }
     }
-    free(hashtable->table);
 
     /* free mutexs */
     for (i = 0; i < HASH_MAP_SIZE; ++i) {

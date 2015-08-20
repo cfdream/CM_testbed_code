@@ -83,7 +83,6 @@ void ht_vl_destory( hashtable_vl_t *hashtable ) {
             p_node = next;
         }
     }
-    free(hashtable->table);
 
     /* destroy mutexs */
     for (i = 0; i < HASH_MAP_SIZE; ++i) {
