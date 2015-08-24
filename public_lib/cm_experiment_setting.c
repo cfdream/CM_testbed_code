@@ -41,13 +41,13 @@ int read_cm_experiment_setting_from_file(void) {
         char** tokens = str_split(line_buffer, ':');
 
         if (tokens) {
-            //interval_sec_len
-            if (strcmp(*(tokens+0), "interval_sec_len") == 0 && *(tokens+1)) {
-                cm_experiment_setting.interval_sec_len = strtol(*(tokens+1), NULL, 10);
+            //interval_msec_len
+            if (strcmp(*(tokens+0), "interval_msec_len") == 0 && *(tokens+1)) {
+                cm_experiment_setting.interval_msec_len = strtol(*(tokens+1), NULL, 10);
             }
-            //condition_sec_freq
-            if (strcmp(*(tokens+0), "condition_sec_freq") == 0 && *(tokens+1)) {
-                cm_experiment_setting.condition_sec_freq = strtol(*(tokens+1), NULL, 10);
+            //condition_msec_freq
+            if (strcmp(*(tokens+0), "condition_msec_freq") == 0 && *(tokens+1)) {
+                cm_experiment_setting.condition_msec_freq = strtol(*(tokens+1), NULL, 10);
             }
             //replacement
             if (strcmp(*(tokens+0), "replacement") == 0 && *(tokens+1)) {
@@ -143,12 +143,12 @@ int init_other_experiment_setting(void) {
 }
 
 int check_value_correct(void) {
-    if (cm_experiment_setting.interval_sec_len == 0) {
-        printf("interval_sec_len not correct\n");
+    if (cm_experiment_setting.interval_msec_len == 0) {
+        printf("interval_msec_len not correct\n");
         return -1;
     }
-    if (cm_experiment_setting.condition_sec_freq == 0) {
-        printf("condition_sec_freq\n");
+    if (cm_experiment_setting.condition_msec_freq == 0) {
+        printf("condition_msec_freq\n");
         return -1;
     }
     if (cm_experiment_setting.switch_memory_times == 0) {

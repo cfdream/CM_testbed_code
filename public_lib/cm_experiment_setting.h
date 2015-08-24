@@ -12,7 +12,7 @@
 
 //condition
 //#define CM_CONDITION_TIME_INTERVAL 3 //cannot be 1
-#define CM_CONDITION_TIME_INTERVAL_POSTPOINE_FOR_SWITCH 1
+#define CM_CONDITION_MILLISECONDS_POSTPOINE_FOR_SWITCH 200   //200 milliseconds
 
 //packet dropping model
 //#define CM_SWITCH_DROP_RATE 0.00
@@ -48,8 +48,8 @@ typedef struct target_flow_setting_s {
 }target_flow_setting_t;
 
 typedef struct cm_experiment_setting_s {
-    int interval_sec_len;
-    int condition_sec_freq;
+    int interval_msec_len;
+    int condition_msec_freq;
     bool replacement;
     enum switch_mem_type_e switch_mem_type;
     int switch_memory_times;   //the times of memory compared to default sample and hold

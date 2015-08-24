@@ -77,7 +77,7 @@ int send_udp_condition_pkt(condition_t* p_condition) {
 
 void* send_condition_to_network(void* param_ptr) {
     struct timespec spec;
-    uint64_t sec;
+    uint64_t msec;
     condition_t condition;
 
     /* switch_sample needs to now the target flows as well
@@ -108,7 +108,7 @@ void* send_condition_to_network(void* param_ptr) {
 
     while (1) {
         // postpone till the next timestamp that condition should be sent 
-        uint64_t current_sec = get_next_interval_start(cm_experiment_setting.condition_sec_freq);
+        uint64_t current_msec = get_next_interval_start(cm_experiment_setting.condition_msec_freq);
         int condition_pkt_num = 0;
 
         //lock to send all condition packets
@@ -117,7 +117,7 @@ void* send_condition_to_network(void* param_ptr) {
 		//in order to avoid IntervalRotator thread destory the data
         pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
 
-        printf("-----start send_condition_to_network, current_sec:%lu-----\n", current_sec);
+        printf("-----start send_condition_to_network, current_msec:%lu ms-----\n", current_msec);
         ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
         data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
         if (data_warehouse.last_sent_target_flow_map == NULL) {
@@ -141,8 +141,8 @@ void* send_condition_to_network(void* param_ptr) {
         pthread_mutex_unlock(&data_warehouse.packet_send_mutex);
 
         clock_gettime(CLOCK_REALTIME, &spec);
-        sec = (intmax_t)((time_t)spec.tv_sec);
-        printf("-----end send_udp_condition_pkt, current_sec:%lu, condition_pkts_sent:%d-----\n", sec, condition_pkt_num);
+        msec = (intmax_t)((time_t)spec.tv_sec*1000 + spec.tv_nsec/1000000);
+        printf("-----end send_udp_condition_pkt, current_msec:%lu, condition_pkts_sent:%d-----\n", msec, condition_pkt_num);
     }
 
     return NULL;

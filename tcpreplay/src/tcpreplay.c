@@ -151,8 +151,8 @@ main(int argc, char *argv[])
     srand48_r(time(NULL), &g_rand_buffer);
     
     /* all hosts/senders start/end at the nearby timestamp for intervals */
-    uint64_t current_sec =  get_next_interval_start(cm_experiment_setting.interval_sec_len);
-    printf("current_sec:%lu\n", current_sec);
+    uint64_t current_msec =  get_next_interval_start(cm_experiment_setting.interval_msec_len);
+    printf("current_msec:%lu\n", current_msec);
 
     /* initialize the data_warehouse */
     if (data_warehouse_init() != 0) {

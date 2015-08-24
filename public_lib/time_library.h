@@ -18,8 +18,8 @@ void print_current_time_with_ms (void);
 * then, will return at every xx:xx:00 or xx:xx:30
 * It is usually less than 0.1 ms larger than xx:xx:00, or xx:xx:30
 *
-* @param time_interval_len : length of time interval in seconds. It should be dividable by 60 (1min)
+* @param time_interval_len : length of time interval in seconds.
 */
-uint64_t get_next_interval_start(int time_interval_secs);
+uint64_t get_next_interval_start(uint32_t time_interval_msecs);
 
 #endif
