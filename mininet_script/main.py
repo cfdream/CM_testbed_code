@@ -72,7 +72,7 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
     replace_pattern = re.compile("^replacement:(\d+)")
     memory_type_pattern = re.compile("^switch_mem_type:(\d+)")
     memory_times_pattern = re.compile("^switch_memory_times:(\d+)")
-    freq_pattern = re.compile("^condition_sec_freq:(\d+)")
+    freq_pattern = re.compile("^condition_msec_freq:(\d+)")
     
     for line in lines:
         #host_or_switch_sample
@@ -111,7 +111,7 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
         match = freq_pattern.match(line)
         if match != None:
             #config freq
-            sed_str = "sed -i 's/^{0}/condition_sec_freq:{1}/g' {2} " .format(line, freq, config_fname)
+            sed_str = "sed -i 's/^{0}/condition_msec_freq:{1}/g' {2} " .format(line, freq, config_fname)
             commands.getstatusoutput(sed_str)
             print sed_str
     
@@ -140,9 +140,9 @@ if __name__ == "__main__":
         #2.4. HSSH+diverse memory + replace
     for host_switch_sample in [0]:
         for replace in [1]:
-            for memory_type in [1]:
-                for memory_times in [1, 4]:
-                    for freq in [20000,80000]:
+            for memory_type in [0]:
+                for memory_times in [16]:
+                    for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
                         run_one_round()
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)

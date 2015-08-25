@@ -4,7 +4,7 @@ interval_msec_len:750000
 # test:per sender sends 150k packets
 #75seconds, *1000 milliseconds
 #interval_msec_len:75000
-condition_msec_freq:5000
+condition_msec_freq:500
 replacement:1
 #UNIFORM:0 DIVERSE:1
 switch_mem_type:0
