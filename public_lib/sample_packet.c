@@ -30,8 +30,8 @@ int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_
 }
 
 
-int flow_src_already_sampled_fixSize_map(flow_src_t* p_flow_src, hashtable_kfs_vi_fixSize_t* flow_sample_map) {
-    if (ht_kfs_vi_fixSize_get(flow_sample_map, p_flow_src) >= 0) {
+int flow_src_already_sampled_fixSize_map(flow_src_t* p_flow_src, hashtable_kfs_fixSize_t* flow_sample_map) {
+    if (ht_kfs_fixSize_get(flow_sample_map, p_flow_src) >= 0) {
         return 1;
     }
     return 0;
@@ -40,8 +40,7 @@ int flow_src_already_sampled_fixSize_map(flow_src_t* p_flow_src, hashtable_kfs_v
 int sample_packet_fixSize_map(packet_t* p_packet, 
     int total_pkt_len, 
     struct drand48_data* p_rand_buffer, 
-    hashtable_kfs_vi_fixSize_t* flow_sample_map, 
-    hashtable_kfs_vi_fixSize_t* target_flow_map) {
+    hashtable_kfs_fixSize_t* flow_sample_map) {
 
     double pkt_sample_rate;
     double rand_float;
@@ -59,7 +58,7 @@ int sample_packet_fixSize_map(packet_t* p_packet,
     if (rand_float < pkt_sample_rate) {
         //mark the flow as sampled
         //NOTE: set the value as 0, as this the flow_sample_volume map
-        ht_kfs_vi_fixSize_set(flow_sample_map, target_flow_map, p_flow_src, 0);
+        ht_kfs_fixSize_set(flow_sample_map, p_flow_src, 0);
         return 1;
     }
     return 0;
