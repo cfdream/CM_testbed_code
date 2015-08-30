@@ -70,8 +70,10 @@ void data_warehouse_destroy() {
     pthread_mutex_destroy(&data_warehouse.packet_send_mutex);
     pthread_mutex_destroy(&data_warehouse.data_warehouse_mutex);
 
-    // create flow_recePktList_map
+    // destory flow_recePktList_map
     ht_vl_destory(data_warehouse.flow_recePktList_map);
+
+    //destory last_sent_target_flow_map
     ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
 
     int a_idx = 0;
@@ -85,7 +87,7 @@ void data_warehouse_destroy() {
     }
 
     int i = 0;
-    /* initialize mutexs */
+    /* destory mutexs */
     for (i = 0; i < HASH_MAP_SIZE; ++i) {
         pthread_mutex_destroy(&data_warehouse.mutexs[i]);
     }
@@ -231,6 +233,11 @@ int data_warehouse_reset_noactive_buf() {
     ht_kfs_vf_destory(data_warehouse.flow_loss_rate_map[na_idx]);
     ht_kfs_vi_destory(data_warehouse.flow_sample_map[na_idx]);
     ht_kfs_vi_destory(data_warehouse.flow_not_sampled_volume_map[na_idx]);
+
+    //destory last_sent_target_flow_map
+    //This is to make sure that next interval, last_sent_target_flow_map is clear
+    ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
+
     //recreate the hashmaps
     data_warehouse.flow_volume_map[na_idx] = ht_kfs_vi_create();
     if (data_warehouse.flow_volume_map[na_idx] == NULL) {

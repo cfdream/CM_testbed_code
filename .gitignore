@@ -95,3 +95,5 @@ pcapsend
 tags
 mininet_script/eth_id_name_map.txt
 ol
+cscope.*
+*.pyc

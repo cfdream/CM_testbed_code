@@ -64,7 +64,7 @@ void ht_kfs_fixSize_refresh( hashtable_kfs_fixSize_t *hashtable );
 int ht_kfs_fixSize_hash( hashtable_kfs_fixSize_t *hashtable, flow_src_t *key );
 
 /* Create a key-value pair. */
-entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value );
+entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value, bool is_target_flow );
 
 /**
 * @brief Retrieve a key-value pair from a hash table.
@@ -76,8 +76,30 @@ entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value
 */
 int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key );
 
+/**
+* @brief get whether the flow is a target flow
+*
+* @param hashtable
+* @param key
+*
+* @return 
+*/
+bool ht_kfs_fixSize_is_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key);
+
+/**
+* @brief get whether the flow is sampled or not
+*
+* @param hashtable
+* @param key
+*
+* @return 
+*/
+bool ht_kfs_fixSize_is_sampled(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key);
+
 /* Insert a key-value pair into a hash table. */
 void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE value);
+
+void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow);
 
 /* del a key-value pair from a hash table. */
 void ht_kfs_fixSize_del( hashtable_kfs_fixSize_t *hashtable, flow_src_t *key);

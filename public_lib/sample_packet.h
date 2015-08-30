@@ -13,7 +13,6 @@
 int flow_src_already_sampled(flow_src_t* p_flow_src, hashtable_kfs_vi_t* flow_sample_map);
 int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_rand_buffer, hashtable_kfs_vi_t* flow_sample_map);
 
-int flow_src_already_sampled_fixSize_map(flow_src_t* p_flow_src, hashtable_kfs_fixSize_t* flow_sample_map);
 int sample_packet_fixSize_map(packet_t* p_packet, 
     int total_pkt_len, 
     struct drand48_data* p_rand_buffer, 

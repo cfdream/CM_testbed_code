@@ -14,7 +14,7 @@
 
 extern tcpreplay_t* g_tcpreplay_ctx;
 
-int send_udp_condition_pkt(condition_t* p_condition);
+int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow);
 
 void* send_condition_to_network(void* param_ptr);
 

@@ -23,15 +23,8 @@ int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_
     //printf("pkt_sample_rate:%f, rand_float:%f\n", pkt_sample_rate, rand_float);        
     if (rand_float < pkt_sample_rate) {
         //mark the flow as sampled
+        //tcpreplay will use flow_sample_map to check whether the flow is sampled or not
         ht_kfs_vi_set(flow_sample_map, p_flow_src, 1);
-        return 1;
-    }
-    return 0;
-}
-
-
-int flow_src_already_sampled_fixSize_map(flow_src_t* p_flow_src, hashtable_kfs_fixSize_t* flow_sample_map) {
-    if (ht_kfs_fixSize_get(flow_sample_map, p_flow_src) >= 0) {
         return 1;
     }
     return 0;
@@ -47,7 +40,7 @@ int sample_packet_fixSize_map(packet_t* p_packet,
 
     flow_src_t* p_flow_src = p_packet;
 
-    if (flow_src_already_sampled_fixSize_map(p_flow_src, flow_sample_map)) {
+    if (ht_kfs_fixSize_is_sampled(flow_sample_map, p_flow_src)) {
         //printf("srcip:%u already in flow_sample_map\n", p_flow_src->srcip);
         return 1;
     }
@@ -57,8 +50,8 @@ int sample_packet_fixSize_map(packet_t* p_packet,
     //printf("pkt_sample_rate:%f, rand_float:%f\n", pkt_sample_rate, rand_float);        
     if (rand_float < pkt_sample_rate) {
         //mark the flow as sampled
-        //NOTE: set the value as 0, as this the flow_sample_volume map
-        ht_kfs_fixSize_set(flow_sample_map, p_flow_src, 0);
+        //This is not necessary, as ovs will set the real volume of the flow. Thus one sampled flow will appear in the flow_sample_map immediately
+        //ht_kfs_fixSize_set(flow_sample_map, p_flow_src, 0);
         return 1;
     }
     return 0;

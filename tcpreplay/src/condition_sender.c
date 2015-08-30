@@ -2,6 +2,7 @@
 #include <config.h>
 #include "tcpreplay_api.h"
 #include "condition_sender.h"
+#include "vlan_tag.h"
 #include "../public_lib/time_library.h"
 #include "../public_lib/general_functions.h"
 #include "../public_lib/cm_experiment_setting.h"
@@ -18,14 +19,15 @@ extern cm_experiment_setting_t cm_experiment_setting;
 *
 * @return 
 */
-int send_udp_condition_pkt(condition_t* p_condition) {
+int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
     char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
     char dst_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
     //geneate a udp packet
     struct pcap_pkthdr pcap_header;
     struct tcpr_udp_hdr udp_header;
     struct tcpr_ipv4_hdr ip_header;
-    struct tcpr_ethernet_hdr ethernet_header;
+    //struct tcpr_ethernet_hdr ethernet_header;
+    struct tcpr_802_1q_hdr ethernet_header_vlan;
     int pkt_len;
    
     if (g_tcpreplay_ctx == NULL || g_tcpreplay_ctx->intf1 == NULL) {
@@ -52,14 +54,26 @@ int send_udp_condition_pkt(condition_t* p_condition) {
     ip_header.ip_dst.s_addr = 0;
    
     //ethernet header
-    strncpy((char*)ethernet_header.ether_dhost, dst_mac, 6);
-    strncpy((char*)ethernet_header.ether_shost, src_mac, 6);
-    ethernet_header.ether_type = htons(0x0800);
+    strncpy((char*)ethernet_header_vlan.vlan_dhost, dst_mac, 6);
+    strncpy((char*)ethernet_header_vlan.vlan_shost, src_mac, 6);
+    ethernet_header_vlan.vlan_tpi = htons(0x8100);
+    ethernet_header_vlan.vlan_len = htons(0x0800);
+    //ethernet_header.ether_type = htons(0x0800);
+    if (is_target_flow) {
+        // + delta info
+        // now target flow, last non-target flow
+        //tag one VLAN bit to mark the flow as target_flow
+        tag_packet_as_target_flow(&ethernet_header_vlan);
+    } else {
+        // - delta info
+        // now non-target flow, last target flow
+        // not tagged flow is treated as non-target flow defaultly
+    }
 
-    memcpy(g_pkt_buffer, &ethernet_header, sizeof(ethernet_header));
-    memcpy(g_pkt_buffer+sizeof(ethernet_header), &ip_header, sizeof(ip_header));
-    memcpy(g_pkt_buffer+sizeof(ethernet_header)+sizeof(ip_header), &udp_header, sizeof(udp_header));
-    pkt_len = sizeof(ethernet_header)+sizeof(ip_header)+sizeof(udp_header);
+    memcpy(g_pkt_buffer, &ethernet_header_vlan, sizeof(ethernet_header_vlan));
+    memcpy(g_pkt_buffer+sizeof(ethernet_header_vlan), &ip_header, sizeof(ip_header));
+    memcpy(g_pkt_buffer+sizeof(ethernet_header_vlan)+sizeof(ip_header), &udp_header, sizeof(udp_header));
+    pkt_len = sizeof(ethernet_header_vlan)+sizeof(ip_header)+sizeof(udp_header);
 
     //pcap header
     pcap_header.ts.tv_sec = 0xAA779F47;
@@ -118,25 +132,53 @@ void* send_condition_to_network(void* param_ptr) {
         pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
 
         printf("-----start send_condition_to_network, current_msec:%lu ms-----\n", current_msec);
-        ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
-        data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
-        if (data_warehouse.last_sent_target_flow_map == NULL) {
-            return NULL;
-        }
-
         hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
         entry_kfs_vi_t ret_entry;
+        //1. for one flow in target_flow_map, if it does not exist in the last_sent_target_flow_map, send the + information
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
+            if (ht_kfs_vi_get(data_warehouse.last_sent_target_flow_map, ret_entry.key) > 0) {
+                //the flow is target flow now and last time
+                continue;
+            }
+            //1.1 new target flow not sent last time
+            //send the + delta info
             //get one target flow, send to the network
             condition.srcip = ret_entry.key->srcip;
-            send_udp_condition_pkt(&condition);
+            send_udp_condition_pkt(&condition, true);
             ++condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("condition srcip:%u\n", condition.srcip);
-            //add the flow into last_sent_target_flow_map
-            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, ret_entry.key, 1);
             free(ret_entry.key);
         }
+
+        //2. for one flow in last_sent_target_flow_map, if it does not exist in target_flow_map, send the - information
+        while (ht_kfs_vi_next(data_warehouse.last_sent_target_flow_map, &ret_entry) == 0) {
+            if (ht_kfs_vi_get(target_flow_map, ret_entry.key) > 0) {
+                //the flow is target flow now and last time
+                continue;
+            }
+            //2.1 target flow sent last time but now not target flow
+            //send the - delta info
+            condition.srcip = ret_entry.key->srcip;
+            send_udp_condition_pkt(&condition, false);
+            ++condition_pkt_num;
+            ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
+            //printf("condition srcip:%u\n", condition.srcip);
+            free(ret_entry.key);
+        }
+
+        //3. copy the current target_flow_map into last_sent_target_flow_map
+        ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
+        data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
+        if (data_warehouse.last_sent_target_flow_map == NULL) {
+            //add the flow into last_sent_target_flow_map
+            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, ret_entry.key, ret_entry.value);
+            return NULL;
+        }
+        while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
+            free(ret_entry.key);
+        }
+
         pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);
         pthread_mutex_unlock(&data_warehouse.packet_send_mutex);
 

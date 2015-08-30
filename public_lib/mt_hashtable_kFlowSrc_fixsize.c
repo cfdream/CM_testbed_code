@@ -108,7 +108,7 @@ void ht_kfs_fixSize_refresh( hashtable_kfs_fixSize_t *hashtable ) {
 }
 
 /* Create a key-value pair. */
-entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value ) {
+entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value, bool is_target_flow ) {
     entry_kfs_fixSize_t *newpair;
 
     if( ( newpair = malloc( sizeof( entry_kfs_fixSize_t ) ) ) == NULL ) {
@@ -118,6 +118,7 @@ entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value
     //copy the key and value
     newpair->key = deep_copy_flow(key);
     newpair->value = value;
+    newpair->is_target_flow = is_target_flow;
 
     return newpair;
 }
@@ -152,9 +153,48 @@ int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key ) {
         return -1;
     } else {
         /* release mutex */
+        KEY_INT_TYPE value = pair->value;
         pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
-        return pair->value;
+        return value;
     }
+}
+
+bool ht_kfs_fixSize_is_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key) {
+    int bin = 0;
+    entry_kfs_fixSize_t *pair;
+
+    if (NULL == hashtable) {
+        return false;
+    }
+
+    bin = flow_src_hash_bin(key, hashtable->size);
+
+    /* request mutex */
+    pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+
+    /* Step through the bin, looking for our value. */
+    pair = hashtable->table[ bin ];
+    /* Did we actually find anything? */
+    if( pair == NULL || pair->key == NULL || flow_src_compare( key, pair->key ) != 0 ) {
+        /* release mutex */
+        pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+        return false;
+    } else {
+        /* release mutex */
+        bool is_target_flow = pair->is_target_flow;
+        pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+        return is_target_flow;
+    }
+}
+
+bool ht_kfs_fixSize_is_sampled(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key) {
+    //In ovs, the is_target_flow info is stored in flow_sample_map as well. When a flow is just marked as target by the senders, it has not been sampled yet.
+    //Thus, ht_kfs_fixSize_get == 0 cannot be treated as the flow already sampled
+    //This will influence sample and hold at switch. If condition flows are treated as sampled, sample and hold at switch will get much better performance, which is wrong.
+    if (ht_kfs_fixSize_get(hashtable, key) > 0) {
+        return true;
+    }
+    return false;
 }
 
 /* Insert a key-value pair into a hash table. */
@@ -193,13 +233,61 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY
                 free(next->key);
                 free(next);
                 //2. set the new pair
-                newpair = ht_kfs_fixSize_newpair( key, value );
+                newpair = ht_kfs_fixSize_newpair( key, value, false);
                 hashtable->table[ bin ] = newpair;
             }
         }
     /* The bin is empty */
     } else {
-        newpair = ht_kfs_fixSize_newpair( key, value );
+        newpair = ht_kfs_fixSize_newpair( key, value, false );
+        hashtable->table[ bin ] = newpair;
+    }
+    /* release mutex */
+    pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+}
+
+void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow) {
+    int bin = 0;
+    entry_kfs_fixSize_t *newpair = NULL;
+    entry_kfs_fixSize_t *next = NULL;
+
+    if (NULL == hashtable) {
+        return;
+    }
+
+    bin = flow_src_hash_bin(key, hashtable->size);
+
+    /* request mutex */
+    pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+
+    next = hashtable->table[ bin ];
+
+    if( next != NULL && next->key != NULL ) {
+        /* There's already a pair. */
+        if (flow_src_compare( key, next->key ) == 0 ) {
+            //the flow exist
+            next->is_target_flow = is_target_flow;
+        } else {
+            ++hashtable->collision_times;
+            //another flow already exist
+            //conflict happens
+            if (cm_experiment_setting.replacement
+                && next->is_target_flow) {
+                //replay && the existing flow is_target_flow, 
+                /* keep the existing flow */
+            } else {
+                //replace with the new flow
+                //1. free the existing pair
+                free(next->key);
+                free(next);
+                //2. set the new pair
+                newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
+                hashtable->table[ bin ] = newpair;
+            }
+        }
+    /* The bin is empty */
+    } else {
+        newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
         hashtable->table[ bin ] = newpair;
     }
     /* release mutex */
