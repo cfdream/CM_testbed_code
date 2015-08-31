@@ -22,7 +22,7 @@ class switch_one_round_result_c():
         self.fn_num_not_targetflow = fn_num_not_targetflow
         self.fn_num_not_captured  = fn_num_not_captured
         self.sample_map_size = 0
-        self.condition_map_size = 0
+        #self.condition_map_size = 0
 
 class avg_switch_result_one_setting_c():
     def __init__(self):
@@ -33,7 +33,7 @@ class avg_switch_result_one_setting_c():
         self.avg_accuracy = 0
         self.stdv_accuracy = 0
         self.sample_map_size = 0
-        self.condition_map_size = 0
+        #self.condition_map_size = 0
         self.avg_real_target_flow_num = 0
         self.avg_fn_num = 0
         self.avg_fn_num_not_targetflow = 0
@@ -61,12 +61,12 @@ class one_setting_result_c():
         self.min_sample_map_size = 0
         self.max_sample_map_size = 0
         self.avg_condition_map_size = 0
-        self.max_condition_map_size = 0
+        self.min_condition_map_size = 0
         self.max_condition_map_size = 0
         self.raw_host_sample_switch_hold_accuracy = 0
 
 class one_setting_result_calculator_c():
-    CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY = "CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY"
+    #CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY = "CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY"
     def __init__(self):
         #setting
         self.host_switch_sample = 0
@@ -74,7 +74,7 @@ class one_setting_result_calculator_c():
         self.memory_type = 0
         self.freq = 0
         self.switches_sample_map_size = [None] * (CONSTANTS.NUM_SWITCH+1)
-        self.switches_condition_map_size = [None] * (CONSTANTS.NUM_SWITCH+1)
+        #self.switches_condition_map_size = [None] * (CONSTANTS.NUM_SWITCH+1)
     
     def get_one_setting_result(self, one_setting_path):
         one_setting_result = one_setting_result_c()
@@ -195,13 +195,13 @@ class one_setting_result_calculator_c():
                 match = sample_map_size_pattern.match(line)
                 if match != None:
                     self.switches_sample_map_size[switch_idx] = int(match.group(1))
-                match = condition_map_size_pattern.match(line)
-                if match != None:
-                    self.switches_condition_map_size[switch_idx] = int(match.group(1))
-                match = condition_map_last_round_collision_num.match(line)
-                if match != None:
-                    one_switch_rounds_info[cur_round_sec][one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY] \
-                        = int(match.group(1))
+                #match = condition_map_size_pattern.match(line)
+                #if match != None:
+                #    self.switches_condition_map_size[switch_idx] = int(match.group(1))
+                #match = condition_map_last_round_collision_num.match(line)
+                #if match != None:
+                #    one_switch_rounds_info[cur_round_sec][one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY] \
+                #        = int(match.group(1))
                 match = round_start_pattern.match(line)
                 if match != None:
                     #print previous round info
@@ -275,12 +275,12 @@ class one_setting_result_calculator_c():
                 fn_num_not_captured = 0
                 fn_num_not_sent_out_at_sender = 0
                 fn_num_sent_not_receive_or_hashmap_collision = 0
-                fn_num_condition_map_last_round_collision = \
-                    switch_flow_info_map[one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY]
+                #fn_num_condition_map_last_round_collision = \
+                #    switch_flow_info_map[one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY]
                 #print("all_flow_num:{0}" .format(all_flow_num))
                 for srcip, flow_info in switch_flow_info_map.items():
-                    if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
-                        continue
+                    #if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
+                    #    continue
                     if srcip in global_target_flow_map:
                         #the target flow goes through the switch
                         real_target_flow_num += 1
@@ -296,29 +296,30 @@ class one_setting_result_calculator_c():
                         if flow_info.captured_volume <= 0 or flow_info.signed_target <= 0:
                             #not captured flow
                             false_negative_num += 1
-                fn_num_sent_out_not_receive = \
-                    fn_num_sent_not_receive_or_hashmap_collision - \
-                    fn_num_condition_map_last_round_collision
+                #fn_num_sent_out_not_receive = \
+                #    fn_num_sent_not_receive_or_hashmap_collision - \
+                #    fn_num_condition_map_last_round_collision
                 false_negative_ratio=0.0
                 if real_target_flow_num > 0:
                     false_negative_ratio = 1.0 * false_negative_num / real_target_flow_num 
                 #print("real_target_flow_num:{0}" .format(real_target_flow_num))
                 #print("false_negative_num:{0}" .format(false_negative_num))
                 #print("false_negative_ratio:{0}" .format(false_negative_ratio))
-                print("switch_id:{0}, sec:{secc},target_flow_num:{1}, fn_num:{2}, fn_num_not_targetflow:{3}(not_sent_accurate-{not_sent}, not_receiv: not_accurate_>={not_receiv}, collision_all_accurate-{collision}), fn_num_not_captured:{4}" \
+                print("switch_id:{0}, sec:{secc},target_flow_num:{1}, fn_num:{2}, fn_num_not_targetflow:{3}(not_sent_accurate-{not_sent}, not_receive_or_hash_collision:{not_rece_or_collision}), fn_num_not_captured:{4}" \
                         .format(switch_id, real_target_flow_num, false_negative_num,\
                         fn_num_not_targetflow, fn_num_not_captured, \
                         not_sent = fn_num_not_sent_out_at_sender, \
-                        collision = fn_num_condition_map_last_round_collision, \
-                        not_receiv=fn_num_sent_out_not_receive, \
+                        not_rece_or_collision = fn_num_sent_not_receive_or_hashmap_collision, \
+                        #collision = fn_num_condition_map_last_round_collision, \
+                        #not_receiv=fn_num_sent_out_not_receive, \
                         secc=sec))
                             
                 #2.2. FPR
                 not_target_flow_num = all_flow_num - real_target_flow_num
                 false_positive_num = 0
                 for srcip, flow_info in switch_flow_info_map.items():
-                    if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
-                        continue
+                    #if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
+                    #    continue
                     if (srcip not in global_target_flow_map) \
                         and (flow_info.captured_volume > 0) \
                         and (flow_info.signed_target > 0):
@@ -331,8 +332,8 @@ class one_setting_result_calculator_c():
                 all_to_report_target_flow_accuracy = 0
                 all_to_report_target_flow_num = 0
                 for srcip, flow_info in switch_flow_info_map.items():
-                    if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
-                        continue
+                    #if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
+                    #    continue
                     if srcip in global_target_flow_map \
                         and (flow_info.captured_volume > 0) \
                         and (flow_info.signed_target > 0):
@@ -359,7 +360,7 @@ class one_setting_result_calculator_c():
             avg_switch_one_setting = avg_switch_result_one_setting_c()
             avg_switches_result_one_setting[switch_id] = avg_switch_one_setting
             avg_switch_one_setting.sample_map_size = self.switches_sample_map_size[switch_id]
-            avg_switch_one_setting.condition_map_size = self.switches_condition_map_size[switch_id]
+            #avg_switch_one_setting.condition_map_size = self.switches_condition_map_size[switch_id]
 
             fn_list = []
             fp_list = []
@@ -413,7 +414,7 @@ class one_setting_result_calculator_c():
         fp_list = []
         accuracy_list = []
         sample_map_size_list = []
-        condition_map_size_list = []
+        #condition_map_size_list = []
 
         real_target_flow_num_list = []
         fn_num_list = []
@@ -425,7 +426,7 @@ class one_setting_result_calculator_c():
             fp_list.append(avg_switch_one_setting.avg_fp)
             accuracy_list.append(avg_switch_one_setting.avg_accuracy)
             sample_map_size_list.append(avg_switch_one_setting.sample_map_size)
-            condition_map_size_list.append(avg_switch_one_setting.condition_map_size)
+            #condition_map_size_list.append(avg_switch_one_setting.condition_map_size)
             real_target_flow_num_list.append(avg_switch_one_setting.avg_real_target_flow_num)
             fn_num_list.append(avg_switch_one_setting.avg_fn_num)
             fn_num_not_targetflow_list.append(avg_switch_one_setting.avg_fn_num_not_targetflow)
@@ -450,7 +451,7 @@ class one_setting_result_calculator_c():
         one_setting_result.avg_sample_map_size = statistics.mean(sample_map_size_list)
         one_setting_result.min_sample_map_size = min(sample_map_size_list)
         one_setting_result.max_sample_map_size = max(sample_map_size_list)
-        one_setting_result.avg_condition_map_size = statistics.mean(condition_map_size_list)
-        one_setting_result.min_condition_map_size = min(condition_map_size_list)
-        one_setting_result.max_condition_map_size = max(condition_map_size_list)
+        #one_setting_result.avg_condition_map_size = statistics.mean(condition_map_size_list)
+        #one_setting_result.min_condition_map_size = min(condition_map_size_list)
+        #one_setting_result.max_condition_map_size = max(condition_map_size_list)
 
