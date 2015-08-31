@@ -12,7 +12,7 @@ class results_analyzer_c():
             for replace in [0, 1]:
                 for memory_type in [0, 1]:
                     for memory_times in [1, 2, 4, 8, 10,16]:
-                        for freq in [5, 10, 20, 40, 80]:   #these loop settings should be the same as those in main.py
+                        for freq in [500, 2000, 8000, 32000]:
                             #one setting result path
                             one_setting_path = '{0}/sample_{1}_replace_{2}_mem_{3}_mem_times_{4}_freq_{5}' .format(result_path, host_switch_sample, replace, memory_type, memory_times, freq)
                             if not os.path.lexists(one_setting_path):
@@ -85,7 +85,7 @@ class results_analyzer_c():
 
 if __name__ == '__main__':
     if len(sys.argv) !=2:
-        print("usage: python result_analysis.py result_path")
+        print("usage: python3 result_analysis.py result_path")
         exit(0)
 
     result_path = sys.argv[1]

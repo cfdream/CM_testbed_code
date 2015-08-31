@@ -263,6 +263,10 @@ int data_warehouse_reset_noactive_buf() {
     if (data_warehouse.flow_not_sampled_volume_map[na_idx] == NULL) {
         return -1;
     }
+    data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
+    if (data_warehouse.last_sent_target_flow_map == NULL) {
+        return -1;
+    }
     /* interval infor */
     data_warehouse.pkt_num_sent[na_idx] = 0;
     data_warehouse.volume_sent[na_idx] = 0;

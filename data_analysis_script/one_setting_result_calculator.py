@@ -284,16 +284,16 @@ class one_setting_result_calculator_c():
                     if srcip in global_target_flow_map:
                         #the target flow goes through the switch
                         real_target_flow_num += 1
-                        if flow_info.signed_target < 0:
+                        if flow_info.signed_target <= 0:
                             fn_num_not_targetflow += 1
                             if srcip in global_not_sent_out_targetflow_map:
                                 fn_num_not_sent_out_at_sender += 1
                             else:
                                 #fn_num_sent_out_at_sender_not_receive_at_switch and hashmap_collision
                                 fn_num_sent_not_receive_or_hashmap_collision += 1
-                        if flow_info.captured_volume < 0:
+                        if flow_info.captured_volume <= 0:
                             fn_num_not_captured += 1
-                        if flow_info.captured_volume < 0 or flow_info.signed_target < 0:
+                        if flow_info.captured_volume <= 0 or flow_info.signed_target <= 0:
                             #not captured flow
                             false_negative_num += 1
                 fn_num_sent_out_not_receive = \

@@ -131,7 +131,7 @@ entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value
 *
 * @return -1: key not exist in the hashtable, >=0 : value of the key
 */
-int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key ) {
+int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key, entry_kfs_fixSize_t* ret_entry) {
     int bin = 0;
     entry_kfs_fixSize_t *pair;
 
@@ -154,36 +154,10 @@ int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key ) {
     } else {
         /* release mutex */
         KEY_INT_TYPE value = pair->value;
+        ret_entry->value = pair->value;
+        ret_entry->is_target_flow = pair->is_target_flow;
         pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
-        return value;
-    }
-}
-
-bool ht_kfs_fixSize_is_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key) {
-    int bin = 0;
-    entry_kfs_fixSize_t *pair;
-
-    if (NULL == hashtable) {
-        return false;
-    }
-
-    bin = flow_src_hash_bin(key, hashtable->size);
-
-    /* request mutex */
-    pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
-
-    /* Step through the bin, looking for our value. */
-    pair = hashtable->table[ bin ];
-    /* Did we actually find anything? */
-    if( pair == NULL || pair->key == NULL || flow_src_compare( key, pair->key ) != 0 ) {
-        /* release mutex */
-        pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
-        return false;
-    } else {
-        /* release mutex */
-        bool is_target_flow = pair->is_target_flow;
-        pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
-        return is_target_flow;
+        return 0;
     }
 }
 
@@ -191,14 +165,66 @@ bool ht_kfs_fixSize_is_sampled(hashtable_kfs_fixSize_t *hashtable, flow_src_t* k
     //In ovs, the is_target_flow info is stored in flow_sample_map as well. When a flow is just marked as target by the senders, it has not been sampled yet.
     //Thus, ht_kfs_fixSize_get == 0 cannot be treated as the flow already sampled
     //This will influence sample and hold at switch. If condition flows are treated as sampled, sample and hold at switch will get much better performance, which is wrong.
-    if (ht_kfs_fixSize_get(hashtable, key) > 0) {
+    entry_kfs_fixSize_t ret_entry;
+    if (ht_kfs_fixSize_get(hashtable, key, &ret_entry) == 0
+        && ret_entry.value > 0) {
         return true;
     }
     return false;
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE value) {
+void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, entry_kfs_fixSize_t* ret_entry) {
+    int bin = 0;
+    entry_kfs_fixSize_t *newpair = NULL;
+    entry_kfs_fixSize_t *next = NULL;
+
+    if (NULL == hashtable) {
+        return;
+    }
+
+    bin = flow_src_hash_bin(key, hashtable->size);
+
+    // request mutex
+    pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+
+    next = hashtable->table[ bin ];
+
+    if( next != NULL && next->key != NULL ) {
+        // There's already a pair.
+        if (flow_src_compare( key, next->key ) == 0 ) {
+            //the flow exist
+            next->value = ret_entry->value;
+            next->is_target_flow = ret_entry->is_target_flow;
+        } else {
+            ++hashtable->collision_times;
+            //another flow already exist
+            //conflict happens
+            if (cm_experiment_setting.replacement
+                && next->is_target_flow) {
+                //replay && the existing flow is_target_flow, 
+                // keep the existing flow
+            } else {
+                //replace with the new flow
+                //1. free the existing pair
+                free(next->key);
+                free(next);
+                //2. set the new pair
+                newpair = ht_kfs_fixSize_newpair( key, ret_entry->value, ret_entry->is_target_flow);
+                hashtable->table[ bin ] = newpair;
+            }
+        }
+    // The bin is empty
+    } else {
+        newpair = ht_kfs_fixSize_newpair( key, ret_entry->value, ret_entry->is_target_flow);
+        hashtable->table[ bin ] = newpair;
+    }
+    // release mutex
+    pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+}
+
+/* Insert a key-value pair into a hash table. */
+void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value) {
     int bin = 0;
     entry_kfs_fixSize_t *newpair = NULL;
     entry_kfs_fixSize_t *next = NULL;
@@ -218,7 +244,7 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY
         /* There's already a pair. */
         if (flow_src_compare( key, next->key ) == 0 ) {
             //the flow exist
-            next->value = value;
+            next->value += delta_value;
         } else {
             ++hashtable->collision_times;
             //another flow already exist
@@ -233,19 +259,22 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY
                 free(next->key);
                 free(next);
                 //2. set the new pair
-                newpair = ht_kfs_fixSize_newpair( key, value, false);
+                //a new sampled packet, set the is_target_flow as 0
+                newpair = ht_kfs_fixSize_newpair( key, delta_value, false);
                 hashtable->table[ bin ] = newpair;
             }
         }
     /* The bin is empty */
     } else {
-        newpair = ht_kfs_fixSize_newpair( key, value, false );
+        //a new sampled packet, set the is_target_flow as 0
+        newpair = ht_kfs_fixSize_newpair( key, delta_value, false);
         hashtable->table[ bin ] = newpair;
     }
     /* release mutex */
     pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
 }
 
+/* Insert a key-value pair into a hash table. */
 void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow) {
     int bin = 0;
     entry_kfs_fixSize_t *newpair = NULL;
@@ -281,14 +310,24 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
                 free(next->key);
                 free(next);
                 //2. set the new pair
-                newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
-                hashtable->table[ bin ] = newpair;
+                //a new condition packet, value is set to 0
+                if (is_target_flow == true) {
+                    newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
+                    hashtable->table[ bin ] = newpair;
+                } else {
+                    //this only happens when the previous + delta information (the flow is a target flow) did not arrive, or collisoin happens
+                }
             }
         }
     /* The bin is empty */
     } else {
-        newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
-        hashtable->table[ bin ] = newpair;
+        //a new condition packet, value is set to 0
+        if (is_target_flow == true) {
+            newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
+            hashtable->table[ bin ] = newpair;
+        } else {
+            //this only happens when the previous + delta information (the flow is a target flow) did not arrive, or collisoin happens
+        }
     }
     /* release mutex */
     pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
@@ -360,9 +399,10 @@ hashtable_kfs_fixSize_t* ht_kfs_fixSize_copy(hashtable_kfs_fixSize_t *source_has
         return NULL;
     }
 
+
     entry_kfs_fixSize_t ret_entry;
     while(ht_kfs_fixSize_next(source_hashtable, &ret_entry) != -1) {
-        ht_kfs_fixSize_set(ret_hashtable, ret_entry.key, ret_entry.value);
+        ht_kfs_fixSize_set(ret_hashtable, ret_entry.key, &ret_entry);
         free(ret_entry.key);
     }
     return ret_hashtable;

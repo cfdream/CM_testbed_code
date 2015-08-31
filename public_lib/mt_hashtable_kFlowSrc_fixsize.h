@@ -74,17 +74,7 @@ entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value
 *
 * @return -1: key not exist in the hashtable, >=0 : value of the key
 */
-int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key );
-
-/**
-* @brief get whether the flow is a target flow
-*
-* @param hashtable
-* @param key
-*
-* @return 
-*/
-bool ht_kfs_fixSize_is_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key);
+int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key, entry_kfs_fixSize_t* ret_entry);
 
 /**
 * @brief get whether the flow is sampled or not
@@ -97,7 +87,10 @@ bool ht_kfs_fixSize_is_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_
 bool ht_kfs_fixSize_is_sampled(hashtable_kfs_fixSize_t *hashtable, flow_src_t* key);
 
 /* Insert a key-value pair into a hash table. */
-void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE value);
+//replaced by the followed two functions
+void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, entry_kfs_fixSize_t* ret_entry);
+
+void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value);
 
 void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow);
 

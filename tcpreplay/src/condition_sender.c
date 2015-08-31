@@ -171,11 +171,11 @@ void* send_condition_to_network(void* param_ptr) {
         ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
         data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
         if (data_warehouse.last_sent_target_flow_map == NULL) {
-            //add the flow into last_sent_target_flow_map
-            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, ret_entry.key, ret_entry.value);
             return NULL;
         }
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
+            //add the flow into last_sent_target_flow_map
+            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, ret_entry.key, ret_entry.value);
             free(ret_entry.key);
         }
 
