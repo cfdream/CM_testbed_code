@@ -12,7 +12,7 @@
 
 //condition
 //#define CM_CONDITION_TIME_INTERVAL 3 //cannot be 1
-#define CM_CONDITION_MILLISECONDS_POSTPOINE_FOR_SWITCH 200   //200 milliseconds
+#define CM_CONDITION_MILLISECONDS_POSTPOINE_FOR_SWITCH 10   //10 milliseconds, refer to time_library.h:get_next_sec_interval_start()
 
 //packet dropping model
 //#define CM_SWITCH_DROP_RATE 0.00

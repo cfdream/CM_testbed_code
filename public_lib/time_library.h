@@ -13,9 +13,9 @@ void print_current_time_with_ms (void);
 
 /**
 * @brief postpone till the next time interval starts, then return
-* e.g., time_interval_len = 30 seconds
-* then, will return at every xx:xx:00 or xx:xx:30
-* It is usually less than 0.1 ms larger than xx:xx:00, or xx:xx:30
+* e.g., time_interval_len = 500 milliseconds
+* then, will return at the next millisecond whose value mod 500 == 0
+* delta(returned value, expected value) < 1ms
 *
 * @param time_interval_len : length of time interval in seconds.
 */

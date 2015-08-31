@@ -125,6 +125,12 @@ void* send_condition_to_network(void* param_ptr) {
         uint64_t current_msec = get_next_interval_start(cm_experiment_setting.condition_msec_freq);
         int condition_pkt_num = 0;
 
+        /* postpone CM_CONDITION_MILLISECONDS_POSTPOINE_FOR_SWITCH
+         * This is to make sure that the switches can receive all the condition informational-         
+         * This should be large enough to make sure the condition infor is used at switches in time.
+         */
+        usleep(1000*CM_CONDITION_MILLISECONDS_POSTPOINE_FOR_SWITCH);
+
         //lock to send all condition packets
         pthread_mutex_lock(&data_warehouse.packet_send_mutex);
 		//lock the data_warehouse.data_warehouse_mutex
