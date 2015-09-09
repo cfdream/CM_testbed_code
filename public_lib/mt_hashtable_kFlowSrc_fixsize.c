@@ -61,7 +61,6 @@ void ht_kfs_fixSize_destory( hashtable_kfs_fixSize_t *hashtable ) {
     for (i = 0; i < hashtable->size; i++) {
         p_node = hashtable->table[i];
         if (p_node) {
-            free(p_node->key);
             free(p_node);
         }
     }
@@ -93,7 +92,6 @@ void ht_kfs_fixSize_refresh( hashtable_kfs_fixSize_t *hashtable ) {
         //delete all nodes in this bin
         p_node = hashtable->table[i];
         if (p_node) {
-            free(p_node->key);
             free(p_node);
         }
         //set the bin to empty
@@ -116,7 +114,7 @@ entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value
     }
 
     //copy the key and value
-    newpair->key = deep_copy_flow(key);
+    newpair->key = *key;
     newpair->value = value;
     newpair->is_target_flow = is_target_flow;
 
@@ -147,7 +145,7 @@ int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key, ent
     /* Step through the bin, looking for our value. */
     pair = hashtable->table[ bin ];
     /* Did we actually find anything? */
-    if( pair == NULL || pair->key == NULL || flow_src_compare( key, pair->key ) != 0 ) {
+    if( pair == NULL || flow_src_compare( key, &pair->key ) != 0 ) {
         /* release mutex */
         pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
         return -1;
@@ -190,9 +188,9 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, ent
 
     next = hashtable->table[ bin ];
 
-    if( next != NULL && next->key != NULL ) {
+    if( next != NULL ) {
         // There's already a pair.
-        if (flow_src_compare( key, next->key ) == 0 ) {
+        if (flow_src_compare( key, &next->key ) == 0 ) {
             //the flow exist
             next->value = ret_entry->value;
             next->is_target_flow = ret_entry->is_target_flow;
@@ -207,7 +205,6 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, ent
             } else {
                 //replace with the new flow
                 //1. free the existing pair
-                free(next->key);
                 free(next);
                 //2. set the new pair
                 newpair = ht_kfs_fixSize_newpair( key, ret_entry->value, ret_entry->is_target_flow);
@@ -240,23 +237,21 @@ void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *ke
 
     next = hashtable->table[ bin ];
 
-    if( next != NULL && next->key != NULL ) {
+    if( next != NULL ) {
         /* There's already a pair. */
-        if (flow_src_compare( key, next->key ) == 0 ) {
+        if (flow_src_compare( key, &next->key ) == 0 ) {
             //the flow exist
             next->value += delta_value;
         } else {
             ++hashtable->collision_times;
             //another flow already exist
             //conflict happens
-            if (cm_experiment_setting.replacement
-                && next->is_target_flow) {
-                //replay && the existing flow is_target_flow, 
+            if (cm_experiment_setting.replacement && next->is_target_flow) {
+                // replacement && the existing flow is_target_flow
                 /* keep the existing flow */
             } else {
                 //replace with the new flow
                 //1. free the existing pair
-                free(next->key);
                 free(next);
                 //2. set the new pair
                 //a new sampled packet, set the is_target_flow as 0
@@ -291,23 +286,25 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
 
     next = hashtable->table[ bin ];
 
-    if( next != NULL && next->key != NULL ) {
+    if( next != NULL ) {
         /* There's already a pair. */
-        if (flow_src_compare( key, next->key ) == 0 ) {
+        if (flow_src_compare( key, &next->key ) == 0 ) {
             //the flow exist
             next->is_target_flow = is_target_flow;
         } else {
             ++hashtable->collision_times;
             //another flow already exist
             //conflict happens
-            if (cm_experiment_setting.replacement
-                && next->is_target_flow) {
-                //replay && the existing flow is_target_flow, 
+            if (cm_experiment_setting.replacement && next->is_target_flow 
+                && (next->value > 0 || !is_target_flow)) {
+                // replacement 
+                // && the existing flow is_target_flow,
+                // && 
+                // (the existing flow's captured volume > 0 || the new flow is not target flow)
                 /* keep the existing flow */
             } else {
                 //replace with the new flow
                 //1. free the existing pair
-                free(next->key);
                 free(next);
                 //2. set the new pair
                 //a new condition packet, value is set to 0
@@ -350,8 +347,7 @@ void ht_kfs_fixSize_del( hashtable_kfs_fixSize_t *hashtable, flow_src_t *key) {
     next = hashtable->table[ bin ];
 
     /* There's already a pair.  Let's del that entry. */
-    if( next != NULL && next->key != NULL && flow_src_compare( key, next->key ) == 0 ) {
-        free(next->key);
+    if( next != NULL && flow_src_compare( key, &next->key ) == 0 ) {
         free(next);
         hashtable->table[ bin ] = NULL;
     }
@@ -383,7 +379,7 @@ int ht_kfs_fixSize_next(hashtable_kfs_fixSize_t *hashtable, entry_kfs_fixSize_t*
         pthread_mutex_lock(&hashtable->mutexs[(hashtable->next_current_bin)%HASH_MAP_MUTEX_SIZE]);
         entry_kfs_fixSize_t* iterator = hashtable->table[hashtable->next_current_bin];
         if (iterator != NULL) {
-            ret_entry->key = deep_copy_flow(iterator->key);
+            ret_entry->key = iterator->key;
             ret_entry->value = iterator->value;
             pthread_mutex_unlock(&hashtable->mutexs[(hashtable->next_current_bin)%HASH_MAP_MUTEX_SIZE]);
             break;
@@ -402,8 +398,7 @@ hashtable_kfs_fixSize_t* ht_kfs_fixSize_copy(hashtable_kfs_fixSize_t *source_has
 
     entry_kfs_fixSize_t ret_entry;
     while(ht_kfs_fixSize_next(source_hashtable, &ret_entry) != -1) {
-        ht_kfs_fixSize_set(ret_hashtable, ret_entry.key, &ret_entry);
-        free(ret_entry.key);
+        ht_kfs_fixSize_set(ret_hashtable, &ret_entry.key, &ret_entry);
     }
     return ret_hashtable;
 }

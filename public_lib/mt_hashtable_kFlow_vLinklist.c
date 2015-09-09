@@ -68,7 +68,6 @@ void ht_vl_destory( hashtable_vl_t *hashtable ) {
     for (i = 0; i < hashtable->size; i++) {
         p_node = hashtable->table[i];
         while (p_node) {
-            free(p_node->key);
 
             //value: free packet list
             p_pkt = p_node->oldest_pkt;
@@ -111,7 +110,7 @@ entry_vl_t *ht_vl_newpair( flow_s *key, pkt_volume_t* pkt_volume) {
 	}
 
     //copy the key and value
-    newpair->key = deep_copy_flow(key);
+    newpair->key = *key;
     newpair->oldest_pkt = pkt_volume;
     newpair->newest_pkt = pkt_volume;
 
@@ -147,12 +146,12 @@ receV_lostV_t ht_vl_get_rece_lost_volume( hashtable_vl_t *hashtable, flow_s* key
 
 	/* Step through the bin, looking for our value. */
 	pair = hashtable->table[ bin ];
-	while( pair != NULL && pair->key != NULL && flow_compare( key, pair->key ) > 0 ) {
+	while( pair != NULL && flow_compare( key, &pair->key ) > 0 ) {
 		pair = pair->next;
 	}
 
 	/* Did we actually find anything? */
-	if( pair == NULL || pair->key == NULL || flow_compare( key, pair->key ) != 0 ) {
+	if( pair == NULL || flow_compare( key, &pair->key ) != 0 ) {
         printf("FAIL: flow not in hashmap\n");
 	} else {
         /* go through the pkt list, to get <received volume, lost volume> */
@@ -216,14 +215,14 @@ void ht_vl_set( hashtable_vl_t *hashtable, flow_s *key, uint32_t seqid, uint32_t
 
 	next = hashtable->table[ bin ];
 
-	while( next != NULL && next->key != NULL && flow_compare( key, next->key ) > 0 ) {
+	while( next != NULL && flow_compare( key, &next->key ) > 0 ) {
 		last = next;
 		next = next->next;
 	}
 
     pkt_volume_t* pkt_volume = new_pkt_volume(seqid, volume);
 	/* There's already a pair.  add the packet to the list. */
-	if( next != NULL && next->key != NULL && flow_compare( key, next->key ) == 0 ) {
+	if( next != NULL && flow_compare( key, &next->key ) == 0 ) {
 		if (next->oldest_pkt == NULL) {
             next->oldest_pkt = pkt_volume;
             next->newest_pkt = pkt_volume;

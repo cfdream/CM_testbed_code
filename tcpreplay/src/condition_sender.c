@@ -142,35 +142,33 @@ void* send_condition_to_network(void* param_ptr) {
         entry_kfs_vi_t ret_entry;
         //1. for one flow in target_flow_map, if it does not exist in the last_sent_target_flow_map, send the + information
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
-            if (ht_kfs_vi_get(data_warehouse.last_sent_target_flow_map, ret_entry.key) > 0) {
+            if (ht_kfs_vi_get(data_warehouse.last_sent_target_flow_map, &ret_entry.key) > 0) {
                 //the flow is target flow now and last time
                 continue;
             }
             //1.1 new target flow not sent last time
             //send the + delta info
             //get one target flow, send to the network
-            condition.srcip = ret_entry.key->srcip;
+            condition.srcip = ret_entry.key.srcip;
             send_udp_condition_pkt(&condition, true);
             ++condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("condition srcip:%u\n", condition.srcip);
-            free(ret_entry.key);
         }
 
         //2. for one flow in last_sent_target_flow_map, if it does not exist in target_flow_map, send the - information
         while (ht_kfs_vi_next(data_warehouse.last_sent_target_flow_map, &ret_entry) == 0) {
-            if (ht_kfs_vi_get(target_flow_map, ret_entry.key) > 0) {
+            if (ht_kfs_vi_get(target_flow_map, &ret_entry.key) > 0) {
                 //the flow is target flow now and last time
                 continue;
             }
             //2.1 target flow sent last time but now not target flow
             //send the - delta info
-            condition.srcip = ret_entry.key->srcip;
+            condition.srcip = ret_entry.key.srcip;
             send_udp_condition_pkt(&condition, false);
             ++condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("condition srcip:%u\n", condition.srcip);
-            free(ret_entry.key);
         }
 
         //3. copy the current target_flow_map into last_sent_target_flow_map
@@ -181,8 +179,7 @@ void* send_condition_to_network(void* param_ptr) {
         }
         while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
             //add the flow into last_sent_target_flow_map
-            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, ret_entry.key, ret_entry.value);
-            free(ret_entry.key);
+            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, &ret_entry.key, ret_entry.value);
         }
 
         pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);

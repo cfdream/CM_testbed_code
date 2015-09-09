@@ -11,10 +11,11 @@ int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_
     double pkt_sample_rate;
     double rand_float;
 
-    flow_src_t* p_flow_src = p_packet;
+    flow_src_t flow_src;
+    flow_src.srcip = p_packet->srcip;
 
-    if (flow_src_already_sampled(p_flow_src, flow_sample_map)) {
-        //printf("srcip:%u already in flow_sample_map\n", p_flow_src->srcip);
+    if (flow_src_already_sampled(&flow_src, flow_sample_map)) {
+        //printf("srcip:%u already in flow_sample_map\n", flow_src.srcip);
         return 1;
     }
     //packet sample rate
@@ -24,7 +25,7 @@ int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_
     if (rand_float < pkt_sample_rate) {
         //mark the flow as sampled
         //tcpreplay will use flow_sample_map to check whether the flow is sampled or not
-        ht_kfs_vi_set(flow_sample_map, p_flow_src, 1);
+        ht_kfs_vi_set(flow_sample_map, &flow_src, 1);
         return 1;
     }
     return 0;
@@ -38,10 +39,11 @@ int sample_packet_fixSize_map(packet_t* p_packet,
     double pkt_sample_rate;
     double rand_float;
 
-    flow_src_t* p_flow_src = p_packet;
+    flow_src_t flow_src;
+    flow_src.srcip = p_packet->srcip;
 
-    if (ht_kfs_fixSize_is_sampled(flow_sample_map, p_flow_src)) {
-        //printf("srcip:%u already in flow_sample_map\n", p_flow_src->srcip);
+    if (ht_kfs_fixSize_is_sampled(flow_sample_map, &flow_src)) {
+        //printf("srcip:%u already in flow_sample_map\n", flow_src.srcip);
         return 1;
     }
     //packet sample rate
@@ -51,7 +53,7 @@ int sample_packet_fixSize_map(packet_t* p_packet,
     if (rand_float < pkt_sample_rate) {
         //mark the flow as sampled
         //This is not necessary, as ovs will set the real volume of the flow. Thus one sampled flow will appear in the flow_sample_map immediately
-        //ht_kfs_fixSize_set(flow_sample_map, p_flow_src, 0);
+        //ht_kfs_fixSize_set(flow_sample_map, &flow_src, 0);
         return 1;
     }
     return 0;

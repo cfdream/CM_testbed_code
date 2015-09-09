@@ -58,7 +58,6 @@ void ht_vi_destory( hashtable_vi_t *hashtable ) {
     for (i = 0; i < hashtable->size; i++) {
         p_node = hashtable->table[i];
         while (p_node) {
-            free(p_node->key);
             next = p_node->next;
             free(p_node);
             p_node = next;
@@ -91,7 +90,7 @@ entry_vi_t *ht_vi_newpair( flow_s *key, KEY_INT_TYPE value ) {
 	}
 
     //copy the key and value
-    newpair->key = deep_copy_flow(key);
+    newpair->key = *key;
     newpair->value = value;
 
 	newpair->next = NULL;
@@ -122,12 +121,12 @@ int ht_vi_get( hashtable_vi_t *hashtable, flow_s* key ) {
 
 	/* Step through the bin, looking for our value. */
 	pair = hashtable->table[ bin ];
-	while( pair != NULL && pair->key != NULL && flow_compare( key, pair->key ) > 0 ) {
+	while( pair != NULL && flow_compare( key, &pair->key ) > 0 ) {
 		pair = pair->next;
 	}
 
 	/* Did we actually find anything? */
-	if( pair == NULL || pair->key == NULL || flow_compare( key, pair->key ) != 0 ) {
+	if( pair == NULL || flow_compare( key, &pair->key ) != 0 ) {
         /* release mutex */
         pthread_mutex_unlock(&hashtable->mutexs[bin]);
 		return -1;
@@ -157,13 +156,13 @@ void ht_vi_set( hashtable_vi_t *hashtable, flow_s *key, KEY_INT_TYPE value ) {
 
 	next = hashtable->table[ bin ];
 
-	while( next != NULL && next->key != NULL && flow_compare( key, next->key ) > 0 ) {
+	while( next != NULL && flow_compare( key, &next->key ) > 0 ) {
 		last = next;
 		next = next->next;
 	}
 
 	/* There's already a pair.  Let's replace that string. */
-	if( next != NULL && next->key != NULL && flow_compare( key, next->key ) == 0 ) {
+	if( next != NULL && flow_compare( key, &next->key ) == 0 ) {
 		next->value = value;
 
 	/* Nope, could't find it.  Time to grow a pair. */
@@ -206,13 +205,13 @@ void ht_vi_del( hashtable_vi_t *hashtable, flow_s *key) {
 
 	next = hashtable->table[ bin ];
 
-	while( next != NULL && next->key != NULL && flow_compare( key, next->key ) > 0 ) {
+	while( next != NULL && flow_compare( key, &next->key ) > 0 ) {
 		last = next;
 		next = next->next;
 	}
 
 	/* There's already a pair.  Let's del that entry. */
-	if( next != NULL && next->key != NULL && flow_compare( key, next->key ) == 0 ) {
+	if( next != NULL && flow_compare( key, &next->key ) == 0 ) {
 		if (next == hashtable->table[bin]) {
             hashtable->table[bin] = next->next;
         } else {
@@ -222,7 +221,6 @@ void ht_vi_del( hashtable_vi_t *hashtable, flow_s *key) {
 		if (next == hashtable->next_last_visit_entry) {
 			hashtable->next_last_visit_entry = next->next;
 		}		
-        free(next->key);
         free(next);
 	}
 
@@ -249,7 +247,7 @@ int ht_vi_next(hashtable_vi_t *hashtable, entry_vi_t* ret_entry) {
         pthread_mutex_lock(&hashtable->mutexs[hashtable->next_current_bin]);
         if (hashtable->next_last_visit_entry != NULL && hashtable->next_last_visit_entry->next != NULL) {
             iterator = hashtable->next_last_visit_entry->next; 
-            ret_entry->key = deep_copy_flow(iterator->key);
+            ret_entry->key = iterator->key;
             ret_entry->value = iterator->value;
             hashtable->next_last_visit_entry = iterator; 
             pthread_mutex_unlock(&hashtable->mutexs[hashtable->next_current_bin]);
@@ -273,7 +271,7 @@ int ht_vi_next(hashtable_vi_t *hashtable, entry_vi_t* ret_entry) {
         pthread_mutex_lock(&hashtable->mutexs[hashtable->next_current_bin]);
         iterator = hashtable->table[hashtable->next_current_bin];
         if (iterator != NULL) {
-            ret_entry->key = deep_copy_flow(iterator->key);
+            ret_entry->key = iterator->key;
             ret_entry->value = iterator->value;
             hashtable->next_last_visit_entry = iterator;
             pthread_mutex_unlock(&hashtable->mutexs[hashtable->next_current_bin]);

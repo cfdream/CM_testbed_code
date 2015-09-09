@@ -25,7 +25,7 @@
 #include "cm_experiment_setting.h"
 
 struct entry_kfs_fixSize_s {
-	flow_src_t *key;
+	flow_src_t key;
     bool is_target_flow;
 	KEY_INT_TYPE value;
 };

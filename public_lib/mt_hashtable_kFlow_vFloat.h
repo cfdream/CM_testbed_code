@@ -24,7 +24,7 @@
 #include "hashtable.h"
 
 struct entry_vf_s {
-	flow_s *key;
+	flow_s key;
 	KEY_FLOAT_TYPE value;
 	struct entry_vf_s *next;
 };

@@ -34,7 +34,7 @@ void write_last_sent_target_flow_map_lost_target_flow(FILE* fp_target_flow) {
     entry_kfs_vi_t ret_entry;
     while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
         ++final_target_flow_num;
-        flow_src_t* p_flow = ret_entry.key;
+        flow_src_t* p_flow = &ret_entry.key;
         if (ht_kfs_vi_get(last_sent_target_flow_map, p_flow) < 0) {
                 ++ final_lost_num_in_last_sent_target_flow_map;
         }
@@ -76,7 +76,6 @@ void write_interval_info_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         if (ret_vf_entry.value > cm_experiment_setting.target_flow_setting.loss_rate_threshold) {
             ++loss_rate_ok_flow_num;
         }
-        free(ret_vf_entry.key);
     }
     fprintf(fp_target_flow, "loss_rate_ok_flow_num:%d\n", loss_rate_ok_flow_num);
     
@@ -89,7 +88,6 @@ void write_interval_info_to_file(uint64_t current_msec, FILE* fp_target_flow) {
             ++volume_ok_flow_num;
         }
         ++unique_flow_num_sent;
-        free(ret_entry.key);
     }
     fprintf(fp_target_flow, "volume_ok_flow_num:%d\n", volume_ok_flow_num);
     fprintf(fp_target_flow, "unique_flow_num_sent:%d\n", unique_flow_num_sent);
@@ -112,7 +110,7 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
     entry_kfs_vi_t ret_entry;
     while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
         //get one target flow, output to file
-        flow_src_t* p_flow = ret_entry.key;
+        flow_src_t* p_flow = &ret_entry.key;
         int volume = ht_kfs_vi_get(flow_volume_map_pre_interval, p_flow);
         float loss_rate = ht_kfs_vf_get(flow_loss_rate_map_pre_interval, p_flow);
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
@@ -120,8 +118,6 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
         fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
         fflush(fp_target_flow);
-        //ret_entry.key
-        free(ret_entry.key);
     }
 }
 

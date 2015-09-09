@@ -43,11 +43,13 @@ void close_write_pkts_to_files() {
 }
 
 uint32_t get_seqid_of_flow(packet_s* p_packet) {
-    if (ht_kf_get(flow_seqid_hashmap, p_packet) < 0) {
-        ht_kf_set(flow_seqid_hashmap, p_packet, 0);
+    flow_t flow;
+    flow.srcip = p_packet->srcip;
+    if (ht_kf_get(flow_seqid_hashmap, &flow) < 0) {
+        ht_kf_set(flow_seqid_hashmap, &flow, 0);
     }
-    uint32_t seqid = ht_kf_get(flow_seqid_hashmap, p_packet) + 1;
-    ht_kf_set(flow_seqid_hashmap, p_packet, seqid);
+    uint32_t seqid = ht_kf_get(flow_seqid_hashmap, &flow) + 1;
+    ht_kf_set(flow_seqid_hashmap, &flow, seqid);
 
     return seqid;
 }

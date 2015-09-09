@@ -34,7 +34,7 @@ typedef struct pkt_volume_s {
 }pkt_volume_t;
 
 struct entry_vl_s {
-	flow_s *key;
+	flow_s key;
 	pkt_volume_t *oldest_pkt;
 	pkt_volume_t *newest_pkt;
 	struct entry_vl_s *next;

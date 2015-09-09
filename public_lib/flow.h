@@ -17,13 +17,21 @@ typedef struct flow {
 /**
 * @brief 5-tuple flow
 */
-typedef packet_s flow_s;
-typedef flow_s flow_t;
+typedef struct flow_ss {
+    uint32_t srcip;
+    uint32_t dstip;
+    uint16_t src_port;
+    uint16_t dst_port;
+    uint8_t protocol;  //l4 protocol
+} flow_t, flow_s;
+
 /*
  * <src> flow
  *
  */
-typedef flow_s flow_src_t;
+typedef struct flow_src_s {
+    uint32_t srcip;
+} flow_src_t;
 
 /*
  * the return value should be released by the call function

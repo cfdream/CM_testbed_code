@@ -24,7 +24,7 @@
 #include "hashtable.h"
 
 struct entry_kfs_vf_s {
-	flow_src_t *key;
+	flow_src_t key;
 	KEY_FLOAT_TYPE value;
 	struct entry_kfs_vf_s *next;
 };
