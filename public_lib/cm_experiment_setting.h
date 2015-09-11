@@ -39,6 +39,11 @@ enum host_switch_sample_e {
 
 typedef struct sample_hold_setting_s {
     uint64_t switches_interval_volume[NUM_SWITCHES]; //for setting hold hashtable size
+    uint64_t max_switch_interval_volume;
+    // as we want to compare UNIFORM vs. DIVERSE, 
+    // we need to make total mem used in UNIFORM model is the same as DIVERSE mode, 
+    // when the switch_memory_times is the same
+    float uniform_mem_ratio_to_diverse_mem;
     float default_byte_sampling_rate;
 } sample_hold_setting_t;
 

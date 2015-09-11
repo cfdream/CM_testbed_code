@@ -139,6 +139,24 @@ int read_cm_experiment_setting_from_file(void) {
 int init_other_experiment_setting(void) {
     cm_experiment_setting.sample_hold_setting.default_byte_sampling_rate 
         = 1.0 / cm_experiment_setting.target_flow_setting.volume_threshold * OVER_SAMPLING_RATIO;
+
+    //get uniform_mem_ratio_to_diverse_mem
+    uint64_t all_switches_volume = 0;
+    int i = 0;
+    cm_experiment_setting.sample_hold_setting.max_switch_interval_volume = 0;
+    for (i = 0; i < NUM_SWITCHES; ++i) {
+        all_switches_volume += cm_experiment_setting.sample_hold_setting.switches_interval_volume[i];
+        if (cm_experiment_setting.sample_hold_setting.switches_interval_volume[i] 
+            > cm_experiment_setting.sample_hold_setting.max_switch_interval_volume) {
+            cm_experiment_setting.sample_hold_setting.max_switch_interval_volume
+                = cm_experiment_setting.sample_hold_setting.switches_interval_volume[i];
+        }
+    }
+    if (cm_experiment_setting.sample_hold_setting.max_switch_interval_volume > 0) {
+        cm_experiment_setting.sample_hold_setting.uniform_mem_ratio_to_diverse_mem 
+            = 1.0 * all_switches_volume / NUM_SWITCHES 
+              / cm_experiment_setting.sample_hold_setting.max_switch_interval_volume;
+    }
     return 0;
 }
 
@@ -171,6 +189,9 @@ int check_value_correct(void) {
     }
     if (cm_experiment_setting.target_flow_setting.loss_rate_threshold == 0) {
         printf("WARNING: cm_experiment_setting.target_flow_setting.loss_rate_threshold== 0\n");
+    }
+    if (cm_experiment_setting.sample_hold_setting.uniform_mem_ratio_to_diverse_mem > 1) {
+        printf("WARNING: cm_experiment_setting.sample_hold_setting.uniform_mem_ratio_to_diverse_mem > 1\n");
     }
     return 0;
 }

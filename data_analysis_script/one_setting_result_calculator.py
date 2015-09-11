@@ -166,7 +166,7 @@ class one_setting_result_calculator_c():
         print("num_rounds:{0}, max_accuracy_at_host:{1}" \
             .format(len(global_rounds_target_flows), one_setting_result.raw_host_sample_switch_hold_accuracy))
         if len(global_rounds_target_flows) > 0:
-            for sec, one_round_result in global_rounds_target_flows.items():
+            for sec, one_round_result in sorted(global_rounds_target_flows.items(), key=lambda pair: pair[0]):
                 print("one round sec:{0}, target flow num:{1}" .format(sec, len(one_round_result)))
                 #break
 
@@ -245,7 +245,7 @@ class one_setting_result_calculator_c():
         print("num switches:{0}" .format(len(switches_rounds_flow_info)))
         if len(switches_rounds_flow_info) > 0:
             for switch_idx, one_switch_rounds_info in switches_rounds_flow_info.items():
-                for sec, one_switch_one_round_info in one_switch_rounds_info.items():
+                for sec, one_switch_one_round_info in sorted(one_switch_rounds_info.items(), key=lambda pair: pair[0]):
                     print("sec:{0}, switch:{1}, flow num:{2}" .format(sec, switch_idx, len(one_switch_one_round_info)))
                     
 
