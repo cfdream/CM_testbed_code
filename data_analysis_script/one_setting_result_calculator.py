@@ -166,9 +166,16 @@ class one_setting_result_calculator_c():
         print("num_rounds:{0}, max_accuracy_at_host:{1}" \
             .format(len(global_rounds_target_flows), one_setting_result.raw_host_sample_switch_hold_accuracy))
         if len(global_rounds_target_flows) > 0:
+            max_target_flow_num_round = 0
             for sec, one_round_result in sorted(global_rounds_target_flows.items(), key=lambda pair: pair[0]):
+                if len(one_round_result) > max_target_flow_num_round:
+                    max_target_flow_num_round = len(one_round_result)
+            for sec, one_round_result in sorted(global_rounds_target_flows.items(), key=lambda pair: pair[0]):
+                if len(one_round_result) < max_target_flow_num_round / 2:
+                    #this round shouldb the last round
+                    del global_rounds_target_flows[sec]
+                    continue
                 print("one round sec:{0}, target flow num:{1}" .format(sec, len(one_round_result)))
-                #break
 
     def read_rounds_per_switch_flow_info(self, one_setting_path, switches_rounds_flow_info):
         switch_path = "{0}/switch" .format(one_setting_path)
