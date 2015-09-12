@@ -59,7 +59,7 @@ int read_cm_experiment_setting_from_file(void) {
             }
             //switch_memory_times
             if (strcmp(*(tokens+0), "switch_memory_times") == 0 && *(tokens+1)) {
-                cm_experiment_setting.switch_memory_times = strtol(*(tokens+1), NULL, 10);
+                cm_experiment_setting.switch_memory_times = strtof(*(tokens+1), NULL);
             }
             //switch_drop_rate
             if (strcmp(*(tokens+0), "switch_drop_rate") == 0 && *(tokens+1)) {
