@@ -53,7 +53,7 @@ class results_analyzer_c():
             )) 
         with open('result_query1_diff_setting.txt', 'a') as out_file:
             #setting info
-            out_file.write("host_switch_sample={host_switch_sample}\treplace={replace}\tmemory_type={memory_type}\tmemory_times={memory_times}\tfreq={freq}\t{avg_fn}\t{min_fn}\t{max_fn}\t{stdv_fn}\t{avg_fp}\t{min_fp}\t{max_fp}\t{stdv_fp}\t{avg_accuracy}\t{min_accuracy}\t{max_accuracy}\t{stdv_accuracy}\t{avg_sample_map_size}\t{min_sample_map_size}\t{max_sample_map_size}\t{avg_condition_map_size}\t{min_condition_map_size}\t{max_sample_map_size}\t{raw_host_sample_switch_hold_accuracy}\t{avg_real_target_flow_num}\t{avg_fn_num}\n" \
+            out_file.write("host_switch_sample={host_switch_sample}\treplace={replace}\tmemory_type={memory_type}\tmemory_times={memory_times}\tfreq={freq}\tavg_fn={avg_fn}\tmin_fn={min_fn}\tmax_fn={max_fn}\tstdv_fn={stdv_fn}\tavg_fp={avg_fp}\tmin_fp={min_fp}\tmax_fp={max_fp}\tstdv_fp={stdv_fp}\tavg_accuracy={avg_accuracy}\tmin_accuracy={min_accuracy}\tmax_accuracy={max_accuracy}\tstdv_accuracy={stdv_accuracy}\tavg_sample_map_size={avg_sample_map_size}\tmin_sample_map_size={min_sample_map_size}\tmax_sample_map_size={max_sample_map_size}\tavg_condition_map_size={avg_condition_map_size}\tmin_condition_map_size={min_condition_map_size}\tmax_sample_map_size={max_sample_map_size}\traw_host_sample_switch_hold_accuracy={raw_host_sample_switch_hold_accuracy}\tavg_real_target_flow_num={avg_real_target_flow_num}\tavg_fn_num={avg_fn_num}\n" \
             .format(host_switch_sample=host_switch_sample, \
                 replace=replace, memory_type=memory_type, memory_times=memory_times, freq=freq, \
                 avg_fn = one_setting_result.avg_fn, \

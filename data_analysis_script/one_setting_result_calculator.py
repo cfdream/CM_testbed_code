@@ -99,7 +99,7 @@ class one_setting_result_calculator_c():
         self.calculate_rounds_per_switch_result(global_rounds_target_flows, switches_rounds_flow_info, global_rounds_not_sent_out_targetflows, switches_rounds_result)
         print("END calculate_rounds_per_switch_result()")
 
-        #4. calculate one_settig_result
+        #4. calculate one_settig_result for every switch
         print("START calculate_switches_one_setting_result()")
         #pair: key-switch_id, value-avg_switch_result_one_setting_c
         avg_switches_result_one_setting = {}    #avg_switch_result_one_setting_c
@@ -180,7 +180,10 @@ class one_setting_result_calculator_c():
     def read_rounds_per_switch_flow_info(self, one_setting_path, switches_rounds_flow_info):
         switch_path = "{0}/switch" .format(one_setting_path)
         round_start_pattern = re.compile("=====time-(\d+) milliseconds=====")
-        flow_info_pattern = re.compile("^(\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)\t(\d+)")
+        #new format
+        flow_info_pattern_new = re.compile("^(\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)\t(\d+)")
+        #old format
+        flow_info_pattern_old = re.compile("^(\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)")
         sample_map_size_pattern = re.compile("^sample_hashmap_size:(\d+)")
         condition_map_size_pattern = re.compile("^condition_hashmap_size:(\d+)")
         condition_map_last_round_collision_num = re.compile("^condition_hashmap last rotate collision times:(\d+)")
@@ -225,19 +228,34 @@ class one_setting_result_calculator_c():
                     cur_round_flow_num=0
                     line_num = 0
                 else:
-                    match = flow_info_pattern.match(line)
-                    line_num += 1
                     #print(line)
-                    if match != None:
-                        #print("matched")
-                        cur_round_flow_num += 1
-                        #print(line)
+                    line_num += 1
+                    cur_round_flow_num += 1
+
+                    srcip = 0
+                    real_volume = 0
+                    captured_volume = 0
+                    signed_target = 0
+                    target_switch_received = 0
+                    matched = False
+                    match_new = flow_info_pattern_new.match(line)
+                    if match_new != None:
                         #one target flow
-                        srcip = match.group(1)
-                        real_volume = int(match.group(2))
-                        captured_volume = int(match.group(3))
-                        signed_target = int(match.group(4))
-                        target_switch_received = int(match.group(5))
+                        srcip = match_new.group(1)
+                        real_volume = int(match_new.group(2))
+                        captured_volume = int(match_new.group(3))
+                        signed_target = int(match_new.group(4))
+                        target_switch_received = int(match_new.group(5))
+                        matched = True
+                    else:
+                        match_old = flow_info_pattern_old.match(line)
+                        if match_old != None:
+                            srcip = match_old.group(1)
+                            real_volume = int(match_old.group(2))
+                            captured_volume = int(match_old.group(3))
+                            signed_target = int(match_old.group(4))
+                            matched = True
+                    if matched:
                         flow_info = switch_flow_info_c(real_volume, captured_volume, signed_target, target_switch_received)
                         if cur_round_sec not in one_switch_rounds_info:
                             print("FATAL: switch_idx:{0}, cur_round_sec:{1} not exist in one_switch_rounds_info" \
@@ -247,8 +265,8 @@ class one_setting_result_calculator_c():
                         one_switch_one_round_info[srcip] = flow_info
                         if signed_target == 1:
                             signed_target_num += 1
-
             print("end read {0}" .format(switch_fname))
+
         print("num switches:{0}" .format(len(switches_rounds_flow_info)))
         if len(switches_rounds_flow_info) > 0:
             for switch_idx, one_switch_rounds_info in switches_rounds_flow_info.items():
@@ -412,14 +430,18 @@ class one_setting_result_calculator_c():
                 avg_switch_one_setting.stdv_fn =statistics.stdev(fn_list)
                 avg_switch_one_setting.stdv_fp =statistics.stdev(fp_list)
                 avg_switch_one_setting.stdv_accuracy =statistics.stdev(accuracy_list)
-            print("switch_id:{switch_id}, avg_fn:{fn}, avg_accuracy:{accuracy}" .format(switch_id=switch_id, fn=avg_switch_one_setting.avg_fn, \
+            print("switch_id:{switch_id}, #buckets:{sample_map_size}, avg_fn:{fn}, avg_accuracy:{accuracy}" \
+                .format( \
+                switch_id=switch_id, \
+                sample_map_size = avg_switch_one_setting.sample_map_size, \
+                fn=avg_switch_one_setting.avg_fn, \
                 accuracy=avg_switch_one_setting.avg_accuracy))
         print("real_targt_flow_num distribution among all swtiches:")
         print(switches_avg_real_targetflow_num)
         print("ratio to the maximum real_targt_flow_num among all switches:")
         ratio_list = []
         for avg_targetflow_num in switches_avg_real_targetflow_num:
-            ratio_list.append(1.0 * avg_targetflow_num / max(switches_avg_real_targetflow_num) )
+            ratio_list.append( 1.0 * avg_targetflow_num / max(switches_avg_real_targetflow_num) )
         print(ratio_list)
 
         #print switches avg_fn
