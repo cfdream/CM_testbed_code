@@ -14,11 +14,13 @@ class switch_flow_info_c():
         self.target_switch_received = target_switch_received
 
 class switch_one_round_result_c():
-    def __init__(self, fn, fp, accuracy, real_target_flow_num, fn_num, fn_num_not_targetflow, fn_num_not_captured):
+    def __init__(self, all_volume_one_interval, all_flow_num_one_interval, real_target_flow_num, fn, fp, accuracy, fn_num, fn_num_not_targetflow, fn_num_not_captured):
+        self.all_volume_one_interval = all_volume_one_interval
+        self.all_flow_num_one_interval = all_flow_num_one_interval
+        self.real_target_flow_num = real_target_flow_num
         self.fn = fn
         self.fp = fp
         self.accuracy = accuracy
-        self.real_target_flow_num = real_target_flow_num
         self.fn_num = fn_num
         self.fn_num_not_targetflow = fn_num_not_targetflow
         self.fn_num_not_captured  = fn_num_not_captured
@@ -35,6 +37,8 @@ class avg_switch_result_one_setting_c():
         self.stdv_accuracy = 0
         self.sample_map_size = 0
         #self.condition_map_size = 0
+        self.avg_all_volume_one_interval = 0
+        self.avg_all_flow_num_one_interval = 0
         self.avg_real_target_flow_num = 0
         self.avg_fn_num = 0
         self.avg_fn_num_not_targetflow = 0
@@ -283,7 +287,7 @@ class one_setting_result_calculator_c():
             #1. for each switch
             one_switch_rounds_map = {}
             switches_rounds_result[switch_id] = one_switch_rounds_map
-            for sec, switch_flow_info_map in switch_rounds_flow_map.items():
+            for sec, switch_flow_info_map in sorted(switch_rounds_flow_map.items(), key=lambda pair: pair[0]):
                 #2. for each round
                 #global_rounds_target_flows = {}
                 #format: {{sec, {flow}},{sec, {flow}},{sec, {flow}}}
@@ -296,7 +300,8 @@ class one_setting_result_calculator_c():
                 #2.1. FNR
                 #switch_flow_info_map = {}
                 #pair: key-srcip, value-switch_flow_info_c
-                all_flow_num  = len(switch_flow_info_map)
+                all_flow_num_one_interval  = len(switch_flow_info_map)
+                all_volume_one_interval = 0
                 real_target_flow_num = 0
                 false_negative_num = 0
                 fn_num_not_targetflow = 0
@@ -306,10 +311,11 @@ class one_setting_result_calculator_c():
                 fn_num_sent_not_receive = 0
                 #fn_num_condition_map_last_round_collision = \
                 #    switch_flow_info_map[one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY]
-                #print("all_flow_num:{0}" .format(all_flow_num))
+                #print("all_flow_num_one_interval:{0}" .format(all_flow_num_one_interval))
                 for srcip, flow_info in switch_flow_info_map.items():
                     #if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
                     #    continue
+                    all_volume_one_interval += flow_info.real_volume
                     if srcip in global_target_flow_map:
                         #the target flow goes through the switch
                         real_target_flow_num += 1
@@ -332,21 +338,9 @@ class one_setting_result_calculator_c():
                 false_negative_ratio=0.0
                 if real_target_flow_num > 0:
                     false_negative_ratio = 1.0 * false_negative_num / real_target_flow_num 
-                #print("real_target_flow_num:{0}" .format(real_target_flow_num))
-                #print("false_negative_num:{0}" .format(false_negative_num))
-                #print("false_negative_ratio:{0}" .format(false_negative_ratio))
-                print("switch_id:{0}, sec:{secc},target_flow_num:{1}, fn_num:{2}, fn_num_not_targetflow:{3}(not_sent_accurate-{not_sent}, not_receive:{not_rece}, rece_but_collision:{rece_collision}), fn_num_not_captured:{4}" \
-                        .format(switch_id, real_target_flow_num, false_negative_num,\
-                        fn_num_not_targetflow, fn_num_not_captured, \
-                        not_sent = fn_num_not_sent_out_at_sender, \
-                        not_rece = fn_num_sent_not_receive, \
-                        rece_collision = fn_num_received_and_hashmap_collision, \
-                        #collision = fn_num_condition_map_last_round_collision, \
-                        #not_receiv=fn_num_sent_out_not_receive, \
-                        secc=sec))
                             
                 #2.2. FPR
-                not_target_flow_num = all_flow_num - real_target_flow_num
+                not_target_flow_num = all_flow_num_one_interval - real_target_flow_num
                 false_positive_num = 0
                 for srcip, flow_info in switch_flow_info_map.items():
                     #if srcip == one_setting_result_calculator_c.CONDITION_MAP_LAST_ROTATE_COLISSION_TIMES_KEY:
@@ -376,21 +370,37 @@ class one_setting_result_calculator_c():
                 accuracy = 0
                 if all_to_report_target_flow_num > 0:
                     accuracy = all_to_report_target_flow_accuracy / all_to_report_target_flow_num
-  
-                #2.4 one round result of the switch
-                one_result = switch_one_round_result_c(false_negative_ratio, false_positive_ratio, accuracy, \
-                        real_target_flow_num, false_negative_num, fn_num_not_targetflow, fn_num_not_captured)
-                switches_rounds_result[switch_id][sec] = one_result
-                #print("fn-fp-accuracy:{0}-{1}-{2}" .format(one_result.fn, one_result.fp, one_result.accuracy))
+ 
+                if all_to_report_target_flow_num >= 10:
+                    # 2.4 one round result of the switch
+                    # If for one switch, the reported target flow number in one round < 10, means the output is not complete due to time cut,
+                    # In this case, the result of this round is not meaningfule
+                    one_result = switch_one_round_result_c(all_volume_one_interval, all_flow_num_one_interval, real_target_flow_num, \
+                            false_negative_ratio, false_positive_ratio, accuracy, \
+                            false_negative_num, fn_num_not_targetflow, fn_num_not_captured)
+                    switches_rounds_result[switch_id][sec] = one_result
                 
-                #2.5 print debug log
-                print("switch_id:{id}, sec:{secc}, fn_ratio:{fn}, fp_ratio:{fp}, accuracy:{acc}" \
-                        .format(id=switch_id, \
-                        secc=sec, \
-                        fn=false_negative_ratio, \
-                        fp=false_positive_ratio, \
-                        acc=accuracy))
-
+                    #2.5 print debug log
+                    print("switch_id:{switch_id}, sec:{secc}, traffic:{all_volume}Mbyte, #flow:{all_flow_num}, #target_flow:{target_flow_num}, #bucket:{sample_map_size}, accuracy:{acc}, fn:{fn}, fp:{fp}, #fn:{fn_num}, #fn_not_targetflow:{fn_num_not_targetflow}(not_sent_accurate-{not_sent}, not_receive:{not_rece}, rece_but_collision:{rece_collision}), #fn_not_captured:{fn_num_not_captured}" \
+                            .format(switch_id = switch_id, \
+                                secc=sec, \
+                                all_volume = int(all_volume_one_interval/1000000), \
+                                all_flow_num = all_flow_num_one_interval, \
+                                sample_map_size = self.switches_sample_map_size[switch_id], \
+                                fn=round(false_negative_ratio, 4), \
+                                fp=round(false_positive_ratio, 4), \
+                                acc=round(accuracy, 4), \
+                                target_flow_num = real_target_flow_num, \
+                                fn_num = false_negative_num,\
+                                fn_num_not_targetflow = fn_num_not_targetflow, \
+                                fn_num_not_captured = fn_num_not_captured, \
+                                not_sent = fn_num_not_sent_out_at_sender, \
+                                not_rece = fn_num_sent_not_receive, \
+                                rece_collision = fn_num_received_and_hashmap_collision\
+                            ))
+                else:
+                    print("WARNING: switch_id:{switch_id} has all_to_report_target_flow_num < 10" .format(switch_id=switch_id))
+                    
     def calculate_switches_one_setting_result(self, switches_rounds_result, avg_switches_result_one_setting):
         #switches_rounds_result
         #pair: key-switch_id, value-{{sec, switch_one_round_result_c},{sec, switch_one_round_result_c}}
@@ -404,6 +414,8 @@ class one_setting_result_calculator_c():
             fn_list = []
             fp_list = []
             accuracy_list = []
+            all_volume_list = []
+            all_flow_num_list = []
             real_target_flow_num_list = []
             fn_num_list = []
             fn_num_not_targetflow_list = []
@@ -413,6 +425,8 @@ class one_setting_result_calculator_c():
                 fn_list.append(one_round_result.fn)
                 fp_list.append(one_round_result.fp)
                 accuracy_list.append(one_round_result.accuracy)
+                all_volume_list.append(one_round_result.all_volume_one_interval)
+                all_flow_num_list.append(one_round_result.all_flow_num_one_interval)
                 real_target_flow_num_list.append(one_round_result.real_target_flow_num)
                 fn_num_list.append(one_round_result.fn_num)
                 fn_num_not_targetflow_list.append(one_round_result.fn_num_not_targetflow)
@@ -422,7 +436,7 @@ class one_setting_result_calculator_c():
             avg_switch_one_setting.avg_fp = statistics.mean(fp_list)
             avg_switch_one_setting.avg_accuracy = statistics.mean(accuracy_list)
             avg_switch_one_setting.avg_real_target_flow_num = statistics.mean(real_target_flow_num_list)
-            switches_avg_real_targetflow_num.append(avg_switch_one_setting.avg_real_target_flow_num)
+            switches_avg_real_targetflow_num.append(round(avg_switch_one_setting.avg_real_target_flow_num, 1))
             avg_switch_one_setting.avg_fn_num = statistics.mean(fn_num_list)
             avg_switch_one_setting.avg_fn_num_not_targetflow = statistics.mean(fn_num_not_targetflow_list)
             avg_switch_one_setting.avg_fn_num_not_captured = statistics.mean(fn_num_not_captured_list)
@@ -430,27 +444,33 @@ class one_setting_result_calculator_c():
                 avg_switch_one_setting.stdv_fn =statistics.stdev(fn_list)
                 avg_switch_one_setting.stdv_fp =statistics.stdev(fp_list)
                 avg_switch_one_setting.stdv_accuracy =statistics.stdev(accuracy_list)
-            print("switch_id:{switch_id}, #buckets:{sample_map_size}, avg_fn:{fn}, avg_accuracy:{accuracy}" \
+            print("switch_id:{switch_id}, #interval:{num_interval}, traffic:{all_volume}Mbyte, #flow:{all_flow_num}, #target_flow:{target_flow_num}, #buckets:{sample_map_size}, avg_fn:{fn}(stdv:{fn_stdv}), avg_accuracy:{accuracy}(stdv:{acc_stdv})" \
                 .format( \
-                switch_id=switch_id, \
-                sample_map_size = avg_switch_one_setting.sample_map_size, \
-                fn=avg_switch_one_setting.avg_fn, \
-                accuracy=avg_switch_one_setting.avg_accuracy))
+                    switch_id=switch_id, \
+                    num_interval = len(rounds_result_map), \
+                    all_volume = int(sum(all_volume_list)/1000000), \
+                    all_flow_num = sum(all_flow_num_list), \
+                    target_flow_num = round(avg_switch_one_setting.avg_real_target_flow_num, 1), \
+                    sample_map_size = avg_switch_one_setting.sample_map_size, \
+                    fn=round(avg_switch_one_setting.avg_fn, 4), \
+                    fn_stdv = round(avg_switch_one_setting.stdv_fn, 4), \
+                    accuracy=round(avg_switch_one_setting.avg_accuracy, 4), \
+                    acc_stdv = round(avg_switch_one_setting.stdv_accuracy, 4) \
+                ))
         print("real_targt_flow_num distribution among all swtiches:")
         print(switches_avg_real_targetflow_num)
         print("ratio to the maximum real_targt_flow_num among all switches:")
         ratio_list = []
         for avg_targetflow_num in switches_avg_real_targetflow_num:
-            ratio_list.append( 1.0 * avg_targetflow_num / max(switches_avg_real_targetflow_num) )
+            ratio_list.append( round(1.0 * avg_targetflow_num / max(switches_avg_real_targetflow_num), 4) )
         print(ratio_list)
 
         #print switches avg_fn
         switches_avg_fn = []
         print("switches avg false negative")
         for switch_id in range(1, CONSTANTS.NUM_SWITCH+1):
-            switches_avg_fn.append(avg_switches_result_one_setting[switch_id].avg_fn)
+            switches_avg_fn.append(round(avg_switches_result_one_setting[switch_id].avg_fn, 4))
         print(switches_avg_fn)
-
 
     def calculate_one_setting_result(self, avg_switches_result_one_setting, one_setting_result):
         #avg_switches_result_one_setting = {}
