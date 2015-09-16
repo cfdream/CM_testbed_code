@@ -116,6 +116,8 @@ class one_setting_result_calculator_c():
         avg_switches_result_one_setting = {}    #avg_switch_result_one_setting_c
         self.calculate_switches_one_setting_result(switches_rounds_result, avg_switches_result_one_setting)
         print("END calculate_switches_one_setting_result()")
+        avg_switches_result_one_setting[one_setting_result_calculator_c.ALL_SWITCHES].avg_sample_map_size  = \
+            statistics.mean(self.switches_sample_map_size)
         return one_setting_result, avg_switches_result_one_setting[one_setting_result_calculator_c.ALL_SWITCHES]
 
         #5. calculate_one_setting_result
@@ -222,11 +224,12 @@ class one_setting_result_calculator_c():
             line_num = 0
             signed_target_num = 0
             condition_pkt_num = 0
+            sample_map_size = 0
             for line in lines:
                 #get memory sizes
                 match = sample_map_size_pattern.match(line)
                 if match != None:
-                    self.switches_sample_map_size[one_setting_result_calculator_c.ALL_SWITCHES] += int(match.group(1))
+                    self.switches_sample_map_size[switch_idx] = int(match.group(1))
                 match = condition_pkt_received_pattern.match(line)
                 if match != None:
                     condition_pkt_num = int(match.group(1))
@@ -442,8 +445,6 @@ class one_setting_result_calculator_c():
         for switch_id, rounds_result_map in switches_rounds_result.items():
             avg_switch_one_setting = avg_switch_result_one_setting_c()
             avg_switches_result_one_setting[switch_id] = avg_switch_one_setting
-            avg_switch_one_setting.avg_sample_map_size = self.switches_sample_map_size[switch_id]
-            avg_switch_one_setting.avg_sample_map_size /= CONSTANTS.NUM_SWITCH
             #avg_switch_one_setting.condition_map_size = self.switches_condition_map_size[switch_id]
 
             fn_list = []
