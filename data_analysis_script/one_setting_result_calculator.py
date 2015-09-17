@@ -123,6 +123,7 @@ class one_setting_result_calculator_c():
         target_flow_pattern = re.compile("^(\d+)\t(\d+)\t(\d+.\d+)\t(\d+)\t([-]*\d+)\t([-]*\d+)")
         raw_host_sample_switch_hold_accuracy = 0
         raw_host_sample_switch_hold_accuracy_cnt = 0
+        not_sample_flow_num = 0
 
         for sender_idx in range(1, CONSTANTS.NUM_SENDER+1):
             sender_fname = "{0}/h{1}_intervals_target_flows.txt" .format(sender_path, sender_idx)
@@ -163,12 +164,16 @@ class one_setting_result_calculator_c():
 
                         raw_host_sample_switch_hold_accuracy_cnt += 1
                         raw_host_sample_switch_hold_accuracy += (1 - 1.0 * int(not_sampled_volume) / int(volume))
+                        if not_sampled_volume == volume:
+                            not_sample_flow_num += 1
+                            print(not_sample_flow_num)
             print("end read {0}" .format(sender_fname))
         if raw_host_sample_switch_hold_accuracy_cnt > 0:
             raw_host_sample_switch_hold_accuracy /= raw_host_sample_switch_hold_accuracy_cnt
         one_setting_result.raw_host_sample_switch_hold_accuracy = raw_host_sample_switch_hold_accuracy
-        print("num_rounds:{0}, max_accuracy_at_host:{1}" \
-            .format(len(global_rounds_target_flows), one_setting_result.raw_host_sample_switch_hold_accuracy))
+        print("num_rounds:{0}, max_accuracy_at_host:{1}, min_fn_ratio_at_host:{2}" \
+            .format(len(global_rounds_target_flows), one_setting_result.raw_host_sample_switch_hold_accuracy, 
+                1.0*not_sample_flow_num/raw_host_sample_switch_hold_accuracy_cnt))
         if len(global_rounds_target_flows) > 0:
             max_target_flow_num_round = 0
             for sec, one_round_result in sorted(global_rounds_target_flows.items(), key=lambda pair: pair[0]):
@@ -275,7 +280,8 @@ class one_setting_result_calculator_c():
         if len(switches_rounds_flow_info) > 0:
             for switch_idx, one_switch_rounds_info in switches_rounds_flow_info.items():
                 for sec, one_switch_one_round_info in sorted(one_switch_rounds_info.items(), key=lambda pair: pair[0]):
-                    print("sec:{0}, switch:{1}, flow num:{2}" .format(sec, switch_idx, len(one_switch_one_round_info)))
+                    #print("sec:{0}, switch:{1}, flow num:{2}" .format(sec, switch_idx, len(one_switch_one_round_info)))
+                    pass
                     
 
     def calculate_rounds_per_switch_result(self, global_rounds_target_flows, switches_rounds_flow_info, global_rounds_not_sent_out_targetflows, switches_rounds_result):
