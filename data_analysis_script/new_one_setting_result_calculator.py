@@ -295,7 +295,8 @@ class one_setting_result_calculator_c():
                         if srcip in one_switch_one_round_info:
                             flow_info = one_switch_one_round_info[srcip]
                             flow_info.real_volume += real_volume
-                            flow_info.captured_volume += captured_volume
+                            if flow_info.signed_target:
+                                flow_info.captured_volume += captured_volume
                             flow_info.signed_target |= signed_target
                             flow_info.target_switch_received |= target_switch_received
                         else:
