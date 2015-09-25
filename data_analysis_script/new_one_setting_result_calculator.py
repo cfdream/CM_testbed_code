@@ -117,7 +117,7 @@ class one_setting_result_calculator_c():
         self.calculate_switches_one_setting_result(switches_rounds_result, avg_switches_result_one_setting)
         print("END calculate_switches_one_setting_result()")
         avg_switches_result_one_setting[one_setting_result_calculator_c.ALL_SWITCHES].avg_sample_map_size  = \
-            statistics.mean(self.switches_sample_map_size)
+            statistics.mean(self.switches_sample_map_size[1:])
         return one_setting_result, avg_switches_result_one_setting[one_setting_result_calculator_c.ALL_SWITCHES]
 
         #5. calculate_one_setting_result
