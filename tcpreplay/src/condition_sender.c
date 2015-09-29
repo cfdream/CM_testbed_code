@@ -123,7 +123,8 @@ void* send_condition_to_network(void* param_ptr) {
     while (1) {
         // postpone till the next timestamp that condition should be sent 
         uint64_t current_msec = get_next_interval_start(cm_experiment_setting.condition_msec_freq);
-        int condition_pkt_num = 0;
+        int plus_condition_pkt_num = 0;
+        int minus_condition_pkt_num = 0;
 
         /* postpone CM_CONDITION_MILLISECONDS_POSTPOINE_FOR_SWITCH
          * This is to make sure that the switches can receive all the condition informational-         
@@ -151,7 +152,7 @@ void* send_condition_to_network(void* param_ptr) {
             //get one target flow, send to the network
             condition.srcip = ret_entry.key.srcip;
             send_udp_condition_pkt(&condition, true);
-            ++condition_pkt_num;
+            ++plus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("condition srcip:%u\n", condition.srcip);
         }
@@ -166,7 +167,7 @@ void* send_condition_to_network(void* param_ptr) {
             //send the - delta info
             condition.srcip = ret_entry.key.srcip;
             send_udp_condition_pkt(&condition, false);
-            ++condition_pkt_num;
+            ++minus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("condition srcip:%u\n", condition.srcip);
         }
@@ -187,7 +188,7 @@ void* send_condition_to_network(void* param_ptr) {
 
         clock_gettime(CLOCK_REALTIME, &spec);
         msec = (intmax_t)((time_t)spec.tv_sec*1000 + spec.tv_nsec/1000000);
-        printf("-----end send_udp_condition_pkt, current_msec:%lu, condition_pkts_sent:%d-----\n", msec, condition_pkt_num);
+        printf("-----end send_udp_condition_pkt, current_msec:%lu, plus_condition_pkts_sent:%d, minus_condition_pkt_num:%d-----\n", msec, plus_condition_pkt_num, minus_condition_pkt_num);
     }
 
     return NULL;

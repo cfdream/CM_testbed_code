@@ -94,7 +94,7 @@ class one_setting_result_calculator_c():
         #2. read flow infor for per switch per each round
         #pair: key-switch_id, value-{{sec, {flow info}},{sec, {flow info}},{sec, {flow info}}}
         switches_rounds_flow_info = {}
-        self.read_rounds_per_switch_flow_info(one_setting_path, switches_rounds_flow_info)
+        self.read_rounds_per_switch_flow_info(one_setting_path, switches_rounds_flow_info, global_rounds_target_flows)
 
         #3. calculate per switch per round result
         print("START calculate_rounds_per_switch_result()")
@@ -186,7 +186,7 @@ class one_setting_result_calculator_c():
                     continue
                 print("one round sec:{0}, target flow num:{1}" .format(sec, len(one_round_result)))
 
-    def read_rounds_per_switch_flow_info(self, one_setting_path, switches_rounds_flow_info):
+    def read_rounds_per_switch_flow_info(self, one_setting_path, switches_rounds_flow_info, global_rounds_target_flows):
         switch_path = "{0}/switch" .format(one_setting_path)
         round_start_pattern = re.compile("=====time-(\d+) milliseconds=====")
         #new format
@@ -226,7 +226,15 @@ class one_setting_result_calculator_c():
                 match = round_start_pattern.match(line)
                 if match != None:
                     #print previous round info
-                    #print("sec:{0}, cur_round_flow_num:{1}, line_num:{2}" .format(cur_round_sec, cur_round_flow_num, line_num))
+                    if cur_round_sec != 0 and cur_round_sec in global_rounds_target_flows:
+                        one_switch_one_round_info = one_switch_rounds_info[cur_round_sec]
+                        global_target_flow_map = global_rounds_target_flows[cur_round_sec]
+                        real_target_flow_num = 0
+                        for srcip, flow_info in one_switch_one_round_info.items():
+                            if srcip in global_target_flow_map and flow_info.signed_target:
+                                #the target flow goes through the switch
+                                real_target_flow_num += 1
+                        print("sec:{0}, switch:{1}, flow num:{2}, signed_target_num:{3}, real_target_flow_num:{4}" .format(cur_round_sec, switch_idx, len(one_switch_one_round_info), signed_target_num, real_target_flow_num))
                     #new round start
                     cur_round_sec = int(int(match.group(1)) / 1000)
                     one_switch_one_round_info = {}
@@ -272,15 +280,16 @@ class one_setting_result_calculator_c():
                             continue
                         one_switch_one_round_info = one_switch_rounds_info[cur_round_sec]
                         one_switch_one_round_info[srcip] = flow_info
-                        if signed_target == 1:
+                        if signed_target == 1 and captured_volume > 0:
                             signed_target_num += 1
+
             print("end read {0}" .format(switch_fname))
 
         print("num switches:{0}" .format(len(switches_rounds_flow_info)))
         if len(switches_rounds_flow_info) > 0:
             for switch_idx, one_switch_rounds_info in switches_rounds_flow_info.items():
                 for sec, one_switch_one_round_info in sorted(one_switch_rounds_info.items(), key=lambda pair: pair[0]):
-                    #print("sec:{0}, switch:{1}, flow num:{2}" .format(sec, switch_idx, len(one_switch_one_round_info)))
+                    #print("sec:{0}, switch:{1}, flow num:{2}, signed_target_num:{3}" .format(sec, switch_idx, len(one_switch_one_round_info), signed_target_num))
                     pass
                     
 
@@ -355,6 +364,7 @@ class one_setting_result_calculator_c():
                         and (flow_info.captured_volume > 0) \
                         and (flow_info.signed_target > 0):
                         false_positive_num += 1
+                        print(switch_id, srcip)
                 false_positive_ratio = 0
                 if not_target_flow_num > 0:
                     false_positive_ratio = 1.0 * false_positive_num / not_target_flow_num
@@ -376,7 +386,7 @@ class one_setting_result_calculator_c():
                 accuracy = 0
                 if all_to_report_target_flow_num > 0:
                     accuracy = all_to_report_target_flow_accuracy / all_to_report_target_flow_num
- 
+
                 if all_to_report_target_flow_num >= 10:
                     # 2.4 one round result of the switch
                     # If for one switch, the reported target flow number in one round < 10, means the output is not complete due to time cut,
@@ -387,7 +397,7 @@ class one_setting_result_calculator_c():
                     switches_rounds_result[switch_id][sec] = one_result
                 
                     #2.5 print debug log
-                    print("switch_id:{switch_id}, sec:{secc}, traffic:{all_volume}Mbyte, #flow:{all_flow_num}, #target_flow:{target_flow_num}, #bucket:{sample_map_size}, accuracy:{acc}, fn:{fn}, fp:{fp}, #fn:{fn_num}, #fn_not_targetflow:{fn_num_not_targetflow}(not_sent_accurate-{not_sent}, not_receive:{not_rece}, rece_but_collision:{rece_collision}), #fn_not_captured:{fn_num_not_captured}" \
+                    print("switch_id:{switch_id}, sec:{secc}, traffic:{all_volume}Mbyte, #flow:{all_flow_num}, #target_flow:{target_flow_num}, #bucket:{sample_map_size}, accuracy:{acc}, fn:{fn}, fp:{fp}(fp_num:{fp_num}, all_absence_num:{not_target_flow_num}), #fn:{fn_num}, #fn_not_targetflow:{fn_num_not_targetflow}(not_sent_accurate-{not_sent}, not_receive:{not_rece}, rece_but_collision:{rece_collision}), #fn_not_captured:{fn_num_not_captured}" \
                             .format(switch_id = switch_id, \
                                 secc=sec, \
                                 all_volume = int(all_volume_one_interval/1000000), \
@@ -402,7 +412,9 @@ class one_setting_result_calculator_c():
                                 fn_num_not_captured = fn_num_not_captured, \
                                 not_sent = fn_num_not_sent_out_at_sender, \
                                 not_rece = fn_num_sent_not_receive, \
-                                rece_collision = fn_num_received_and_hashmap_collision\
+                                rece_collision = fn_num_received_and_hashmap_collision, \
+                                fp_num = false_positive_num, \
+                                not_target_flow_num = not_target_flow_num \
                             ))
                 else:
                     print("WARNING: switch_id:{switch_id} has all_to_report_target_flow_num < 10" .format(switch_id=switch_id))
