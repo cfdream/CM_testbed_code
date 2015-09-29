@@ -292,28 +292,27 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
             //the flow exist
             next->is_target_flow = is_target_flow;
         } else {
+            if (is_target_flow == false) {
+                //this only happens when the previous + delta information (the flow is a target flow) did not arrive, or collisoin happens
+                continue;
+            }
             ++hashtable->collision_times;
-            //another flow already exist
+            //another flow already exist, and is_target_flow == true
             //conflict happens
             if (cm_experiment_setting.replacement && next->is_target_flow 
-                && (next->value > 0 || !is_target_flow)) {
+                && next->value > 0) {
                 // replacement 
-                // && the existing flow is_target_flow,
-                // && 
-                // (the existing flow's captured volume > 0 || the new flow is not target flow)
+                // && the existing flow is_target_flow
+                // && the existing flow's captured volume > 0
                 /* keep the existing flow */
             } else {
-                //replace with the new flow
+                //replace with the new condition information
                 //1. free the existing pair
                 free(next);
                 //2. set the new pair
                 //a new condition packet, value is set to 0
-                if (is_target_flow == true) {
-                    newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
-                    hashtable->table[ bin ] = newpair;
-                } else {
-                    //this only happens when the previous + delta information (the flow is a target flow) did not arrive, or collisoin happens
-                }
+                newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
+                hashtable->table[ bin ] = newpair;
             }
         }
     /* The bin is empty */
@@ -323,7 +322,7 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
             newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
             hashtable->table[ bin ] = newpair;
         } else {
-            //this only happens when the previous + delta information (the flow is a target flow) did not arrive, or collisoin happens
+            //this only happens when the previous + delta information (the flow is a target flow) did not arrive (not coz of collisoin, as no existing flow in the bucket)
         }
     }
     /* release mutex */
