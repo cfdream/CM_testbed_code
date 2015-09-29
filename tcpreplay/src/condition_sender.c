@@ -68,6 +68,7 @@ int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
         // - delta info
         // now non-target flow, last target flow
         // not tagged flow is treated as non-target flow defaultly
+        tag_packet_as_not_target_flow(&ethernet_header_vlan);
     }
 
     memcpy(g_pkt_buffer, &ethernet_header_vlan, sizeof(ethernet_header_vlan));
@@ -154,7 +155,7 @@ void* send_condition_to_network(void* param_ptr) {
             send_udp_condition_pkt(&condition, true);
             ++plus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
-            //printf("condition srcip:%u\n", condition.srcip);
+            //printf("plus condition srcip:%u\n", condition.srcip);
         }
 
         //2. for one flow in last_sent_target_flow_map, if it does not exist in target_flow_map, send the - information
@@ -169,7 +170,7 @@ void* send_condition_to_network(void* param_ptr) {
             send_udp_condition_pkt(&condition, false);
             ++minus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
-            //printf("condition srcip:%u\n", condition.srcip);
+            //printf("minus condition srcip:%u\n", condition.srcip);
         }
 
         //3. copy the current target_flow_map into last_sent_target_flow_map
