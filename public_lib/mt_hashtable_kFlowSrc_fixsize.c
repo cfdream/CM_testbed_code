@@ -294,7 +294,9 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
         } else {
             if (is_target_flow == false) {
                 //this only happens when the previous + delta information (the flow is a target flow) did not arrive, or collisoin happens
-                continue;
+                /* release mutex */
+                pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+                return;
             }
             ++hashtable->collision_times;
             //another flow already exist, and is_target_flow == true
