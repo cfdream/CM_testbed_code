@@ -166,8 +166,6 @@ class one_setting_result_calculator_c():
                         loss_volume = match.group(4)
                         not_sampled_volume = match.group(5)
                         sent_out = int(match.group(6))
-                        if sent_out <= 0:
-                            continue
 
                         one_round_result = global_rounds_target_flows[cur_round_sec]
                         one_round_result[srcip] = 1
@@ -299,8 +297,8 @@ class one_setting_result_calculator_c():
                             flow_info.real_volume += real_volume
                             if signed_target and captured_volume > 0:
                                 flow_info.captured_volume += captured_volume
-                                flow_info.signed_target |= signed_target
-                            flow_info.target_switch_received |= target_switch_received
+                                flow_info.signed_target = max(signed_target, flow_info.signed_target)
+                                flow_info.target_switch_received = max(target_switch_received, flow_info.target_switch_received)
                         else:
                             if real_volume <= 0: 
                                 #this means flow_info just keeps the condition information
@@ -309,7 +307,7 @@ class one_setting_result_calculator_c():
                             if signed_target and captured_volume > 0:
                                 flow_info = switch_flow_info_c(real_volume, captured_volume, signed_target, target_switch_received)
                             else:
-                                flow_info = switch_flow_info_c(real_volume, 0, 0, target_switch_received)
+                                flow_info = switch_flow_info_c(real_volume, 0, 0, 0)
                         one_switch_one_round_info[srcip] = flow_info
                         if signed_target == 1:
                             signed_target_num += 1
@@ -375,6 +373,8 @@ class one_setting_result_calculator_c():
                         if flow_info.captured_volume <= 0:
                             fn_num_not_captured += 1
                         if flow_info.captured_volume <= 0 or flow_info.signed_target <= 0:
+                            #print("FN-switch_id:{0}, srcip:{1}, real_volume:{2}, captured_volume:{3}, signed_target:{4}, sign_received:{5}" \
+                            #    .format(switch_id, srcip, flow_info.real_volume, flow_info.captured_volume, flow_info.signed_target, flow_info.target_switch_received))
                             #not captured flow
                             false_negative_num += 1
                 #fn_num_sent_out_not_receive = \
@@ -410,8 +410,8 @@ class one_setting_result_calculator_c():
                         one_flow_accuracy = (1.0 * flow_info.captured_volume / flow_info.real_volume)
                         all_to_report_target_flow_accuracy += one_flow_accuracy
                         all_to_report_target_flow_num += 1
-                        #print("srcip:{0}, real_v:{1}, captured_v:{2}, accuracy:{3}" \
-                        #    .format(srcip, flow_info.real_volume, flow_info.captured_volume, one_flow_accuracy))
+                        #print("Accuracy-switch_id:{switch_id}, srcip:{0}, real_v:{1}, captured_v:{2}, accuracy:{3}" \
+                        #    .format(srcip, flow_info.real_volume, flow_info.captured_volume, one_flow_accuracy, switch_id=switch_id))
                 accuracy = 0
                 if all_to_report_target_flow_num > 0:
                     accuracy = all_to_report_target_flow_accuracy / all_to_report_target_flow_num

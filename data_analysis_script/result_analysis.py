@@ -8,10 +8,10 @@ from one_setting_result_calculator import one_setting_result_calculator_c
 
 class results_analyzer_c():
     def get_all_setting_result(self, result_path):
-        for host_switch_sample in [0, 1]:
-            for replace in [0, 1]:
+        for host_switch_sample in [0]:
+            for replace in [0]:
                 for memory_type in [0, 1]:
-                    for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 10,16, 100]:
+                    for memory_times in [0.2]:
                         for freq in [500, 2000, 8000, 32000]:
                             #one setting result path
                             one_setting_path = '{0}/sample_{1}_replace_{2}_mem_{3}_mem_times_{4}_freq_{5}' .format(result_path, host_switch_sample, replace, memory_type, memory_times, freq)
@@ -53,7 +53,7 @@ class results_analyzer_c():
             )) 
         with open('result_query1_diff_setting.txt', 'a') as out_file:
             #setting info
-            out_file.write("host_switch_sample={host_switch_sample}\treplace={replace}\tmemory_type={memory_type}\tmemory_times={memory_times}\tfreq={freq}\tavg_fn={avg_fn}\tmin_fn={min_fn}\tmax_fn={max_fn}\tstdv_fn={stdv_fn}\tavg_fp={avg_fp}\tmin_fp={min_fp}\tmax_fp={max_fp}\tstdv_fp={stdv_fp}\tavg_accuracy={avg_accuracy}\tmin_accuracy={min_accuracy}\tmax_accuracy={max_accuracy}\tstdv_accuracy={stdv_accuracy}\tavg_sample_map_size={avg_sample_map_size}\tmin_sample_map_size={min_sample_map_size}\tmax_sample_map_size={max_sample_map_size}\tavg_condition_map_size={avg_condition_map_size}\tmin_condition_map_size={min_condition_map_size}\tmax_sample_map_size={max_sample_map_size}\traw_host_sample_switch_hold_accuracy={raw_host_sample_switch_hold_accuracy}\tavg_real_target_flow_num={avg_real_target_flow_num}\tavg_fn_num={avg_fn_num}\n" \
+            out_file.write("host_switch_sample={host_switch_sample}\treplace={replace}\tmemory_type={memory_type}\tmemory_times={memory_times}\tfreq={freq}\tavg_fn={avg_fn}\tmin_fn={min_fn}\tmax_fn={max_fn}\tstdv_fn={stdv_fn}\tavg_fp={avg_fp}\tmin_fp={min_fp}\tmax_fp={max_fp}\tstdv_fp={stdv_fp}\tavg_accuracy={avg_accuracy}\tmin_accuracy={min_accuracy}\tmax_accuracy={max_accuracy}\tstdv_accuracy={stdv_accuracy}\tavg_sample_map_size={avg_sample_map_size}\tmin_sample_map_size={min_sample_map_size}\tmax_sample_map_size={max_sample_map_size}\tavg_condition_map_size={avg_condition_map_size}\tmin_condition_map_size={min_condition_map_size}\tmax_sample_map_size={max_sample_map_size}\traw_host_sample_switch_hold_accuracy={raw_host_sample_switch_hold_accuracy}\tavg_real_target_flow_num={avg_real_target_flow_num}\tavg_fn_num={avg_fn_num}\tavg_fn_num_not_captured={avg_fn_num_not_captured}\tavg_fn_num_not_targetflow={avg_fn_num_not_targetflow}\tavg_fn_num_all_switches_not_signed_target={avg_fn_num_all_switches_not_signed_target}\n" \
             .format(host_switch_sample=host_switch_sample, \
                 replace=replace, memory_type=memory_type, memory_times=memory_times, freq=freq, \
                 avg_fn = one_setting_result.avg_fn, \
@@ -76,7 +76,10 @@ class results_analyzer_c():
                 max_condition_map_size = one_setting_result.max_condition_map_size, \
                 raw_host_sample_switch_hold_accuracy = one_setting_result.raw_host_sample_switch_hold_accuracy, \
                 avg_real_target_flow_num = one_setting_result.avg_real_target_flow_num, \
-                avg_fn_num = one_setting_result.avg_fn_num
+                avg_fn_num = one_setting_result.avg_fn_num, \
+                avg_fn_num_not_captured = one_setting_result.avg_fn_num_not_captured, \
+                avg_fn_num_not_targetflow = one_setting_result.avg_fn_num_not_targetflow, \
+                avg_fn_num_all_switches_not_signed_target = one_setting_result.avg_fn_num_all_switches_not_signed_target
             )) 
 
 if __name__ == '__main__':
