@@ -49,9 +49,10 @@ def run_one_round():
 
     #------------wait for experiments to run------------
     #time.sleep(8000); #750 per interval, 10 intervals
-    #time.sleep(23000); #750 per interval, 30 intervals
-    time.sleep(11300); #750 per interval, 15 intervals
+    time.sleep(23000); #750 per interval, 30 intervals
+    #time.sleep(11300); #750 per interval, 15 intervals
     #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
     commands.getstatusoutput('sudo pkill tcpreplay')
@@ -132,35 +133,46 @@ def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, 
     print "SUCC: move_one_round_data"
 
 if __name__ == "__main__":
-    #######For figure: memory_size vs. performance
-    #2.1. HSSH+fixed memory
-    #not necessary-2.2. HSSH+fixed memory + replace
+    #######For figure: condition frequency vs. performance
+    #based on HSSH+Replace
     for host_switch_sample in [0]:
         for memory_type in [0]:
-            for replace in [0]:
-                for memory_times in [0.2, 0.5, 0.7]:
-                    for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
-                        run_one_round()
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
-    
-    #2.3. HSSH+diverse memory
-    #2.4. HSSH+diverse memory + replace
-    for host_switch_sample in [0]:
-        for memory_type in [1]:
-            for replace in [0]:
-                for memory_times in [0.2, 0.5, 0.7]:
-                    for freq in [500]:
+            for replace in [1]:
+                for memory_times in [0.2, 0.7, 2, 8]:
+                    for freq in [500, 1000, 2000, 4000, 8000, 16000]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
                         run_one_round()
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
 
+    #######For figure: memory_size vs. performance
+    #2.1. HSSH+fixed memory
+    #not necessary-2.2. HSSH+fixed memory + replace
+    #for host_switch_sample in [0]:
+    #    for memory_type in [0]:
+    #        for replace in [0, 1]:
+    #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
+    #                for freq in [500]:
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
+    #                    run_one_round()
+    #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+    
+    #2.3. HSSH+diverse memory
+    #2.4. HSSH+diverse memory + replace
+    #for host_switch_sample in [0]:
+    #    for memory_type in [1]:
+    #        for replace in [1]:
+    #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
+    #                for freq in [500]:
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
+    #                    run_one_round()
+    #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+
     #for experiment of SH +- no replace + memory_type:1-diverse +- memory_times + freq:5s
     #2.5 No-coord
     #for host_switch_sample in [1]:
-    #    for memory_type in [0]:
+    #    for memory_type in [1, 0]:
     #        for replace in [0]:
-    #            for memory_times in [16, 8, 4, 2, 1]:
+    #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
     #                for freq in [500]:
     #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
     #                    run_one_round()
