@@ -354,8 +354,8 @@ class one_setting_result_calculator_c():
                         if flow_info.captured_volume <= 0:
                             fn_num_not_captured += 1
                         if flow_info.captured_volume <= 0 or flow_info.signed_target <= 0:
-                            print("FN-switch_id:{0}, srcip:{1}, real_volume:{2}, captured_volume:{3}, signed_target:{4}, sign_received:{5}" \
-                                .format(switch_id, srcip, flow_info.real_volume, flow_info.captured_volume, flow_info.signed_target, flow_info.target_switch_received))
+                            #print("FN-switch_id:{0}, srcip:{1}, real_volume:{2}, captured_volume:{3}, signed_target:{4}, sign_received:{5}" \
+                                #.format(switch_id, srcip, flow_info.real_volume, flow_info.captured_volume, flow_info.signed_target, flow_info.target_switch_received))
                             #not captured flow
                             false_negative_num += 1
                 #fn_num_sent_out_not_receive = \
@@ -392,8 +392,8 @@ class one_setting_result_calculator_c():
                         one_flow_accuracy = (1.0 * flow_info.captured_volume / flow_info.real_volume)
                         all_to_report_target_flow_accuracy += one_flow_accuracy
                         all_to_report_target_flow_num += 1
-                        print("Accuracy-switch_id:{switch_id}, srcip:{0}, real_v:{1}, captured_v:{2}, accuracy:{3}" \
-                            .format(srcip, flow_info.real_volume, flow_info.captured_volume, one_flow_accuracy, switch_id=switch_id))
+                        #print("Accuracy-switch_id:{switch_id}, srcip:{0}, real_v:{1}, captured_v:{2}, accuracy:{3}" \
+                            #.format(srcip, flow_info.real_volume, flow_info.captured_volume, one_flow_accuracy, switch_id=switch_id))
                 accuracy = 0
                 if all_to_report_target_flow_num > 0:
                     accuracy = all_to_report_target_flow_accuracy / all_to_report_target_flow_num
