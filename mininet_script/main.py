@@ -49,9 +49,9 @@ def run_one_round():
 
     #------------wait for experiments to run------------
     #time.sleep(8000); #750 per interval, 10 intervals
-    time.sleep(23000); #750 per interval, 30 intervals
+    #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
-    #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    time.sleep(2300); #750 per interval, 2 intervals + wait one interval
     #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
@@ -65,7 +65,7 @@ def run_one_round():
     #system_topo.tearDown()
     #print "system_topo tearDown completed"
 
-def config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq):
+def config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate):
     config_fname = '../public_lib/cm_experiment_setting.txt'
     in_file = open(config_fname, 'r')
     lines = in_file.readlines();
@@ -80,7 +80,8 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
     memory_type_pattern = re.compile("^switch_mem_type:(\d+)")
     memory_times_pattern = re.compile("^switch_memory_times:(\d+)")
     freq_pattern = re.compile("^condition_msec_freq:(\d+)")
-    
+    target_flow_loss_rate_pattern = re.compile("^target_flow_loss_rate:(\d+\.\d+)")
+
     for line in lines:
         #host_or_switch_sample
         match = host_switch_sample_pattern.match(line)
@@ -121,6 +122,12 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
             sed_str = "sed -i 's/^{0}/condition_msec_freq:{1}/g' {2} " .format(line, freq, config_fname)
             commands.getstatusoutput(sed_str)
             print sed_str
+
+        #loss rate threshold
+        match = target_flow_loss_rate_pattern.match(line)
+        if match != None:
+            #config target_flow_loss_rate
+            sed_str = "sed -i 's/^{0}/target_flow_loss_rate:{1}/g' {2} " .format(line, target_flow_loss_rate, config_fname)
     
 def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq):
     result_dir = './experiment_log/sample_{0}_replace_{1}_mem_{2}_mem_times_{3}_freq_{4}' .format(host_switch_sample, replace, memory_type, memory_times, freq)
@@ -132,18 +139,8 @@ def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, 
     commands.getstatusoutput('mv /tmp/log {0}' .format(result_dir))
     print "SUCC: move_one_round_data"
 
-if __name__ == "__main__":
-    #######For figure: condition frequency vs. performance
-    #based on HSSH+Replace
-    for host_switch_sample in [0]:
-        for memory_type in [0]:
-            for replace in [1]:
-                for memory_times in [0.2, 0.7, 2, 8]:
-                    for freq in [500, 1000, 2000, 4000, 8000, 16000]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
-                        run_one_round()
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
-
+def experiment1_compare_algos():
+    target_flow_loss_rate = 0.01
     #######For figure: memory_size vs. performance
     #2.1. HSSH+fixed memory
     #not necessary-2.2. HSSH+fixed memory + replace
@@ -152,7 +149,7 @@ if __name__ == "__main__":
     #        for replace in [0, 1]:
     #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
     #                for freq in [500]:
-    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate)
     #                    run_one_round()
     #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
     
@@ -163,7 +160,7 @@ if __name__ == "__main__":
     #        for replace in [1]:
     #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
     #                for freq in [500]:
-    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate)
     #                    run_one_round()
     #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
 
@@ -174,6 +171,36 @@ if __name__ == "__main__":
     #        for replace in [0]:
     #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
     #                for freq in [500]:
-    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq)
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate)
     #                    run_one_round()
     #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+
+def experiment2_freq_on_performance():
+    #######For figure: condition frequency vs. performance
+    #based on HSSH+Replace
+    target_flow_loss_rate = 0.01
+    for host_switch_sample in [0]:
+        for memory_type in [0]:
+            for replace in [1]:
+                for memory_times in [0.2]:
+                    for freq in [1000, 2000, 4000, 8000, 16000]:
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate)
+                        run_one_round()
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+
+def experiment3_numFlows_vs_overhead():
+    '''
+    run experiments to get the relationship between #flows and network overhead and memory overhead
+    '''
+    host_switch_sample = 0
+    memory_type = 0
+    replace = 1
+    freq = 1000
+    for loss_rate_list = 
+    for target_flow_loss_rate in     
+
+if __name__ == "__main__":
+    #experiment1_compare_algos()
+    experiment2_freq_on_performance()
+    #experiment3_numFlows_vs_overhead()
+
