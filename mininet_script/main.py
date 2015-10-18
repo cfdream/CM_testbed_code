@@ -48,10 +48,10 @@ def run_one_round():
     sendermanager.setup()
 
     #------------wait for experiments to run------------
-    #time.sleep(8000); #750 per interval, 10 intervals
+    time.sleep(8000); #750 per interval, 10 intervals
     #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
-    time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
     #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
@@ -142,6 +142,16 @@ def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, 
 def experiment1_compare_algos():
     target_flow_loss_rate = 0.01
     #######For figure: memory_size vs. performance
+    #2.1. HSSH+fixed memory+replace+ taggingConditionPkt
+    for host_switch_sample in [0]:
+        for memory_type in [0]:
+            for replace in [1]:
+                for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
+                    for freq in [500]:
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate)
+                        run_one_round()
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+    
     #2.1. HSSH+fixed memory
     #not necessary-2.2. HSSH+fixed memory + replace
     #for host_switch_sample in [0]:
@@ -196,11 +206,9 @@ def experiment3_numFlows_vs_overhead():
     memory_type = 0
     replace = 1
     freq = 1000
-    for loss_rate_list = 
-    for target_flow_loss_rate in     
 
 if __name__ == "__main__":
-    #experiment1_compare_algos()
-    experiment2_freq_on_performance()
+    experiment1_compare_algos()
+    #experiment2_freq_on_performance()
     #experiment3_numFlows_vs_overhead()
 
