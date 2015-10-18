@@ -168,9 +168,11 @@ main(int argc, char *argv[])
         printf("Failed: pthread_create rotate_interval\n");
         return 1;
     }
-    if (pthread_create(&send_condition_thread, NULL, send_condition_to_network, NULL)) {
-        printf("FAIL: pthread_create send_condition_to_network\n");
-        return 1;
+    if (cm_experiment_setting.inject_or_tag_packet == INJECT_PKT_AS_CONDITION) {
+        if (pthread_create(&send_condition_thread, NULL, send_condition_to_network, NULL)) {
+            printf("FAIL: pthread_create send_condition_to_network\n");
+            return 1;
+        }
     }
     sleep(1);
 

@@ -25,7 +25,7 @@
 #define CM_RECEIVER_TARGET_FLOW_FNAME_PREFIX "/tmp/switch/"
 #define CM_RECEIVER_TARGET_FLOW_FNAME_SUFFIX "_intervals_target_flows.txt"
 
-#define CM_EXPERIMENT_SETTING_FNAME "/home/xuemei/workspace/CM_testbed_code/public_lib/cm_experiment_setting.txt"
+#define CM_EXPERIMENT_SETTING_FNAME "/home/ubuntu/workspace/CM_testbed_code/public_lib/cm_experiment_setting.txt"
 
 enum switch_mem_type_e {
     UNIFORM,
@@ -35,6 +35,12 @@ enum switch_mem_type_e {
 enum host_switch_sample_e {
     HOST_SAMPLE,
     SWITCH_SAMPLE
+};
+
+//this is to decide whether the condition signal sent by injecting new packets or tagging existing packet
+enum inject_tag_pkt_e {
+    INJECT_PKT_AS_CONDITION,
+    TAG_PKT_AS_CONDITION
 };
 
 typedef struct sample_hold_setting_s {
@@ -60,6 +66,7 @@ typedef struct cm_experiment_setting_s {
     float switch_memory_times;   //the times of memory compared to default sample and hold
     float switch_drop_rate;
     enum host_switch_sample_e host_or_switch_sample;
+    enum inject_tag_pkt_e inject_or_tag_packet;
 
     sample_hold_setting_t sample_hold_setting;
     target_flow_setting_t target_flow_setting;

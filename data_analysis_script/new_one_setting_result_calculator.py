@@ -166,7 +166,7 @@ class one_setting_result_calculator_c():
                         loss_volume = match.group(4)
                         not_sampled_volume = match.group(5)
                         sent_out = int(match.group(6))
-                        if sent_out <= 0:
+                        if int(volume) < 600000 or float(loss_rate) < 0.01:
                             continue
 
                         one_round_result = global_rounds_target_flows[cur_round_sec]

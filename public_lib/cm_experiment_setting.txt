@@ -12,6 +12,8 @@ switch_memory_times:1
 switch_drop_rate:0.0035
 #HOST_SAMPLE:0, SWITCH_SAMPLE:1
 host_or_switch_sample:0
+#inject_packet:0, tag_packet:1
+inject_or_tag_packet:1
 #every sender:~157 flows
 target_flow_volume:600000
 #every sender:~214 flows

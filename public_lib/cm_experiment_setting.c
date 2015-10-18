@@ -69,6 +69,9 @@ int read_cm_experiment_setting_from_file(void) {
             if (strcmp(*(tokens+0), "host_or_switch_sample") == 0 && *(tokens+1)) {
                 cm_experiment_setting.host_or_switch_sample = (enum host_switch_sample_e)strtol(*(tokens+1), NULL, 10);
             }
+            if (strcmp(*(tokens+0), "inject_or_tag_packet") == 0 && *(tokens+1)) {
+                cm_experiment_setting.inject_or_tag_packet = (enum inject_tag_pkt_e)strtol(*(tokens+1), NULL, 10);
+            }
             //target_flow_volume
             if (strcmp(*(tokens+0), "target_flow_volume") == 0 && *(tokens+1)) {
                 cm_experiment_setting.target_flow_setting.volume_threshold = strtol(*(tokens+1), NULL, 10);

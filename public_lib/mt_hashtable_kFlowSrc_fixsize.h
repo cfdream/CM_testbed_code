@@ -92,6 +92,8 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, ent
 
 void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value);
 
+void ht_kfs_fixSize_add_value_and_update_target_flow_info(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value, bool is_target_flow);
+
 void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow);
 
 /* del a key-value pair from a hash table. */

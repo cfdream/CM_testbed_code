@@ -269,6 +269,55 @@ void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *ke
     pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
 }
 
+void ht_kfs_fixSize_add_value_and_update_target_flow_info(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value, bool is_target_flow) {
+    int bin = 0;
+    entry_kfs_fixSize_t *newpair = NULL;
+    entry_kfs_fixSize_t *next = NULL;
+
+    if (NULL == hashtable) {
+        return;
+    }
+
+    bin = flow_src_hash_bin(key, hashtable->size);
+
+    /* request mutex */
+    pthread_mutex_lock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+
+    next = hashtable->table[ bin ];
+
+    if( next != NULL ) {
+        /* There's already a pair. */
+        if (flow_src_compare( key, &next->key ) == 0 ) {
+            //the flow exist
+            next->value += delta_value;
+            next->is_target_flow = is_target_flow;
+        } else {
+            ++hashtable->collision_times;
+            //another flow already exist
+            //conflict happens
+            if (cm_experiment_setting.replacement && next->is_target_flow) {
+                // replacement && the existing flow is_target_flow
+                /* keep the existing flow */
+            } else {
+                //replace with the new flow
+                //1. free the existing pair
+                free(next);
+                //2. set the new pair
+                //a new sampled packet, set is_target_flow
+                newpair = ht_kfs_fixSize_newpair( key, delta_value, is_target_flow);
+                hashtable->table[ bin ] = newpair;
+            }
+        }
+    /* The bin is empty */
+    } else {
+        //a new sampled packet, set is_target_flow
+        newpair = ht_kfs_fixSize_newpair( key, delta_value, is_target_flow);
+        hashtable->table[ bin ] = newpair;
+    }
+    /* release mutex */
+    pthread_mutex_unlock(&hashtable->mutexs[bin%HASH_MAP_MUTEX_SIZE]);
+}
+
 /* Insert a key-value pair into a hash table. */
 void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow) {
     int bin = 0;

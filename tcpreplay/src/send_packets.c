@@ -439,6 +439,15 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                 //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
             }
 
+            /* tag existing packet to carry the target flow information*/
+            if (cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
+                hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+                if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
+                    // the flow is a target flow
+                    tag_packet_as_target_flow_in_normal_packet(packet_buf, datalink);
+                }
+            }
+
             update_flow_normal_volume(&flow_src, total_pkt_len);
             ++data_warehouse.pkt_num_sent[data_warehouse.active_idx];
             data_warehouse.volume_sent[data_warehouse.active_idx] += packet.len;
