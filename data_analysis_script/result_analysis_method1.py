@@ -4,7 +4,7 @@ import time
 import re
 import os
 import sys
-from one_setting_result_calculator import one_setting_result_calculator_c
+from one_setting_result_calculator_method1 import one_setting_result_calculator_c
 
 class results_analyzer_c():
     def get_all_setting_result(self, result_path):

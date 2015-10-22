@@ -397,6 +397,7 @@ class one_setting_result_calculator_c():
                         print("global target flow:{0} not in any switches\n" .format(srcip))
                     if is_fn:
                         false_negative_num += 1
+                        print(srcip)
                 false_negative_ratio = 1.0 * false_negative_num / len(global_target_flow_map)
 
                 #2.2. FPR
