@@ -49,9 +49,9 @@ def run_one_round():
 
     #------------wait for experiments to run------------
     #time.sleep(8000); #750 per interval, 10 intervals
-    time.sleep(23000); #750 per interval, 30 intervals
+    #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
-    #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    time.sleep(2300); #750 per interval, 2 intervals + wait one interval
     #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
@@ -129,15 +129,19 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
         if match != None:
             #config target_flow_loss_rate
             sed_str = "sed -i 's/^{0}/target_flow_loss_rate:{1}/g' {2} " .format(line, target_flow_loss_rate, config_fname)
+            commands.getstatusoutput(sed_str)
+            print sed_str
         
         #inject_or_tag_packet
         match = inject_or_tag_packet_pattern.match(line)
         if match != None:
             #config inject_or_tag_packet
             sed_str = "sed -i 's/^{0}/inject_or_tag_packet:{1}/g' {2} " .format(line, inject_or_tag_packet, config_fname)
+            commands.getstatusoutput(sed_str)
+            print sed_str
     
-def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq):
-    result_dir = './experiment_log/sample_{0}_replace_{1}_mem_{2}_mem_times_{3}_freq_{4}' .format(host_switch_sample, replace, memory_type, memory_times, freq)
+def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet):
+    result_dir = './experiment_log/sample_{0}_replace_{1}_mem_{2}_mem_times_{3}_freq_{4}_tag_{5}' .format(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     commands.getstatusoutput('mkdir {0}' .format(result_dir))
     commands.getstatusoutput('rm -rf {0}/*' .format(result_dir))
     #move result file to result_dir
@@ -149,7 +153,7 @@ def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, 
 def experiment1_compare_algos():
     target_flow_loss_rate = 0.01
     #50000 bytes memory => memory_times = 0.144085991
-    50kMem_memory_times = 0.144085991
+    mem50kbytes_memory_times = 0.144085991
     #######For figure: memory_size vs. performance
     #2.1. HSSH+fixed memory+replace+ taggingConditionPkt
     #NOTE: in cm_experiment_setting.txt set inject_or_tag_packet = 1
@@ -157,11 +161,11 @@ def experiment1_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1]:
-                for memory_times in [1, 2, 4, 8, 16, 32]
+                for memory_times in [1, 2, 4, 8, 16, 32]:
                     for freq in [500]: #freq is useless in tagging
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*50kMem_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
                         run_one_round()
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
     #2.2. HSSH+fixed memory
     #2.3. HSSH+fixed memory + replace
@@ -169,11 +173,11 @@ def experiment1_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1, 0]:
-                for memory_times in [1, 2, 4, 8, 16, 32]
+                for memory_times in [1, 2, 4, 8, 16, 32]:
                     for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*50kMem_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
                         run_one_round()
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
     #2.4 No-coord <=> Switch sample and hold + no replace
     #2.5 No-coord + replace <=> Switch sample and hold replace : 
@@ -183,11 +187,11 @@ def experiment1_compare_algos():
     for host_switch_sample in [1]:
         for memory_type in [0]:
             for replace in [0, 1]:
-                for memory_times in [1, 2, 4, 8, 16, 32]
+                for memory_times in [1, 2, 4, 8, 16, 32]:
                     for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*50kMem_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
                         run_one_round()
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
     #2.3. HSSH+diverse memory
     #2.4. HSSH+diverse memory + replace
