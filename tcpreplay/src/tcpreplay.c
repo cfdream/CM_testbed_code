@@ -168,7 +168,13 @@ main(int argc, char *argv[])
         printf("Failed: pthread_create rotate_interval\n");
         return 1;
     }
-    if (cm_experiment_setting.inject_or_tag_packet == INJECT_PKT_AS_CONDITION) {
+    if (cm_experiment_setting.inject_or_tag_packet == INJECT_PKT_AS_CONDITION
+        && cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE
+        && cm_experiment_setting.replacement) {
+        //only when host sampling, replacement needed, and injecting packets as condition, we need to start send_condition_thread
+        //if TAG_PKT_AS_CONDITION, no need to send condition
+        //if INJECT_PKT_AS_CONDITION but SWITCH_SAMPLE, no need to send condition
+        //if INJECT_PKT_AS_CONDITION, HOST_SAMPLE, but no replacement, no need to send condition
         if (pthread_create(&send_condition_thread, NULL, send_condition_to_network, NULL)) {
             printf("FAIL: pthread_create send_condition_to_network\n");
             return 1;

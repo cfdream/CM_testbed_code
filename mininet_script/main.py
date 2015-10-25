@@ -49,10 +49,10 @@ def run_one_round(install_rule_type):
     sendermanager.setup()
 
     #------------wait for experiments to run------------
-    time.sleep(8000); #750 per interval, 10 intervals
+    #time.sleep(8000); #750 per interval, 10 intervals
     #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
-    #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    time.sleep(2300); #750 per interval, 2 intervals + wait one interval
     #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
@@ -172,15 +172,15 @@ def query1_compare_algos():
     
     #2.3. HSSH+fixed memory + replace
     #2.2. HSSH+fixed memory
-    inject_or_tag_packet = 0
-    for host_switch_sample in [0]:
-        for memory_type in [0]:
-            for replace in [1, 0]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
-                    for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
-                        run_one_round(install_rule_type)
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    #inject_or_tag_packet = 0
+    #for host_switch_sample in [0]:
+    #    for memory_type in [0]:
+    #        for replace in [1, 0]:
+    #            for memory_times in [1, 2, 4, 8, 16, 32]:
+    #                for freq in [500]:
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+    #                    run_one_round(install_rule_type)
+    #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
     #2.4 No-coord <=> Switch sample and hold + no replace
     #2.5 No-coord + replace <=> Switch sample and hold replace : 
@@ -189,7 +189,7 @@ def query1_compare_algos():
     inject_or_tag_packet = 0
     for host_switch_sample in [1]:
         for memory_type in [0]:
-            for replace in [0, 1]:
+            for replace in [0]:
                 for memory_times in [1, 2, 4, 8, 16, 32]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
