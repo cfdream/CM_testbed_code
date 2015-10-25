@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "../../public_lib/time_library.h"
 #include "interval_rotator.h"
 
@@ -174,11 +175,11 @@ void* rotate_interval(void* param_ptr) {
         printf("FAIL: initilize target_flow_file\n");
         return NULL;
     }
+    
+    //wait to next whole 10 minutes <=> 600s <=> 600000 minisecond
+    uint64_t current_msec = get_next_interval_start(600000);
 
     while (true) {
-        /* all hosts/senders start/end at the nearby timestamp for intervals */
-        /* postpone till switching to next time interval */
-        uint64_t current_msec = get_next_interval_start(cm_experiment_setting.interval_msec_len);
 
 		//lock the data_warehouse.data_warehouse_mutex
 		//in order to avoid IntervalRotator thread destory the data
@@ -207,6 +208,9 @@ void* rotate_interval(void* param_ptr) {
         clock_gettime(CLOCK_REALTIME, &spec);
         uint64_t msec = (intmax_t)((time_t)spec.tv_sec*1000 + spec.tv_nsec/1000000);
         printf("=====end rotate_interval, current_msec:%lu=====\n", msec);
+        
+        //wait one interval length
+        usleep(cm_experiment_setting.interval_msec_len*1000);
     }
 
     //close file
