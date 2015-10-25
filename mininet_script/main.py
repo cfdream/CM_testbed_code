@@ -49,10 +49,10 @@ def run_one_round(install_rule_type):
     sendermanager.setup()
 
     #------------wait for experiments to run------------
-    #time.sleep(8000); #750 per interval, 10 intervals
+    time.sleep(8000); #750 per interval, 10 intervals
     #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
-    time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
     #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
