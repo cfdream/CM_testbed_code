@@ -44,6 +44,7 @@ enum inject_tag_pkt_e {
 };
 
 typedef struct sample_hold_setting_s {
+    int target_flow_volume_in_sampling;
     uint64_t switches_interval_volume[NUM_SWITCHES]; //for setting hold hashtable size
     uint64_t max_switch_interval_volume;
     // as we want to compare UNIFORM vs. DIVERSE, 

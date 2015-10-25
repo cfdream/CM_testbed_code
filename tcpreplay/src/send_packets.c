@@ -432,10 +432,16 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
             flow_src.dstip = packet.dstip;
             #endif
 
+            hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
             /* sample the packet at the sender side */
             if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
-                hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
-                int sampled = sample_packet(&packet, total_pkt_len, &g_rand_buffer, flow_sample_map);
+                int sampled = 0;
+                if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
+                    sampled = 1;
+                } else {
+                    hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
+                    sampled = sample_packet(&packet, total_pkt_len, &g_rand_buffer, flow_sample_map);
+                }
                 if (sampled) {
                     //tag one VLAN bit to mark the packet as sampled
                     tag_packet_as_sampled(packet_buf, datalink);
@@ -447,7 +453,6 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
 
             /* tag existing packet to carry the target flow information*/
             if (cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
-                hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
                 if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
                     // the flow is a target flow
                     tag_packet_as_target_flow_in_normal_packet(packet_buf, datalink);

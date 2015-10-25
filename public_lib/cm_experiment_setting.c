@@ -85,6 +85,10 @@ int read_cm_experiment_setting_from_file(void) {
                 cm_experiment_setting.target_flow_setting.loss_volume_threshold = strtol(*(tokens+1), NULL, 10);
             }
 
+            //target_flow_volume_in_sampling
+            if (strcmp(*(tokens+0), "target_flow_volume_in_sampling") == 0 && *(tokens+1)) {
+                cm_experiment_setting.sample_hold_setting.target_flow_volume_in_sampling = strtol(*(tokens+1), NULL, 10);
+            }
             //switch1_interval_volume
             if (strcmp(*(tokens+0), "switch1_interval_volume") == 0 && *(tokens+1)) {
                 cm_experiment_setting.sample_hold_setting.switches_interval_volume[0] = strtoll(*(tokens+1), NULL, 10);
@@ -145,7 +149,7 @@ int read_cm_experiment_setting_from_file(void) {
 
 int init_other_experiment_setting(void) {
     cm_experiment_setting.sample_hold_setting.default_byte_sampling_rate 
-        = 1.0 / cm_experiment_setting.target_flow_setting.volume_threshold * OVER_SAMPLING_RATIO;
+        = 1.0 / cm_experiment_setting.sample_hold_setting.target_flow_volume_in_sampling * OVER_SAMPLING_RATIO;
 
     //get uniform_mem_ratio_to_diverse_mem
     uint64_t all_switches_volume = 0;
@@ -180,8 +184,10 @@ int check_value_correct(void) {
         printf("switch_memory_times = 0\n");
         return -1;
     }
-    if (cm_experiment_setting.target_flow_setting.volume_threshold == 0) {
-        printf("volume_threshold not correct\n");
+    if (cm_experiment_setting.target_flow_setting.volume_threshold == 0
+        && cm_experiment_setting.target_flow_setting.loss_rate_threshold == 0
+        && cm_experiment_setting.target_flow_setting.loss_volume_threshold == 0) {
+        printf("target flow setting not correct\n");
         return -1;
     }
     int switch_idx = 0;
@@ -193,9 +199,6 @@ int check_value_correct(void) {
     }
     if (cm_experiment_setting.switch_drop_rate == 0) {
         printf("WARNING: cm_experiment_setting.switch_drop_rate == 0\n");
-    }
-    if (cm_experiment_setting.target_flow_setting.loss_rate_threshold == 0) {
-        printf("WARNING: cm_experiment_setting.target_flow_setting.loss_rate_threshold== 0\n");
     }
     if (cm_experiment_setting.sample_hold_setting.uniform_mem_ratio_to_diverse_mem > 1) {
         printf("WARNING: cm_experiment_setting.sample_hold_setting.uniform_mem_ratio_to_diverse_mem > 1\n");

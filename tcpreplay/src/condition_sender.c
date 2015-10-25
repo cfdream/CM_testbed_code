@@ -57,7 +57,6 @@ int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
     ip_header.ip_src.s_addr = htonl(p_condition->srcip);   //set the condition_t.ip
     ip_header.ip_dst.s_addr = htonl(p_condition->dstip);
     #endif
-    ip_header.ip_dst.s_addr = 0;
    
     //ethernet header
     strncpy((char*)ethernet_header_vlan.vlan_dhost, dst_mac, 6);

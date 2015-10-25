@@ -127,7 +127,7 @@ entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value
 * @param hashtable
 * @param key
 *
-* @return -1: key not exist in the hashtable, >=0 : value of the key
+* @return -1: key not exist in the hashtable, ==0 : value of the key
 */
 int ht_kfs_fixSize_get( hashtable_kfs_fixSize_t *hashtable, flow_src_t* key, entry_kfs_fixSize_t* ret_entry) {
     int bin = 0;
