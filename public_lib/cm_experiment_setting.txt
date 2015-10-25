@@ -9,33 +9,55 @@ replacement:1
 #UNIFORM:0 DIVERSE:1
 switch_mem_type:0
 switch_memory_times:1
-switch_drop_rate:0.0035
+#1.2% volume loss <=> switch_drop_rate: 0.0035, 5% volume loss <=> switch_drop_rate:0.014
+switch_drop_rate:0.014
 #HOST_SAMPLE:0, SWITCH_SAMPLE:1
 host_or_switch_sample:0
 #inject_packet:0, tag_packet:1
 inject_or_tag_packet:1
-#every sender:~157 flows
-target_flow_volume:600000
+#<srcip>:        one round 750seconds: #flows in 35 rounds = 198k
+#case1: <srcip>:        one round statistics: every sender:volume>600k<=>~183 flows, min(#pkt)=453, median(#pkt)=1863;  volume>60k<=> ~522 flows, min(#pkt)=45, median(#pkt)=470;
+#<srcip, dstip>: one round 750seconds: #flows in 35 rounds = 536k
+#case2: <srcip, dstip>: one round statistics: every sender:volume>600k<=>~201 flows, min(#pkt)=413, median(#pkt)=1149;  volume>60k<=> ~1434 flows, min(#pkt)=31, median(#pkt)=124;
+#case3: <srcip,dstip>: ten rounds statistics: every sender:volume> 120k #pkt> 200 <=> 3238 flows. Suppose 5% avg loss rate, there would be 10 pkts lost for target flows, reasonable.
+#use case3
+target_flow_volume:120000
 #every sender:~214 flows
 #target_flow_volume:300000   
 #test
 #target_flow_volume:60000
-target_flow_loss_rate:0.01
-#the following switch volume is got from b4 topo with each sender sending 1.5 million packets
+target_flow_loss_rate:0
+target_flow_loss_volume:6000
+#ten round: the following switch volume is got from b4 topo with each sender sending 1.5 million packets
 #pcap file generated from 29 intervals (750s per interval)
 #63382 64258 91031 109360 100923 123844 115339 121883 57204 107309 99734 60701
-switch1_interval_volume:2185000000
-switch2_interval_volume:2215000000
-switch3_interval_volume:3139000000
-switch4_interval_volume:3771000000
-switch5_interval_volume:3480000000
-switch6_interval_volume:4270000000
-switch7_interval_volume:3977000000
-switch8_interval_volume:4202000000
-switch9_interval_volume:1972000000
-switch10_interval_volume:3700000000
-switch11_interval_volume:3439000000
-switch12_interval_volume:2093000000
+switch1_interval_volume:21850000000
+switch2_interval_volume:22150000000
+switch3_interval_volume:31390000000
+switch4_interval_volume:37710000000
+switch5_interval_volume:34800000000
+switch6_interval_volume:42700000000
+switch7_interval_volume:39770000000
+switch8_interval_volume:42020000000
+switch9_interval_volume:19720000000
+switch10_interval_volume:37000000000
+switch11_interval_volume:34390000000
+switch12_interval_volume:20930000000
+##one round: the following switch volume is got from b4 topo with each sender sending 1.5 million packets
+##pcap file generated from 29 intervals (750s per interval)
+##63382 64258 91031 109360 100923 123844 115339 121883 57204 107309 99734 60701
+#switch1_interval_volume:2185000000
+#switch2_interval_volume:2215000000
+#switch3_interval_volume:3139000000
+#switch4_interval_volume:3771000000
+#switch5_interval_volume:3480000000
+#switch6_interval_volume:4270000000
+#switch7_interval_volume:3977000000
+#switch8_interval_volume:4202000000
+#switch9_interval_volume:1972000000
+#switch10_interval_volume:3700000000
+#switch11_interval_volume:3439000000
+#switch12_interval_volume:2093000000
 #pcap file generated from 130000, 130100 csv files
 #switch1_interval_volume:1984790681
 #switch2_interval_volume:1988689498

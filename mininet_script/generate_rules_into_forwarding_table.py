@@ -12,6 +12,10 @@ class NeighborNode:
 class GenerateRulesIntoTables:
     HIGH_PRIORITY = 32769
     LOW_PRIORITY = 32768
+
+    ONLY_SINGLE_PATH_RULE = 1
+    ONLY_ECMP_PATH_RULE = 2
+    BOTH_SINGLE_AND_ECMP_PATH_RULE = 3
     def __init__(self):
         self.hosts=[]
         self.switches=[]
@@ -216,7 +220,7 @@ class GenerateRulesIntoTables:
             ith+=1
         return path
     
-    def generate_rules_for_normal_packets(self, filename):
+    def generate_rules_for_normal_packets(self, filename, install_rule_type):
         out_file = open(filename, 'w')
         for host in self.hosts:
             path = self.get_reverse_pre_nodes(host)
@@ -225,7 +229,7 @@ class GenerateRulesIntoTables:
                 if re.match("^h(\d+)", entity) != None:
                     #only add forwarding rules to switches
                     continue
-                if len(next_nodes) > 1:
+                if install_rule_type != GenerateRulesIntoTables.ONLY_SINGLE_PATH_RULE and len(next_nodes) > 1:
                     neighbor_nodes=self.graph[entity]
                     ports=[]
                     for next_node in next_nodes:
@@ -245,7 +249,7 @@ class GenerateRulesIntoTables:
                     #add ARP pkts forwarding rules
                     out_str="""sudo ovs-ofctl add-flow {0} 'dl_type=0x0806,nw_dst={1},action=bundle(symmetric_l4,50,hrw,ofport,slaves:{2})'""" .format(entity, self.host_ipprefix_map[host], port_str)
                     out_file.write(out_str + "\n")
-                else:
+                elif install_rule_type != GenerateRulesIntoTables.ONLY_ECMP_PATH_RULE:
                     portid=1
                     neighbor_nodes=self.graph[entity]
                     for neighbor in neighbor_nodes:

@@ -33,6 +33,7 @@ void destory_srcip_dstip_to_b4_srcip_dstip() {
 void get_mapped_info(uint32_t ip, uint32_t* p_mapped_nodeid, uint32_t* p_mapped_ip) {
     flow_src_t flow;
     flow.srcip = ip;
+    flow.dstip = 0;
     
     int ret = ht_kfs_vi_get(srcip_to_node_idx_map, &flow);
     if (ret < 0) {
@@ -55,6 +56,7 @@ void get_mapped_info(uint32_t ip, uint32_t* p_mapped_nodeid, uint32_t* p_mapped_
 uint32_t get_mapped_nodeid(hashtable_kfs_vi_t* ip_to_node_idx_map, uint32_t ip, uint64_t* p_unique_ip_num) {
     flow_src_t flow;
     flow.srcip = ip;
+    flow.dstip = 0;
     
     int ret = ht_kfs_vi_get(ip_to_node_idx_map, &flow);
     if (ret < 0) {
@@ -74,6 +76,7 @@ uint32_t get_mapped_nodeid(hashtable_kfs_vi_t* ip_to_node_idx_map, uint32_t ip, 
 uint32_t get_mapped_ip(hashtable_kfs_vi_t* ip_to_node_ip_map, uint32_t ip, uint64_t unique_ip_num) {
     flow_src_t flow;
     flow.srcip = ip;
+    flow.dstip = 0;
 
     int ret = ht_kfs_vi_get(ip_to_node_ip_map, &flow); 
     if (ret < 0) {

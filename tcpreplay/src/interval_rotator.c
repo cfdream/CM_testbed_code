@@ -20,7 +20,12 @@ FILE* init_target_flow_file() {
     if (fp == NULL) {
         return NULL;
     }
+    #ifdef FLOW_SRC
     fprintf(fp, "%s\n", "srcip");
+    #endif
+    #ifdef FLOW_SRC_DST
+    fprintf(fp, "%s\n", "srcip\tdstip");
+    #endif
     fflush(fp);
     return fp;
 }
@@ -58,6 +63,7 @@ void write_interval_info_to_file(uint64_t current_msec, FILE* fp_target_flow) {
     fprintf(fp_target_flow, "switch_drop_rate:%f\n", cm_experiment_setting.switch_drop_rate);
     fprintf(fp_target_flow, "target_flow_volume_threshold:%d\n", cm_experiment_setting.target_flow_setting.volume_threshold);
     fprintf(fp_target_flow, "target_flow_loss_rate_threshold:%f\n", cm_experiment_setting.target_flow_setting.loss_rate_threshold);
+    fprintf(fp_target_flow, "target_flow_loss_volume_threshold:%d\n", cm_experiment_setting.target_flow_setting.loss_volume_threshold);
 
     //optional infor
     int na_idx = (data_warehouse.active_idx+1)%BUFFER_NUM;
@@ -116,7 +122,12 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
         int not_sampled_volume = ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow);
         int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
+        #ifdef FLOW_SRC
         fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
+        #endif
+        #ifdef FLOW_SRC_DST
+        fprintf(fp_target_flow, "%u\t%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, p_flow->dstip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
+        #endif
         fflush(fp_target_flow);
     }
 }
@@ -143,7 +154,12 @@ void write_all_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
         int not_sampled_volume = ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow);
         int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
+        #ifdef FLOW_SRC
         fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
+        #endif
+        #ifdef FLOW_SRC_DST
+        fprintf(fp_target_flow, "%u\t%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, p_flow->dstip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
+        #endif
         fflush(fp_target_flow);
     }
 }

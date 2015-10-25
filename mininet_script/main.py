@@ -3,11 +3,12 @@
 import time
 import commands
 import mini_system_manager
+from generate_rules_into_forwarding_table import GenerateRulesIntoTables
 import receiver_manager
 import sender_manager
 import re
 
-def run_one_round():
+def run_one_round(install_rule_type):
     #-----------create FIFO files for each sender
     commands.getstatusoutput('mkdir /tmp/fifo')
     commands.getstatusoutput('mkdir /tmp/log')
@@ -33,7 +34,7 @@ def run_one_round():
     system_topo = mini_system_manager.SystemManager()
     system_topo.configUserspaceThreadNum()
     system_topo.setup()
-    system_topo.installForwardingRule()
+    system_topo.installForwardingRule(install_rule_type)
     system_topo.configuMTUSize()
 
     #-----------test connectivity------------
@@ -48,10 +49,10 @@ def run_one_round():
     sendermanager.setup()
 
     #------------wait for experiments to run------------
-    #time.sleep(8000); #750 per interval, 10 intervals
+    time.sleep(8000); #750 per interval, 10 intervals
     #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
-    time.sleep(2300); #750 per interval, 2 intervals + wait one interval
+    #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
     #time.sleep(1550); #750 per interval, 1 intervals + wait one interval
 
     #------------stop all senders and receivers------------
@@ -150,6 +151,51 @@ def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, 
     commands.getstatusoutput('mv /tmp/log {0}' .format(result_dir))
     print "SUCC: move_one_round_data"
 
+def query1_compare_algos():
+    install_rule_type = GenerateRulesIntoTables.ONLY_SINGLE_PATH_RULE 
+    target_flow_loss_rate = 0
+    #50000 bytes memory => memory_times = 0.144085991
+    #this is for 750 as one round, 600k as volume threshold
+    mem50kbytes_memory_times = 0.144085991
+    #######For figure: memory_size vs. performance
+    #2.1. HSSH+fixed memory+replace+ taggingConditionPkt
+    #NOTE: in cm_experiment_setting.txt set inject_or_tag_packet = 1
+    inject_or_tag_packet = 1
+    for host_switch_sample in [0]:
+        for memory_type in [0]:
+            for replace in [1]:
+                for memory_times in [1, 2, 4, 8, 16, 32]:
+                    for freq in [500]: #freq is useless in tagging
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        run_one_round(install_rule_type)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    
+    #2.3. HSSH+fixed memory + replace
+    #2.2. HSSH+fixed memory
+    inject_or_tag_packet = 0
+    for host_switch_sample in [0]:
+        for memory_type in [0]:
+            for replace in [1, 0]:
+                for memory_times in [1, 2, 4, 8, 16, 32]:
+                    for freq in [500]:
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        run_one_round(install_rule_type)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    
+    #2.4 No-coord <=> Switch sample and hold + no replace
+    #2.5 No-coord + replace <=> Switch sample and hold replace : 
+    #why 2.5: I want to check whether No-coord is better than HSSH. Coz accuracy of Nocoord with smaller memory is better than HSSH, that's why we need to use HSSH+replace. 
+    #However, this is under the assumption that Nocoord+replace is worse than HSSH+replace, 2.5 is used to verify this.
+    inject_or_tag_packet = 0
+    for host_switch_sample in [1]:
+        for memory_type in [0]:
+            for replace in [0, 1]:
+                for memory_times in [1, 2, 4, 8, 16, 32]:
+                    for freq in [500]:
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        run_one_round(install_rule_type)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+
 def experiment1_compare_algos():
     target_flow_loss_rate = 0.01
     #50000 bytes memory => memory_times = 0.144085991
@@ -167,17 +213,17 @@ def experiment1_compare_algos():
                         run_one_round()
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
-    #2.2. HSSH+fixed memory
     #2.3. HSSH+fixed memory + replace
-    inject_or_tag_packet = 0
-    for host_switch_sample in [0]:
-        for memory_type in [0]:
-            for replace in [1, 0]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
-                    for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
-                        run_one_round()
-                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    #inject_or_tag_packet = 0
+    #for host_switch_sample in [0]:
+    #    for memory_type in [0]:
+    #        for replace in [1]:
+    #            for memory_times in [1, 2, 4, 8, 16, 32]:
+    #                for freq in [500]:
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+    #                    run_one_round()
+    #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    #2.2. HSSH+fixed memory
     
     #2.4 No-coord <=> Switch sample and hold + no replace
     #2.5 No-coord + replace <=> Switch sample and hold replace : 
@@ -193,17 +239,6 @@ def experiment1_compare_algos():
                         run_one_round()
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
-    #2.3. HSSH+diverse memory
-    #2.4. HSSH+diverse memory + replace
-    #for host_switch_sample in [0]:
-    #    for memory_type in [1]:
-    #        for replace in [1]:
-    #            for memory_times in [0.2, 0.5, 0.7, 1, 2, 4, 8, 16]:
-    #                for freq in [500]:
-    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate)
-    #                    run_one_round()
-    #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq)
-
 def experiment2_freq_on_performance():
     #######For figure: condition frequency vs. performance
     #based on HSSH+Replace
@@ -227,7 +262,8 @@ def experiment3_numFlows_vs_overhead():
     freq = 1000
 
 if __name__ == "__main__":
-    experiment1_compare_algos()
+    query1_compare_algos()
+    #experiment1_compare_algos()
     #experiment2_freq_on_performance()
     #experiment3_numFlows_vs_overhead()
 

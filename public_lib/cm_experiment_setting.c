@@ -80,6 +80,10 @@ int read_cm_experiment_setting_from_file(void) {
             if (strcmp(*(tokens+0), "target_flow_loss_rate") == 0 && *(tokens+1)) {
                 cm_experiment_setting.target_flow_setting.loss_rate_threshold = strtof(*(tokens+1), NULL);
             }
+            //target_flow_loss_volume
+            if (strcmp(*(tokens+0), "target_flow_loss_volume") == 0 && *(tokens+1)) {
+                cm_experiment_setting.target_flow_setting.loss_volume_threshold = strtol(*(tokens+1), NULL, 10);
+            }
 
             //switch1_interval_volume
             if (strcmp(*(tokens+0), "switch1_interval_volume") == 0 && *(tokens+1)) {

@@ -56,6 +56,7 @@ typedef struct sample_hold_setting_s {
 typedef struct target_flow_setting_s {
     int volume_threshold;
     float loss_rate_threshold;
+    int loss_volume_threshold;
 }target_flow_setting_t;
 
 typedef struct cm_experiment_setting_s {

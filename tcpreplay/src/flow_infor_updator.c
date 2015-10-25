@@ -52,10 +52,16 @@ void* flow_infor_update(void* param_ptr) {
         }
         total_lost_pkt_num += receV_lostV.lost_pkt_num;
 
-        // 2. update <srcip> flow infor
+        // 2. update flow infor
         if (receV_lostV.lost_volume > 0) {
             flow_src_t flow_src;
+            #ifdef FLOW_SRC
             flow_src.srcip = recv_2_send_proto.srcip;
+            #endif
+            #ifdef FLOW_SRC_DST
+            flow_src.srcip = recv_2_send_proto.srcip;
+            flow_src.dstip = recv_2_send_proto.dstip;
+            #endif
             update_flow_loss_volume(&flow_src, receV_lostV.lost_volume);
         }
 

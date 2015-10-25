@@ -424,7 +424,13 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
             ht_vl_set(flow_recePktList_map, (flow_s*)(&packet), seqid, packet.len);
 
             flow_src_t flow_src;
+            #ifdef FLOW_SRC
             flow_src.srcip = packet.srcip;
+            #endif
+            #ifdef FLOW_SRC_DST
+            flow_src.srcip = packet.srcip;
+            flow_src.dstip = packet.dstip;
+            #endif
 
             /* sample the packet at the sender side */
             if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {

@@ -27,14 +27,14 @@ class SystemManager():
     # @brief genearte forwarding rules, and install the rules
     #
     # @return 
-    def installForwardingRule(self):
+    def installForwardingRule(self, install_rule_type):
         #generate eth name id map
         commands.getstatusoutput('sudo ovs-appctl dpif/show >eth_id_name_map.txt')
         #generate rules_to_add_flow_table.sh
         generator = generate_rules_into_forwarding_table.GenerateRulesIntoTables()
         generator.read_eth_id_name_topo("eth_id_name_map.txt")
         generator.read_topo("b4_topo_ip_prefixes.txt")
-        generator.generate_rules_for_normal_packets("rules_to_add_flow_table.sh")
+        generator.generate_rules_for_normal_packets("rules_to_add_flow_table.sh", install_rule_type)
         generator.generate_rules_for_condition_packets("rules_to_add_flow_table.sh")
         #run rules_to_add_flow_table.sh
         commands.getstatusoutput('sh -x rules_to_add_flow_table.sh')

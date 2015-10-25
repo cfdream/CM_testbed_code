@@ -12,7 +12,13 @@ int sample_packet(packet_t* p_packet, int total_pkt_len, struct drand48_data* p_
     double rand_float;
 
     flow_src_t flow_src;
+    #ifdef FLOW_SRC
     flow_src.srcip = p_packet->srcip;
+    #endif
+    #ifdef FLOW_SRC_DST
+    flow_src.srcip = p_packet->srcip;
+    flow_src.dstip = p_packet->dstip;
+    #endif
 
     if (flow_src_already_sampled(&flow_src, flow_sample_map)) {
         //printf("srcip:%u already in flow_sample_map\n", flow_src.srcip);
@@ -40,7 +46,13 @@ int sample_packet_fixSize_map(packet_t* p_packet,
     double rand_float;
 
     flow_src_t flow_src;
+    #ifdef FLOW_SRC
     flow_src.srcip = p_packet->srcip;
+    #endif
+    #ifdef FLOW_SRC_DST
+    flow_src.srcip = p_packet->srcip;
+    flow_src.dstip = p_packet->dstip;
+    #endif
 
     if (ht_kfs_fixSize_is_sampled(flow_sample_map, &flow_src)) {
         //printf("srcip:%u already in flow_sample_map\n", flow_src.srcip);

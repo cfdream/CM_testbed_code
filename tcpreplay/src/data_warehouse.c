@@ -94,8 +94,9 @@ void data_warehouse_destroy() {
 }
 
 void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
+    uint32_t lock_bin = flow_src_hash_bin(p_flow, HASH_MAP_SIZE);
     /* request mutex */
-    pthread_mutex_lock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
+    pthread_mutex_lock(&data_warehouse.mutexs[lock_bin]);
 
     hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
@@ -108,7 +109,7 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
         int volume = ht_kfs_vi_get(flow_volume_map, p_flow);
         if (volume < 0) {
             printf("FATAL: flow_volume = 0 while loss_volume > 0 \n");
-            pthread_mutex_unlock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
+            pthread_mutex_unlock(&data_warehouse.mutexs[lock_bin]);
             return;
         }
 
@@ -126,7 +127,8 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
 
         //update target flows
         if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
-            && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold) {
+            && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold
+            && loss_volume >= cm_experiment_setting.target_flow_setting.loss_volume_threshold) {
             //this is a target flow
             ht_kfs_vi_set(target_flow_map, p_flow, 1);
         } else {
@@ -140,12 +142,13 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
         //    loss_volume);
     }
     /* release mutex */
-    pthread_mutex_unlock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
+    pthread_mutex_unlock(&data_warehouse.mutexs[lock_bin]);
 }
 
 void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
+    uint32_t lock_bin = flow_src_hash_bin(p_flow, HASH_MAP_SIZE);
     /* request mutex */
-    pthread_mutex_lock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
+    pthread_mutex_lock(&data_warehouse.mutexs[lock_bin]);
 
     hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
@@ -173,7 +176,8 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
 
         //update target flows
         if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
-            && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold) {
+            && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold
+            && loss_volume >= cm_experiment_setting.target_flow_setting.loss_volume_threshold) {
             //this is a target flow
             ht_kfs_vi_set(target_flow_map, p_flow, 1);
         } else {
@@ -190,7 +194,7 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
     }
 
     /* release mutex */
-    pthread_mutex_unlock(&data_warehouse.mutexs[p_flow->srcip % HASH_MAP_SIZE]);
+    pthread_mutex_unlock(&data_warehouse.mutexs[lock_bin]);
 }
 
 void update_flow_not_sampled_volume(flow_src_t* p_flow) {

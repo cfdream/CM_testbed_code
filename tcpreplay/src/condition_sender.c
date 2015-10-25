@@ -50,7 +50,13 @@ int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
     ip_header.ip_off = 0x4000;
     ip_header.ip_ttl = 0x40;
     ip_header.ip_p = 0x11;  //TCP-0x06, UDP-0x11
+    #ifdef FLOW_SRC
     ip_header.ip_src.s_addr = htonl(p_condition->srcip);   //set the condition_t.ip
+    #endif
+    #ifdef FLOW_SRC_DST
+    ip_header.ip_src.s_addr = htonl(p_condition->srcip);   //set the condition_t.ip
+    ip_header.ip_dst.s_addr = htonl(p_condition->dstip);
+    #endif
     ip_header.ip_dst.s_addr = 0;
    
     //ethernet header
@@ -151,7 +157,14 @@ void* send_condition_to_network(void* param_ptr) {
             //1.1 new target flow not sent last time
             //send the + delta info
             //get one target flow, send to the network
+            #ifdef FLOW_SRC
             condition.srcip = ret_entry.key.srcip;
+            #endif
+            #ifdef FLOW_SRC_DST
+            condition.srcip = ret_entry.key.srcip;
+            condition.dstip = ret_entry.key.dstip;
+            #endif
+
             send_udp_condition_pkt(&condition, true);
             ++plus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
@@ -166,7 +179,13 @@ void* send_condition_to_network(void* param_ptr) {
             }
             //2.1 target flow sent last time but now not target flow
             //send the - delta info
+            #ifdef FLOW_SRC
             condition.srcip = ret_entry.key.srcip;
+            #endif
+            #ifdef FLOW_SRC_DST
+            condition.srcip = ret_entry.key.srcip;
+            condition.dstip = ret_entry.key.dstip;
+            #endif
             send_udp_condition_pkt(&condition, false);
             ++minus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
