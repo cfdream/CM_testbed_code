@@ -1,6 +1,8 @@
 #for experiment, one interval len, each sender sends 1.5 million packets
+#7500 seconds, * 1000 milliseconds
+interval_msec_len:7500000
 #750seconds, *1000 milliseconds
-interval_msec_len:750000
+#interval_msec_len:750000
 # test:per sender sends 150k packets
 #75seconds, *1000 milliseconds
 #interval_msec_len:75000
@@ -8,7 +10,7 @@ condition_msec_freq:500
 replacement:1
 #UNIFORM:0 DIVERSE:1
 switch_mem_type:0
-switch_memory_times:1.152687928
+switch_memory_times:1
 #1.2% volume loss <=> switch_drop_rate: 0.0035, 5% volume loss <=> switch_drop_rate:0.014
 switch_drop_rate:0.014
 #HOST_SAMPLE:0, SWITCH_SAMPLE:1
