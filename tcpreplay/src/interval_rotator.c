@@ -39,8 +39,16 @@ void write_last_sent_target_flow_map_lost_target_flow(FILE* fp_target_flow) {
     int final_lost_num_in_last_sent_target_flow_map = 0;
     entry_kfs_vi_t ret_entry;
     while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
-        ++final_target_flow_num;
+        //get one target flow, output to file
         flow_src_t* p_flow = &ret_entry.key;
+
+        //------------if the flow is not interested by any task on this host. No need to output it-------------
+        task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, p_flow);
+        if (p_task == NULL) {
+            return;
+        }
+        
+        ++final_target_flow_num;
         if (ht_kfs_vi_get(last_sent_target_flow_map, p_flow) < 0) {
                 ++ final_lost_num_in_last_sent_target_flow_map;
         }
