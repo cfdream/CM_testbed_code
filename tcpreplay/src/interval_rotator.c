@@ -208,8 +208,17 @@ void* rotate_interval(void* param_ptr) {
         uint64_t msec = (intmax_t)((time_t)spec.tv_sec*1000 + spec.tv_nsec/1000000);
         printf("=====end rotate_interval, current_msec:%lu=====\n", msec);
         
+        //get time(msec) used to rotate
+        clock_gettime(CLOCK_REALTIME, &spec);
+        //1s = 10^3 msec, 1 ns = 10^-6 msec
+        uint64_t after_rotate_msec = (intmax_t)spec.tv_sec * 1000 + spec.tv_nsec / 1000000;
+        uint32_t rotate_duration_msec = after_rotate_msec - current_msec;
+        //get time(msec) that should be slept
+        uint32_t to_sleep_msec = cm_experiment_setting.interval_msec_len - rotate_duration_msec;
+        
         //wait one interval length
-        usleep(cm_experiment_setting.interval_msec_len*1000);
+        usleep(to_sleep_msec * 1000);
+
         clock_gettime(CLOCK_REALTIME, &spec);
         //1s = 10^3 msec, 1 ns = 10^-6 msec
         current_msec = (intmax_t)spec.tv_sec * 1000 + spec.tv_nsec / 1000000;
