@@ -180,7 +180,6 @@ void* rotate_interval(void* param_ptr) {
     uint64_t current_msec = get_next_interval_start(600000);
 
     while (true) {
-
 		//lock the data_warehouse.data_warehouse_mutex
 		//in order to avoid IntervalRotator thread destory the data
         pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
@@ -211,6 +210,9 @@ void* rotate_interval(void* param_ptr) {
         
         //wait one interval length
         usleep(cm_experiment_setting.interval_msec_len*1000);
+        clock_gettime(CLOCK_REALTIME, &spec);
+        //1s = 10^3 msec, 1 ns = 10^-6 msec
+        current_msec = (intmax_t)spec.tv_sec * 1000 + spec.tv_nsec / 1000000;
     }
 
     //close file
