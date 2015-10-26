@@ -67,7 +67,7 @@ def run_one_round(install_rule_type):
     #system_topo.tearDown()
     #print "system_topo tearDown completed"
 
-def config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate, inject_or_tag_packet):
+def config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet):
     config_fname = '../public_lib/cm_experiment_setting.txt'
     in_file = open(config_fname, 'r')
     lines = in_file.readlines();
@@ -83,6 +83,8 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
     memory_times_pattern = re.compile("^switch_memory_times:(\d+)")
     freq_pattern = re.compile("^condition_msec_freq:(\d+)")
     target_flow_loss_rate_pattern = re.compile("^target_flow_loss_rate:(\d+\.\d+)")
+    target_flow_volume_pattern = re.compile("^target_flow_volume:(\d+)")
+    target_floww_loss_volume_pattern = re.compile("^target_flow_loss_volume:(\d+)")
     inject_or_tag_packet_pattern = re.compile("^inject_or_tag_packet:(\d+)")
 
     for line in lines:
@@ -126,6 +128,22 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
             commands.getstatusoutput(sed_str)
             print sed_str
 
+        #volume threshold
+        match = target_flow_volume_pattern.match(line)
+        if match != None:
+            #configu target_flow_volume
+            sed_str = "sed -i 's/^{0}/target_flow_volume:{1}/g' {2} " .format(line, target_flow_volume, config_fname)
+            commands.getstatusoutput(sed_str)
+            print sed_str
+
+        #loss volume threshold
+        match = target_floww_loss_volume_pattern.match(line)
+        if match != None:
+            #configu target_flow_loss_volume
+            sed_str = "sed -i 's/^{0}/target_flow_loss_volume:{1}/g' {2} " .format(line, target_flow_loss_volume, config_fname)
+            commands.getstatusoutput(sed_str)
+            print sed_str
+
         #loss rate threshold
         match = target_flow_loss_rate_pattern.match(line)
         if match != None:
@@ -133,7 +151,7 @@ def config_experiment_setting_file(host_switch_sample, replace, memory_type, mem
             sed_str = "sed -i 's/^{0}/target_flow_loss_rate:{1}/g' {2} " .format(line, target_flow_loss_rate, config_fname)
             commands.getstatusoutput(sed_str)
             print sed_str
-        
+
         #inject_or_tag_packet
         match = inject_or_tag_packet_pattern.match(line)
         if match != None:
@@ -153,13 +171,22 @@ def move_one_round_data(host_switch_sample, replace, memory_type, memory_times, 
     print "SUCC: move_one_round_data"
 
 def query1_compare_algos():
-    install_rule_type = GenerateRulesIntoTables.ONLY_SINGLE_PATH_RULE 
-    target_flow_loss_rate = 0
+    '''
+    Host measures loss, if the loss is high, 
+    ask all the switches along the path to measure the volume of the high loss flow
+    '''
     #50000 bytes memory => memory_times = 0.144085991
-    #this is for 750 as one round, 600k as volume threshold
     mem50kbytes_memory_times = 0.144085991
-    #######For figure: memory_size vs. performance
-    #2.1. HSSH+fixed memory+replace+ taggingConditionPkt
+
+    #------------set target flow threshold
+    target_flow_volume = 0
+    target_flow_loss_volume = 6000
+    target_flow_loss_rate = 0
+
+    #------------only single path forwarding rules will be installed in the network
+    install_rule_type = GenerateRulesIntoTables.ONLY_SINGLE_PATH_RULE 
+
+    #------------Coordination + replace + taggingConditionPkt
     #NOTE: in cm_experiment_setting.txt set inject_or_tag_packet = 1
     inject_or_tag_packet = 1
     for host_switch_sample in [0]:
@@ -167,7 +194,7 @@ def query1_compare_algos():
             for replace in [1]:
                 for memory_times in [1, 2, 4, 8, 16, 32]:
                     for freq in [500]: #freq is useless in tagging
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
                         run_one_round(install_rule_type)
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
@@ -179,7 +206,7 @@ def query1_compare_algos():
     #        for replace in [1, 0]:
     #            for memory_times in [1, 2, 4, 8, 16, 32]:
     #                for freq in [500]:
-    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
     #                    run_one_round(install_rule_type)
     #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
@@ -193,7 +220,60 @@ def query1_compare_algos():
             for replace in [0]:
                 for memory_times in [1, 2, 4, 8, 16, 32]:
                     for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
+                        run_one_round(install_rule_type)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+
+def query3_compare_algos():
+    '''
+    Condition: high volume at sender; 
+    Capture: one switch at each path for all the paths, one monitor per path
+    '''
+    #50000 bytes memory => memory_times = 0.144085991
+    mem50kbytes_memory_times = 0.144085991 #for 8 bytes per bucket
+
+    #------------set target flow threshold
+    target_flow_volume = 120000
+    target_flow_loss_volume = 0
+    target_flow_loss_rate = 0
+
+    #------------both single and multiple forwarding rules will be installed in the network
+    install_rule_type = GenerateRulesIntoTables.BOTH_SINGLE_AND_ECMP_PATH_RULE
+
+    #------------Coordination + replace + taggingConditionPkt
+    inject_or_tag_packet = 1
+    for host_switch_sample in [0]:
+        for memory_type in [0]:
+            for replace in [1]:
+                for memory_times in [1, 2, 4, 8, 16, 32]:
+                    for freq in [500]: #freq is useless in tagging
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
+                        run_one_round(install_rule_type)
+                        move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    
+    #2.3. HSSH+fixed memory + replace
+    #2.2. HSSH+fixed memory
+    #inject_or_tag_packet = 0
+    #for host_switch_sample in [0]:
+    #    for memory_type in [0]:
+    #        for replace in [1, 0]:
+    #            for memory_times in [1, 2, 4, 8, 16, 32]:
+    #                for freq in [500]:
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
+    #                    run_one_round(install_rule_type)
+    #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
+    
+    #--------------No-coord <=> Switch sample and hold + no replace
+    #2.5 No-coord + replace <=> Switch sample and hold replace : 
+    #why 2.5: I want to check whether No-coord is better than HSSH. Coz accuracy of Nocoord with smaller memory is better than HSSH, that's why we need to use HSSH+replace. 
+    #However, this is under the assumption that Nocoord+replace is worse than HSSH+replace, 2.5 is used to verify this.
+    inject_or_tag_packet = 0
+    for host_switch_sample in [1]:
+        for memory_type in [0]:
+            for replace in [0]:
+                for memory_times in [1, 2, 4, 8, 16, 32]:
+                    for freq in [500]:
+                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
                         run_one_round(install_rule_type)
                         move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
 
@@ -263,7 +343,8 @@ def experiment3_numFlows_vs_overhead():
     freq = 1000
 
 if __name__ == "__main__":
-    query1_compare_algos()
+    #query1_compare_algos()
+    query3_compare_algos()
     #experiment1_compare_algos()
     #experiment2_freq_on_performance()
     #experiment3_numFlows_vs_overhead()
