@@ -431,7 +431,34 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
             flow_src.srcip = packet.srcip;
             flow_src.dstip = packet.dstip;
             #endif
+            
+            //update flow information, this may make the target flow information of the flow changed.
+            update_flow_normal_volume(&flow_src, total_pkt_len);
+            ++data_warehouse.pkt_num_sent[data_warehouse.active_idx];
+            data_warehouse.volume_sent[data_warehouse.active_idx] += packet.len;
 
+            if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
+                packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
+                char src_str[100];
+                char dst_str[100];
+                ip_to_str(packet.srcip, src_str, 100);
+                ip_to_str(packet.dstip, dst_str, 100);
+
+                printf("sender: flow[%s-%s-%u-%u-%u-len:%u]\n", 
+                    src_str, dst_str, 
+                    packet.src_port, packet.dst_port, seqid, packet.len);
+            }
+           
+            //------------if the packet is not interested by any task. No action on it-------------
+            task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, &flow_src);
+            if (p_task == NULL) {
+                return;
+            }
+
+            //------------tag which switches to handle the tagging information (sample, targetFlow)-------------
+            tag_packet_for_switches(packet_buf, datalink, p_task->monitor_switch_ids, p_task->num_monitors);
+            
+            //-----------sample packet-------------
             hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
             /* sample the packet at the sender side */
             if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
@@ -451,7 +478,7 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                 //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
             }
 
-            /* tag existing packet to carry the target flow information*/
+            //----------- tag existing packet to carry the target flow information-----------
             if (cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
                 if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
                     // the flow is a target flow
@@ -459,21 +486,6 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                 }
             }
 
-            update_flow_normal_volume(&flow_src, total_pkt_len);
-            ++data_warehouse.pkt_num_sent[data_warehouse.active_idx];
-            data_warehouse.volume_sent[data_warehouse.active_idx] += packet.len;
-
-            if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
-                packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
-                char src_str[100];
-                char dst_str[100];
-                ip_to_str(packet.srcip, src_str, 100);
-                ip_to_str(packet.dstip, dst_str, 100);
-
-                printf("sender: flow[%s-%s-%u-%u-%u-len:%u]\n", 
-                    src_str, dst_str, 
-                    packet.src_port, packet.dst_port, seqid, packet.len);
-            }
             break;
         default:
             return; /* non-IP */

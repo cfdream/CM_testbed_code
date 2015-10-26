@@ -5,6 +5,7 @@
 #include "../../public_lib/mt_hashtable_kFlow_vLinklist.h"
 #include "../../public_lib/mt_hashtable_kFlowSrc_vInt.h"
 #include "../../public_lib/mt_hashtable_kFlowSrc_vFloat.h"
+#include "task_manager.h"
 
 #define BUFFER_NUM 2
 
@@ -14,6 +15,8 @@ extern struct drand48_data g_rand_buffer;
 * @brief 
 */
 typedef struct data_warehouse_s {
+    task_manager_t task_manager;
+
     /* packet sender mutex */
     pthread_mutex_t packet_send_mutex;
 	/* data_warehouse operate mutex */

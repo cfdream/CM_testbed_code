@@ -9,6 +9,10 @@ struct drand48_data g_rand_buffer;
 * @return 0-succ -1:fail
 */
 int data_warehouse_init() {
+    if (init_tasks_info(&data_warehouse.task_manager) != 0) {
+        return -1;
+    }
+
     pthread_mutex_init(&data_warehouse.packet_send_mutex, NULL);
     pthread_mutex_init(&data_warehouse.data_warehouse_mutex, NULL);
 

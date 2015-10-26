@@ -1,0 +1,3 @@
+#taskid sender_hostid receiver_hostid s1_id, s2_id, ...
+1 1 2 1
+2 3 4 5 6
