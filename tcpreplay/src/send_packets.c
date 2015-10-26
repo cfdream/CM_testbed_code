@@ -449,7 +449,7 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                     packet.src_port, packet.dst_port, seqid, packet.len);
             }
            
-            //------------if the packet is not interested by any task. No action on it-------------
+            //------------if the packet is not interested by any task on this host. No action on it-------------
             task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, &flow_src);
             if (p_task == NULL) {
                 return;

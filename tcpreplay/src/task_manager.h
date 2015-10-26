@@ -47,6 +47,6 @@ void init_task_srcip_dstip_prefixes(task_manager_t* p_task_manager);
 
 task_t* get_task_of_traffic(task_manager_t* p_task_manager, flow_src_t* p_flow);
 
-void print_tasks_infor(task_manager_t* p_task_manager);
+void print_tasks_infor(task_manager_t* p_task_manager, int hostid);
 
 #endif

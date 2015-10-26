@@ -67,6 +67,7 @@ int data_warehouse_init() {
     for (i = 0; i < HASH_MAP_SIZE; ++i) {
         pthread_mutex_init(&data_warehouse.mutexs[i], NULL);
     }
+    printf("data_warehouse_init succ\n");
     return 0;
 }
 

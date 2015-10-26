@@ -11,24 +11,25 @@ int init_tasks_info(task_manager_t* p_task_manager) {
         return -1;
     }
     int hostid = atoi(hostname+1);
+    //for this host, it just needs to read tasks with selectors on it.
     if (read_tasks_from_file(p_task_manager, hostid) != 0) {
         return -1;
     }
     init_task_srcip_dstip_prefixes(p_task_manager);
 
-    print_tasks_infor(p_task_manager);
+    print_tasks_infor(p_task_manager, hostid);
 
     return 0;
 }
 
 int read_one_task_from_one_line(char* line_buffer, size_t len, task_t* p_task) {
     //taskid sender_hostid receiver_hostid s1_id, s2_id, ...
-    char** tokens = str_split(line_buffer, ':');
+    char** tokens = str_split(line_buffer, ' ');
 
     memset(p_task, 0, sizeof(task_t));
 
     int i = 0;
-    while (tokens) {
+    while (*tokens) {
         if (i == 0) {
             p_task->taskid = strtol(*tokens, NULL, 10);
         } else if (i == 1) {
@@ -40,6 +41,7 @@ int read_one_task_from_one_line(char* line_buffer, size_t len, task_t* p_task) {
             ++p_task->num_monitors;
         }
         ++i;
+        ++tokens;
     }
     
     if (p_task->num_monitors == 0) {
@@ -49,6 +51,14 @@ int read_one_task_from_one_line(char* line_buffer, size_t len, task_t* p_task) {
     return 0;
 }
 
+/**
+* @brief only read tasks specified for this host
+*
+* @param p_task_manager
+* @param hostid
+*
+* @return 
+*/
 int read_tasks_from_file(task_manager_t* p_task_manager, int hostid) {
     memset(p_task_manager, 0, sizeof(task_manager_t));
 
@@ -79,6 +89,7 @@ int read_tasks_from_file(task_manager_t* p_task_manager, int hostid) {
             return -1;
         }
         free(line_buffer);
+        line_buffer = NULL;
     }
     return 0;
 }
@@ -107,7 +118,8 @@ task_t* get_task_of_traffic(task_manager_t* p_task_manager, flow_src_t* p_flow) 
     for (i = 0; i < p_task_manager->num_tasks; i++) {
         if (srcip_prefix == p_task_manager->tasks[i].srcip_prefix 
             && dstip_prefix == p_task_manager->tasks[i].dstip_prefix) {
-            //only need to compare dstip_prefix, as p_flow is the traffic sent from this host
+            //only need to compare dstip_prefix, as p_flow is the traffic sent from this host,
+            //and p_task_manager only stored tasks monitoring traffic coming out from this host
             return &p_task_manager->tasks[i];
         }
     }
@@ -115,14 +127,19 @@ task_t* get_task_of_traffic(task_manager_t* p_task_manager, flow_src_t* p_flow) 
     return NULL;
 }
 
-void print_tasks_infor(task_manager_t* p_task_manager) {
+void print_tasks_infor(task_manager_t* p_task_manager, int hostid) {
+    printf("tasks for h%d:\n", hostid);
     int i = 0;
     for (i = 0; i < p_task_manager->num_tasks; i++) {
         task_t* p_task = &p_task_manager->tasks[i];
-        printf("taskid:%d, sender:h%d, receiver:h%d, monitor[0]:s%d", 
+        printf("taskid:%d, sender:h%d, receiver:h%d",
             p_task->taskid,
             p_task->sender_host,
-            p_task->receiver_host,
-            p_task->monitor_switch_ids[0]);
+            p_task->receiver_host);
+        int j = 0;
+        for (; j < p_task_manager->tasks[i].num_monitors; ++j) {
+            printf(", switch[%d]:s%d", j, p_task->monitor_switch_ids[j]);
+        }
+        printf("\n");
     }
 }
