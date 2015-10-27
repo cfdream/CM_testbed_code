@@ -189,7 +189,7 @@ def query1_compare_algos():
     mem50kbytes_memory_times = 0.144085991
     
     #------------set switch_drop_rate to make avg. loss rate is 5%
-    switch_drop_rate = 0.014
+    switch_drop_rate = 0.024
 
     #------------set target flow threshold
     target_flow_volume = 0
