@@ -286,6 +286,7 @@ class GenerateRulesIntoTables:
         '''
         #TODO: filter some paths to make number of monitors on each switch similar
         with open("query1_task_info.txt", 'w') as out_file:
+            max_node_appear_times = 12
             node_appear_times = {}
             num_single_path = 0
             for src in self.hosts:
@@ -297,10 +298,16 @@ class GenerateRulesIntoTables:
                     if not single_path_exist:
                         continue
                     #count node appear times
+                    has_node_exceed_max_appear_time = False
                     for node in single_path_nodes:
                         if node not in node_appear_times:
                             node_appear_times[node] = 0
+                        if node_appear_times[node] > max_node_appear_times:
+                            has_node_exceed_max_appear_time = True
+                            break
                         node_appear_times[node] += 1
+                    if has_node_exceed_max_appear_time:
+                        continue
                     #output one task for this path
                     num_single_path += 1
                     node_id_list = []
@@ -310,6 +317,7 @@ class GenerateRulesIntoTables:
                         if node == 's10':
                             debug_node_exist = True
                     if debug_node_exist:
+                        print node_appear_times['s10']
                         print num_single_path, src, dst, single_path_nodes
                     out_file.write("{0} {1} {2} {3}\n" .format(num_single_path, src[1:], dst[1:], " ".join(node_id_list)))
             for switch in self.switches:
