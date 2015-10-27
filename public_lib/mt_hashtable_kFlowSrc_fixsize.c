@@ -203,12 +203,15 @@ void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, ent
                 //replay && the existing flow is_target_flow, 
                 // keep the existing flow
             } else {
-                //replace with the new flow
-                //1. free the existing pair
-                free(next);
-                //2. set the new pair
-                newpair = ht_kfs_fixSize_newpair( key, ret_entry->value, ret_entry->is_target_flow);
-                hashtable->table[ bin ] = newpair;
+                //if the new flow is a target flow, replace; otherwise, keep existing flow
+                if (ret_entry->is_target_flow) {
+                    //replace with the new flow
+                    //1. free the existing pair
+                    free(next);
+                    //2. set the new pair
+                    newpair = ht_kfs_fixSize_newpair( key, ret_entry->value, ret_entry->is_target_flow);
+                    hashtable->table[ bin ] = newpair;
+                }
             }
         }
     // The bin is empty
@@ -250,13 +253,16 @@ void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *ke
                 // replacement && the existing flow is_target_flow
                 /* keep the existing flow */
             } else {
-                //replace with the new flow
-                //1. free the existing pair
-                free(next);
-                //2. set the new pair
-                //a new sampled packet, set the is_target_flow as 0
-                newpair = ht_kfs_fixSize_newpair( key, delta_value, false);
-                hashtable->table[ bin ] = newpair;
+                // here don't replace, as the new flow is not signed as target flow
+                if (false) {
+                    //replace with the new flow
+                    //1. free the existing pair
+                    free(next);
+                    //2. set the new pair
+                    //a new sampled packet, set the is_target_flow as 0
+                    newpair = ht_kfs_fixSize_newpair( key, delta_value, false);
+                    hashtable->table[ bin ] = newpair;
+                }
             }
         }
     /* The bin is empty */
@@ -299,13 +305,16 @@ void ht_kfs_fixSize_add_value_and_update_target_flow_info(hashtable_kfs_fixSize_
                 // replacement && the existing flow is_target_flow
                 /* keep the existing flow */
             } else {
-                //replace with the new flow
-                //1. free the existing pair
-                free(next);
-                //2. set the new pair
-                //a new sampled packet, set is_target_flow
-                newpair = ht_kfs_fixSize_newpair( key, delta_value, is_target_flow);
-                hashtable->table[ bin ] = newpair;
+                //if the new flow is a target flow, replace; otherwise, keep existing flow
+                if (is_target_flow) {
+                    //replace with the new flow
+                    //1. free the existing pair
+                    free(next);
+                    //2. set the new pair
+                    //a new sampled packet, set is_target_flow
+                    newpair = ht_kfs_fixSize_newpair( key, delta_value, is_target_flow);
+                    hashtable->table[ bin ] = newpair;
+                }
             }
         }
     /* The bin is empty */
@@ -357,13 +366,16 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
                 // && the existing flow's captured volume > 0
                 /* keep the existing flow */
             } else {
-                //replace with the new condition information
-                //1. free the existing pair
-                free(next);
-                //2. set the new pair
-                //a new condition packet, value is set to 0
-                newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
-                hashtable->table[ bin ] = newpair;
+                //if the new flow is a target flow, replace; otherwise, keep existing flow
+                if (is_target_flow) {
+                    //replace with the new condition information
+                    //1. free the existing pair
+                    free(next);
+                    //2. set the new pair
+                    //a new condition packet, value is set to 0
+                    newpair = ht_kfs_fixSize_newpair( key, 0, is_target_flow);
+                    hashtable->table[ bin ] = newpair;
+                }
             }
         }
     /* The bin is empty */
