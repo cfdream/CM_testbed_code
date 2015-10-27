@@ -17,6 +17,7 @@ void tag_packet_as_sampled(u_char* packet_buf, int datalink) {
     if (ether_type == ETHERTYPE_VLAN) {
         vlan_hdr = (struct tcpr_802_1q_hdr *)(packet_buf + l2_len);
         vlan_hdr->vlan_priority_c_vid |= TAG_VLAN_PACKET_SAMPLED_VAL;
+        //printf("sampled: vlan_priority_c_vid:%04x\n", vlan_hdr->vlan_priority_c_vid);
     }
 }
 
@@ -65,6 +66,7 @@ void tag_packet_as_target_flow_in_normal_packet(u_char* packet_buf, int datalink
     if (ether_type == ETHERTYPE_VLAN) {
         vlan_hdr = (struct tcpr_802_1q_hdr *)(packet_buf + l2_len);
         vlan_hdr->vlan_priority_c_vid |= TAG_VLAN_TARGET_FLOW_VAL;
+        //printf("target flow: vlan_priority_c_vid:%04x\n", vlan_hdr->vlan_priority_c_vid);
     }
 }
 
@@ -94,8 +96,10 @@ void tag_packet_for_switches(u_char* packet_buf, int datalink, int switchides[],
         int i = 0;
         for (; i < num_switch; i++) {
             int switchid = switchides[i];
+            //printf("tag switchid:%d, TAG_VLAN_FOR_SWITCH_I:%04x\n", switchid, TAG_VLAN_FOR_SWITCH_I(switchid-1));
             vlan_hdr->vlan_priority_c_vid |= TAG_VLAN_FOR_SWITCH_I(switchid-1);
         }
+        //printf("switches: vlan_priority_c_vid:%04x\n", vlan_hdr->vlan_priority_c_vid);
     }
     
 }

@@ -16,7 +16,8 @@
 #define TAG_VLAN_PACKET_SAMPLED_VAL 1
 #define TAG_VLAN_TARGET_FLOW_VAL (1<<1)
 
-#define TAG_VLAN_FOR_SWITCH_I(i) (1<<(i+2))  //i=0,1,...,SENDERS-1
+//skip the 5th bit of vlan_id, it changes even reset
+#define TAG_VLAN_FOR_SWITCH_I(i) ( (i < 2 ? 1<<(i+2) : 1<<(i+3)))  //i=0,1,...,SENDERS-1
 
 typedef struct packet {
     uint32_t srcip;
