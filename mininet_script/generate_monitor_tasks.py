@@ -139,6 +139,35 @@ class GenerateRulesIntoTables:
             elif self.graph['s1'][i].neigh_name=='s3':
                 assert(self.graph['s1'][i].ethid==2)
 
+    ##
+    # @brief get all switches between src and dst
+    #
+    # @param src
+    # @param dst
+    #
+    # @return 
+    def get_single_path_between_nodes(self, src, dst):
+        next_hops_map = self.get_reverse_pre_nodes(dst)
+        single_path_nodes = []
+        cur_node = src
+        while True:
+            next_hops = next_hops_map[cur_node]
+            if len(next_hops) > 1:
+                return False, []
+            next_node = next_hops[0]
+            if next_node == dst:
+                break
+            single_path_nodes.append(next_node)
+            cur_node = next_node
+        return True, single_path_nodes
+
+    ##
+    # @brief If there are ECMP paths between src and dst, find one disjoint switch on each ECMP path
+    #
+    # @param src
+    # @param dst
+    #
+    # @return 
     def get_ecmp_paths_between_nodes(self, src, dst):
         next_hops_map = self.get_reverse_pre_nodes(dst)
         node_queue = deque([src])
@@ -151,7 +180,6 @@ class GenerateRulesIntoTables:
             if next_hops[0] != dst:
                 node_queue.append(next_hops[0])
         return False, []
-
 
     def get_reverse_pre_nodes(self, dst):
         visited_name_id_map={}
@@ -193,48 +221,6 @@ class GenerateRulesIntoTables:
                         expand_name_list.append(neigh_name)
             ith+=1
         return path
-    
-    def get_forward_next_nodes(self, src):
-        visited_name_id_map={}
-        visited_name_id_map[src]=0
-        ith=0
-        expand_name_list=[src]
-        while ith < len(expand_name_list):
-            now_name=expand_name_list[ith]
-            now_id=visited_name_id_map[now_name]
-            neighbors = self.graph[now_name]
-            dst_reached=False
-            for neigh in neighbors:
-                neigh_name=neigh.neigh_name
-                if neigh_name in visited_name_id_map:
-                    continue
-                expand_name_list.append(neigh_name)
-                visited_name_id_map[neigh_name]=now_id+1
-            ith+=1
-        #reverse to get the ECMP paths
-        path={}
-        #every node just needs to be one parent's next list, if it has multi-parents.
-        node_included={}
-        expand_name_list=[]
-        expand_name_list.append(src)
-        ith = 0
-        while ith < len(expand_name_list):
-            now_name=expand_name_list[ith]
-            now_id=visited_name_id_map[now_name]
-            path[now_name] = []
-            neighbors = self.graph[now_name]
-            for neigh in neighbors:
-                neigh_name=neigh.neigh_name
-                neigh_id = visited_name_id_map[neigh_name]
-                if neigh_id == now_id+1:
-                    #one link: now_name=>neigh_name
-                    if neigh_name not in node_included:
-                        path[now_name].append(neigh_name)
-                        node_included[neigh_name] = 1
-                    if neigh_name not in expand_name_list:
-                        expand_name_list.append(neigh_name)
-            ith+=1
-        return path
 
     def get_reverse_pre_forward_next_nodes_test(self):
         print "get_reverse_pre_nodes for h1"
@@ -244,9 +230,11 @@ class GenerateRulesIntoTables:
         path=self.get_forward_next_nodes('h1')
         print sorted(path.items(), key=lambda item:item[0])
 
-    # Condition: high volume at sender; 
-    # Capture: one switch at each path for all the paths, one monitor per path
     def generate_tasks_for_query3(self):
+        '''
+        Condition: high volume at sender; 
+        Capture: one switch at each path for all the paths, one monitor per path
+        '''
         with open("query3_task_info.txt", 'w') as out_file:
             ecmp_node_set = Set(['s4', 's6', 's10', 's11'])
             max_node_appear_times = 14
@@ -289,10 +277,48 @@ class GenerateRulesIntoTables:
             print num_ecmp_paths
             for node, times in node_appear_times_map.items():
                 print node, "  ",  times
+                
+    def generate_tasks_for_query1(self):
+        '''
+        Host measures loss, 
+        if the loss rate is high, 
+        ask all the switches along the path to measure the volume of the high loss flow
+        '''
+        #TODO: filter some paths to make number of monitors on each switch similar
+        with open("query1_task_info.txt", 'w') as out_file:
+            node_appear_times = {}
+            num_single_path = 0
+            for src in self.hosts:
+                for dst in self.hosts:
+                    if src == dst:
+                        continue
+                    #get path between 
+                    single_path_exist, single_path_nodes = self.get_single_path_between_nodes(src, dst)
+                    if not single_path_exist:
+                        continue
+                    #count node appear times
+                    for node in single_path_nodes:
+                        if node not in node_appear_times:
+                            node_appear_times[node] = 0
+                        node_appear_times[node] += 1
+                    #output one task for this path
+                    num_single_path += 1
+                    node_id_list = []
+                    debug_node_exist = False
+                    for node in single_path_nodes:
+                        node_id_list.append(node[1:])
+                        if node == 's10':
+                            debug_node_exist = True
+                    if debug_node_exist:
+                        print num_single_path, src, dst, single_path_nodes
+                    out_file.write("{0} {1} {2} {3}\n" .format(num_single_path, src[1:], dst[1:], " ".join(node_id_list)))
+            for switch in self.switches:
+                if switch in node_appear_times:
+                    print switch, node_appear_times[switch]
 
 generator = GenerateRulesIntoTables()
 generator.read_eth_id_name_topo("eth_id_name_map.txt")
 generator.read_topo("b4_topo_ip_prefixes.txt")
 
-#generator.get_reverse_pre_forward_next_nodes_test()
 generator.generate_tasks_for_query3()
+generator.generate_tasks_for_query1()

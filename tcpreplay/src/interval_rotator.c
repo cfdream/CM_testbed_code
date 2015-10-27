@@ -232,7 +232,10 @@ void* rotate_interval(void* param_ptr) {
         uint32_t to_sleep_msec = cm_experiment_setting.interval_msec_len - rotate_duration_msec;
         
         //wait one interval length
-        usleep(to_sleep_msec * 1000);
+        struct timespec to_sleep_time;
+        to_sleep_time.tv_sec = to_sleep_msec / 1000;
+        to_sleep_time.tv_nsec = (to_sleep_msec % 1000) * 1000000;
+        nanosleep(&to_sleep_time, NULL);
 
         clock_gettime(CLOCK_REALTIME, &spec);
         //1s = 10^3 msec, 1 ns = 10^-6 msec
