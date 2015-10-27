@@ -45,7 +45,7 @@ void write_last_sent_target_flow_map_lost_target_flow(FILE* fp_target_flow) {
         //------------if the flow is not interested by any task on this host. No need to output it-------------
         task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, p_flow);
         if (p_task == NULL) {
-            return;
+            continue;
         }
         
         ++final_target_flow_num;
@@ -126,11 +126,11 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
     while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
         //get one target flow, output to file
         flow_src_t* p_flow = &ret_entry.key;
-        
+
         //------------if the flow is not interested by any task on this host. No need to output it-------------
         task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, p_flow);
         if (p_task == NULL) {
-            return;
+            continue;
         }
         
         int volume = ht_kfs_vi_get(flow_volume_map_pre_interval, p_flow);

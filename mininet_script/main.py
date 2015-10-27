@@ -251,7 +251,7 @@ def query3_compare_algos():
     #------------set target flow threshold
     target_flow_volume = 120000
     target_flow_loss_volume = 0
-    target_flow_loss_rate = 0
+    target_flow_loss_rate = '0.0'
 
     #------------both single and multiple forwarding rules will be installed in the network
     install_rule_type = GenerateRulesIntoTables.BOTH_SINGLE_AND_ECMP_PATH_RULE
