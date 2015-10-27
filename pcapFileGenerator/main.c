@@ -129,6 +129,8 @@ int main(int argc, char** argv) {
             }
             packet.srcip = srcip_mapped_srcip;
             packet.dstip = dstip_mapped_dstip;
+            packet.src_port = rand() % 65536;
+            packet.dst_port = rand() % 65536;
             generate_one_pcap_pkt(&packet, srcip_mapped_nodeid);
         }
     }
