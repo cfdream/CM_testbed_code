@@ -197,7 +197,7 @@ def query1_compare_algos():
     target_flow_loss_rate = '0.0'
 
     #------------only single path forwarding rules will be installed in the network
-    install_rule_type = GenerateRulesIntoTables.ONLY_SINGLE_PATH_RULE 
+    install_rule_type = GenerateRulesIntoTables.BOTH_SINGLE_AND_ECMP_PATH_RULE
 
     #------------Coordination + replace + taggingConditionPkt
     #NOTE: in cm_experiment_setting.txt set inject_or_tag_packet = 1

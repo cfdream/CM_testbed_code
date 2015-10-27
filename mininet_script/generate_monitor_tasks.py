@@ -305,21 +305,22 @@ class GenerateRulesIntoTables:
                         if node_appear_times[node] > max_node_appear_times:
                             has_node_exceed_max_appear_time = True
                             break
-                        node_appear_times[node] += 1
                     if has_node_exceed_max_appear_time:
                         continue
+                    for node in single_path_nodes:
+                        node_appear_times[node] += 1
                     #output one task for this path
                     num_single_path += 1
                     node_id_list = []
                     debug_node_exist = False
                     for node in single_path_nodes:
                         node_id_list.append(node[1:])
-                        if node == 's10':
+                        if node == 's12':
                             debug_node_exist = True
                     if debug_node_exist:
-                        print node_appear_times['s10']
                         print num_single_path, src, dst, single_path_nodes
                     out_file.write("{0} {1} {2} {3}\n" .format(num_single_path, src[1:], dst[1:], " ".join(node_id_list)))
+            print "single_path_num:", num_single_path
             for switch in self.switches:
                 if switch in node_appear_times:
                     print switch, node_appear_times[switch]
