@@ -432,11 +432,48 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
             flow_src.dstip = packet.dstip;
             #endif
             
+            //------------if the packet is not interested by any task on this host. No action on it-------------
+            task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, &flow_src);
+            if (p_task != NULL) {
+                //------------tag which switches to handle the tagging information (sample, targetFlow)-------------
+                tag_packet_for_switches(packet_buf, datalink, p_task->monitor_switch_ids, p_task->num_monitors);
+                
+                //-----------sample packet-------------
+                hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+                /* sample the packet at the sender side */
+                if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
+                    int sampled = 0;
+                    if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
+                        sampled = 1;
+                    } else {
+                        hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
+                        sampled = sample_packet(&packet, total_pkt_len, &g_rand_buffer, flow_sample_map);
+                    }
+                    if (sampled) {
+                        //tag one VLAN bit to mark the packet as sampled
+                        tag_packet_as_sampled(packet_buf, datalink);
+                        //set not_sampled_volume for the flow
+                        update_flow_not_sampled_volume(&flow_src);
+                    }
+                    //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
+                }
+
+                //----------- tag existing packet to carry the target flow information-----------
+                //tag packet only in coordination mode
+                if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE
+                    && cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
+                    if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
+                        // the flow is a target flow
+                        tag_packet_as_target_flow_in_normal_packet(packet_buf, datalink);
+                    }
+                }
+            }
+
             //update flow information, this may make the target flow information of the flow changed.
             update_flow_normal_volume(&flow_src, total_pkt_len);
             ++data_warehouse.pkt_num_sent[data_warehouse.active_idx];
             data_warehouse.volume_sent[data_warehouse.active_idx] += packet.len;
-
+            /*
             if (ENABLE_DEBUG && packet.srcip == DEBUG_SRCIP && packet.dstip == DEBUG_DSTIP &&
                 packet.src_port == DEBUG_SPORT && packet.dst_port == DEBUG_DPORT) {
                 char src_str[100];
@@ -448,46 +485,7 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                     src_str, dst_str, 
                     packet.src_port, packet.dst_port, seqid, packet.len);
             }
-           
-            //------------if the packet is not interested by any task on this host. No action on it-------------
-            task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, &flow_src);
-            if (p_task == NULL) {
-                return;
-            }
-
-            //------------tag which switches to handle the tagging information (sample, targetFlow)-------------
-            tag_packet_for_switches(packet_buf, datalink, p_task->monitor_switch_ids, p_task->num_monitors);
-            
-            //-----------sample packet-------------
-            hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
-            /* sample the packet at the sender side */
-            if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
-                int sampled = 0;
-                if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
-                    sampled = 1;
-                } else {
-                    hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
-                    sampled = sample_packet(&packet, total_pkt_len, &g_rand_buffer, flow_sample_map);
-                }
-                if (sampled) {
-                    //tag one VLAN bit to mark the packet as sampled
-                    tag_packet_as_sampled(packet_buf, datalink);
-                    //set not_sampled_volume for the flow
-                    update_flow_not_sampled_volume(&flow_src);
-                }
-                //printf("pkt srcip:%u, sampled:%d\n", packet.srcip, sampled);
-            }
-
-            //----------- tag existing packet to carry the target flow information-----------
-            //tag packet only in coordination mode
-            if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE
-                && cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
-                if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
-                    // the flow is a target flow
-                    tag_packet_as_target_flow_in_normal_packet(packet_buf, datalink);
-                }
-            }
-
+            */
             break;
         default:
             return; /* non-IP */
