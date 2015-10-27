@@ -479,7 +479,9 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
             }
 
             //----------- tag existing packet to carry the target flow information-----------
-            if (cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
+            //tag packet only in coordination mode
+            if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE
+                && cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
                 if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
                     // the flow is a target flow
                     tag_packet_as_target_flow_in_normal_packet(packet_buf, datalink);
