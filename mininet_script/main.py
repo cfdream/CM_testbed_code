@@ -246,7 +246,7 @@ def query3_compare_algos():
     #50000 bytes memory => memory_times = 0.144085991
     #mem50kbytes_memory_times = 0.144085991 #for 8 bytes per bucket
     #previous create 307727 buckets, we need 24742 buckets, which is 300kbytes (<srcip, dstip>, counter, 1 bit)
-    mem50kbytes_memory_times = 0.144085991 * 0.080402435
+    mem50kbytes_memory_times = 0.144085991 * 0.080402435 / 2
 
     #------------set switch_drop_rate to make avg. loss rate is 0%
     switch_drop_rate = 0
