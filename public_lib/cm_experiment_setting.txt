@@ -1,6 +1,8 @@
 #for experiment, one interval len, each sender sends 1.5 million packets
+#3750 seconds, * 1000 milliseconds
+interval_msec_len:3750000
 #7500 seconds, * 1000 milliseconds
-interval_msec_len:7500000
+#interval_msec_len:7500000
 #750seconds, *1000 milliseconds
 #interval_msec_len:750000
 # test:per sender sends 150k packets

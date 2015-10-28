@@ -50,7 +50,8 @@ def run_one_round(install_rule_type):
 
     #------------wait for experiments to run------------
     #time.sleep(15500); #7500 per interval, 2 intervals
-    time.sleep(8500); #7500 per interval, 1 intervals
+    #time.sleep(8500); #7500 per interval, 1 intervals
+    time.sleep(4500); #3750 per interval, 1 intervals
     #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
     #time.sleep(2300); #750 per interval, 2 intervals + wait one interval
@@ -189,7 +190,7 @@ def query1_compare_algos():
     mem50kbytes_memory_times = 0.144085991
     
     #------------set switch_drop_rate to make avg. loss rate is 5%
-    switch_drop_rate = 0.024
+    switch_drop_rate = 0.034
 
     #------------set target flow threshold
     target_flow_volume = 0
@@ -243,13 +244,15 @@ def query3_compare_algos():
     Capture: one switch at each path for all the paths, one monitor per path
     '''
     #50000 bytes memory => memory_times = 0.144085991
-    mem50kbytes_memory_times = 0.144085991 #for 8 bytes per bucket
+    #mem50kbytes_memory_times = 0.144085991 #for 8 bytes per bucket
+    #previous create 307727 buckets, we need 24742 buckets, which is 300kbytes (<srcip, dstip>, counter, 1 bit)
+    mem50kbytes_memory_times = 0.144085991 * 0.080402435
 
     #------------set switch_drop_rate to make avg. loss rate is 0%
     switch_drop_rate = 0
 
     #------------set target flow threshold
-    target_flow_volume = 120000
+    target_flow_volume = 60000
     target_flow_loss_volume = 0
     target_flow_loss_rate = '0.0'
 
@@ -275,7 +278,7 @@ def query3_compare_algos():
     #        for replace in [1, 0]:
     #            for memory_times in [1, 2, 4, 8, 16, 32]:
     #                for freq in [500]:
-                        config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
+    #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
     #                    run_one_round(install_rule_type)
     #                    move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)
     
