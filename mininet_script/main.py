@@ -51,7 +51,7 @@ def run_one_round(install_rule_type):
     #------------wait for experiments to run------------
     #time.sleep(15500); #7500 per interval, 2 intervals
     #time.sleep(8500); #7500 per interval, 1 intervals
-    time.sleep(4500); #3750 per interval, 1 intervals
+    time.sleep(5500); #3750 per interval, 1 intervals
     #time.sleep(23000); #750 per interval, 30 intervals
     #time.sleep(11300); #750 per interval, 15 intervals
     #time.sleep(2300); #750 per interval, 2 intervals + wait one interval

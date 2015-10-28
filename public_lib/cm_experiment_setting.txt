@@ -24,7 +24,8 @@ inject_or_tag_packet:1
 #<srcip, dstip>: one round 750seconds: #flows in 35 rounds = 536k
 #case2: <srcip, dstip>: one round statistics: every sender:volume>600k<=>~201 flows, min(#pkt)=413, median(#pkt)=1149;  volume>60k<=> ~1434 flows, min(#pkt)=31, median(#pkt)=124;
 #case3: <srcip,dstip>: ten rounds statistics: every sender:volume> 120k #pkt> 200 <=> 3238 flows. Suppose 5% avg loss rate, there would be 10 pkts lost for target flows, reasonable.
-#####use case3
+#case4: <srcip,dstip>: five rounds statistics: every sender:volume> 60k #pkt> 100 <=> ? flows. Suppose 10% avg loss rate, there would be 10 pkts lost for target flows, reasonable.
+#####use case4
 target_flow_volume:0
 target_flow_loss_rate:0
 #expected loss volume in 10 intervals in case3
