@@ -26,7 +26,7 @@ class results_analyzer_c():
                                 self.new_output_one_setting_result(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet, one_setting_result)
 
     def new_output_one_setting_result(self, host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet, one_setting_result):
-        with open('result_analysis_query3_result.num', 'a') as out_file:
+        with open('result_analysis_query1_result.num', 'a') as out_file:
             #setting info
             out_file.write("{host_switch_sample}\t{replace}\t{memory_type}\t{memory_times}\t{freq}\t{inject_or_tag_packet}\t{avg_fn}\t{stdv_fn}\t{avg_fp}\t{stdv_fp}\t{avg_accuracy}\t{stdv_accuracy}\t{avg_sample_map_size}\t{raw_host_sample_switch_hold_accuracy}\t{avg_real_target_flow_num}\t{avg_fn_num}\t{avg_condition_pkt_num}\n" \
             .format(host_switch_sample=host_switch_sample, \
@@ -44,7 +44,7 @@ class results_analyzer_c():
                 avg_fn_num = one_setting_result.avg_fn_num, \
                 avg_condition_pkt_num = 0
             )) 
-        with open('result_analysis_query3_result.txt', 'a') as out_file:
+        with open('result_analysis_query1_result.txt', 'a') as out_file:
             #setting info
             out_file.write("host_switch_sample={host_switch_sample}\treplace={replace}\tmemory_type={memory_type}\tmemory_times={memory_times}\tfreq={freq}\tinject_or_tag_packet={inject_or_tag_packet}\tavg_fn={avg_fn}\tstdv_fn={stdv_fn}\tavg_fp={avg_fp}\tstdv_fp={stdv_fp}\tavg_accuracy={avg_accuracy}\tstdv_accuracy={stdv_accuracy}\tavg_sample_map_size={avg_sample_map_size}\traw_host_sample_switch_hold_accuracy={raw_host_sample_switch_hold_accuracy}\tavg_real_target_flow_num={avg_real_target_flow_num}\tavg_fn_num={avg_fn_num}\tavg_condition_pkt_num={avg_condition_pkt_num}\n" \
             .format(host_switch_sample=host_switch_sample, \
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     print(result_path)
 
     task_manager = TaskManager()
-    task_manager.readTasksFromFile("../public_lib/query3_task_info.txt")
+    task_manager.readTasksFromFile("../public_lib/query1_task_info.txt")
 
     results_analyzer = results_analyzer_c()
     results_analyzer.get_all_setting_result(result_path, task_manager)
