@@ -291,7 +291,6 @@ def query3_compare_algos():
     for host_switch_sample in [1]:
         for memory_type in [0]:
             for replace in [0]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
                 for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
