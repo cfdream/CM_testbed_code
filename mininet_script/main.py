@@ -187,10 +187,11 @@ def query1_compare_algos():
     ask all the switches along the path to measure the volume of the high loss flow
     '''
     #50000 bytes memory => memory_times = 0.144085991
-    mem50kbytes_memory_times = 0.144085991
+    #query1 has tasks 2 times comapred to query3, thus memory two times here as well.
+    mem50kbytes_memory_times = 0.144085991 * 0.080402435
     
     #------------set switch_drop_rate to make avg. loss rate is 5%
-    switch_drop_rate = 0.034
+    switch_drop_rate = 0.028
 
     #------------set target flow threshold
     target_flow_volume = 0
@@ -206,7 +207,7 @@ def query1_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]: #freq is useless in tagging
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -218,7 +219,7 @@ def query1_compare_algos():
     #for host_switch_sample in [0]:
     #    for memory_type in [0]:
     #        for replace in [1, 0]:
-    #            for memory_times in [1, 2, 4, 8, 16, 32]:
+    #            for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
     #                for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
     #                    run_one_round(install_rule_type)
@@ -232,7 +233,7 @@ def query1_compare_algos():
     for host_switch_sample in [1]:
         for memory_type in [0]:
             for replace in [0]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -264,7 +265,7 @@ def query3_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]: #freq is useless in tagging
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -276,7 +277,7 @@ def query3_compare_algos():
     #for host_switch_sample in [0]:
     #    for memory_type in [0]:
     #        for replace in [1, 0]:
-    #            for memory_times in [1, 2, 4, 8, 16, 32]:
+    #            for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
     #                for freq in [500]:
     #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
     #                    run_one_round(install_rule_type)
@@ -291,6 +292,7 @@ def query3_compare_algos():
         for memory_type in [0]:
             for replace in [0]:
                 for memory_times in [1, 2, 4, 8, 16, 32]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -307,7 +309,7 @@ def experiment1_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]: #freq is useless in tagging
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
                         run_one_round()
@@ -318,7 +320,7 @@ def experiment1_compare_algos():
     #for host_switch_sample in [0]:
     #    for memory_type in [0]:
     #        for replace in [1]:
-    #            for memory_times in [1, 2, 4, 8, 16, 32]:
+    #            for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
     #                for freq in [500]:
     #                    config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
     #                    run_one_round()
@@ -333,7 +335,7 @@ def experiment1_compare_algos():
     for host_switch_sample in [1]:
         for memory_type in [0]:
             for replace in [0, 1]:
-                for memory_times in [1, 2, 4, 8, 16, 32]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, target_flow_loss_rate, inject_or_tag_packet)
                         run_one_round()
