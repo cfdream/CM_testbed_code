@@ -13,7 +13,7 @@ class results_analyzer_c():
             for host_switch_sample in [0, 1]:
                 for replace in [0, 1]:
                     for memory_type in [0]:
-                        for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
+                        for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16, 32]:
                             for freq in [500, 1000, 2000, 4000, 8000, 16000]:
                                 #one setting result path
                                 one_setting_path = '{0}/sample_{1}_replace_{2}_mem_{3}_mem_times_{4}_freq_{5}_tag_{6}' .format(result_path, host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet)

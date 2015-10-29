@@ -31,7 +31,8 @@ target_flow_loss_rate:0
 #expected loss volume in 10 intervals in case3
 target_flow_loss_volume:6000
 #when target_flow_volume=0, this is used to set the default sampling_rate
-target_flow_volume_in_sampling:60000
+#for query 4, volume: 120000, loss: 6000
+target_flow_volume_in_sampling:120000
 #####
 #ten round: the following switch volume is got from b4 topo with each sender sending 1.5 million packets
 #pcap file generated from 29 intervals (750s per interval)
