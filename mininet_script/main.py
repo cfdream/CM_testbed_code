@@ -223,7 +223,7 @@ def query1_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1]:
-                for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16, 32]:
                     for freq in [500]: #freq is useless in tagging
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -249,7 +249,7 @@ def query1_compare_algos():
     for host_switch_sample in [1]:
         for memory_type in [0]:
             for replace in [0]:
-                for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16, 32]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -330,7 +330,7 @@ def query3_compare_algos():
     for host_switch_sample in [0]:
         for memory_type in [0]:
             for replace in [1]:
-                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16, 32]:
                     for freq in [500]: #freq is useless in tagging
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
                         run_one_round(install_rule_type)
@@ -356,7 +356,7 @@ def query3_compare_algos():
     for host_switch_sample in [1]:
         for memory_type in [0]:
             for replace in [0]:
-                for memory_times in [0.25, 0.5, 1, 2, 4, 8]:
+                for memory_times in [0.25, 0.5, 1, 2, 4, 8, 16, 32]:
                     for freq in [500]:
                         config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
                         run_one_round(install_rule_type)
