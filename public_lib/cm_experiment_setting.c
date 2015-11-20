@@ -84,11 +84,19 @@ int read_cm_experiment_setting_from_file(void) {
             if (strcmp(*(tokens+0), "target_flow_loss_volume") == 0 && *(tokens+1)) {
                 cm_experiment_setting.target_flow_setting.loss_volume_threshold = strtol(*(tokens+1), NULL, 10);
             }
-
             //target_flow_volume_in_sampling
             if (strcmp(*(tokens+0), "target_flow_volume_in_sampling") == 0 && *(tokens+1)) {
                 cm_experiment_setting.sample_hold_setting.target_flow_volume_in_sampling = strtol(*(tokens+1), NULL, 10);
             }
+            //loss_map_mem_type
+            if (strcmp(*(tokens+0), "sender_loss_map_mem_type") == 0 && *(tokens+1)) {
+                cm_experiment_setting.sender_setting.loss_map_mem_type = (enum sender_mem_type_e)strtol(*(tokens+1), NULL, 10);
+            }
+            //fix_loss_map_bucket_size
+            if (strcmp(*(tokens+0), "fix_loss_map_bucket_size") == 0 && *(tokens+1)) {
+                cm_experiment_setting.sender_setting.fix_loss_map_bucket_size = strtol(*(tokens+1), NULL, 10);
+            }
+
             //switch1_interval_volume
             if (strcmp(*(tokens+0), "switch1_interval_volume") == 0 && *(tokens+1)) {
                 cm_experiment_setting.sample_hold_setting.switches_interval_volume[0] = strtoll(*(tokens+1), NULL, 10);
@@ -150,6 +158,10 @@ int read_cm_experiment_setting_from_file(void) {
 int init_other_experiment_setting(void) {
     cm_experiment_setting.sample_hold_setting.default_byte_sampling_rate 
         = 1.0 / cm_experiment_setting.sample_hold_setting.target_flow_volume_in_sampling * OVER_SAMPLING_RATIO;
+    if(cm_experiment_setting.target_flow_setting.loss_volume_threshold != 0 ) {
+        cm_experiment_setting.sender_setting.default_loss_byte_sampling_rate 
+            = 1.0 / cm_experiment_setting.target_flow_setting.loss_volume_threshold * SENDER_LOSS_VOLUME_OVER_SAMPLING_RATE;
+    }
 
     //get uniform_mem_ratio_to_diverse_mem
     uint64_t all_switches_volume = 0;

@@ -118,6 +118,7 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
     hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
     hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_flow_loss_volume_map();
+    hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_fixed_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
     hashtable_kfs_vi_t* flow_not_sampled_volume_map = data_warehouse_get_unactive_flow_not_sampled_volume_map();
     hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
@@ -136,13 +137,18 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         int volume = ht_kfs_vi_get(flow_volume_map_pre_interval, p_flow);
         float loss_rate = ht_kfs_vf_get(flow_loss_rate_map_pre_interval, p_flow);
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
+        int loss_volume_from_fixedmap = 0;
+        entry_kfs_fixSize_t ret_entry;
+        if(ht_kfs_fixSize_get(fixed_flow_loss_volume_map_pre_interval, p_flow, &ret_entry) == 0) {
+            loss_volume_from_fixedmap = ret_entry.value;
+        }
         int not_sampled_volume = ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow);
         int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
         #ifdef FLOW_SRC
-        fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
+        fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, loss_volume_from_fixedmap, not_sampled_volume, target_flow_sent_out);
         #endif
         #ifdef FLOW_SRC_DST
-        fprintf(fp_target_flow, "%u\t%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, p_flow->dstip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
+        fprintf(fp_target_flow, "%u\t%u\t%d\t%f\t%d\t%d\t%d\t%d\n", p_flow->srcip, p_flow->dstip, volume, loss_rate, loss_volume, loss_volume_from_fixedmap, not_sampled_volume, target_flow_sent_out);
         #endif
         fflush(fp_target_flow);
     }

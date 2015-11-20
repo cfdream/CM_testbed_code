@@ -7,6 +7,7 @@
 
 //traditional sample and hold
 double pkt_sample_rate_trad(int total_pkt_len);
+double pkt_sample_rate_trad_sender(int total_pkt_len);
 
 /*function pointer to get the right byte sampling model*/
 //extern double (*get_pkt_sample_rate)(flow_src_t*, packet_t*)

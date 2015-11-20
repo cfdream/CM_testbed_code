@@ -9,6 +9,10 @@ double pkt_sample_rate_trad(int total_pkt_len) {
     double rate = cm_experiment_setting.sample_hold_setting.default_byte_sampling_rate * total_pkt_len;            
     return rate > 1 ? 1 : rate;
 }
+double pkt_sample_rate_trad_sender(int total_pkt_len) {
+    double rate = cm_experiment_setting.sender_setting.default_loss_byte_sampling_rate * total_pkt_len;            
+    return rate > 1 ? 1 : rate;
+}
 
 /*
 //linear adjusting

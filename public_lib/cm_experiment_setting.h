@@ -32,6 +32,11 @@ enum switch_mem_type_e {
     DIVERSE
 };
 
+enum sender_mem_type_e {
+    INFINITE,
+    FIXED
+};
+
 enum host_switch_sample_e {
     HOST_SAMPLE,
     SWITCH_SAMPLE
@@ -60,6 +65,12 @@ typedef struct target_flow_setting_s {
     int loss_volume_threshold;
 }target_flow_setting_t;
 
+typedef struct sender_setting_s {
+    enum sender_mem_type_e loss_map_mem_type;
+    float fix_loss_map_bucket_size;
+    float default_loss_byte_sampling_rate;
+}sender_setting_t;
+
 typedef struct cm_experiment_setting_s {
     int interval_msec_len;
     int condition_msec_freq;
@@ -72,7 +83,7 @@ typedef struct cm_experiment_setting_s {
 
     sample_hold_setting_t sample_hold_setting;
     target_flow_setting_t target_flow_setting;
-
+    sender_setting_t sender_setting;
 } cm_experiment_setting_t;
 
 extern cm_experiment_setting_t cm_experiment_setting;

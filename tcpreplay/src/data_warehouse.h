@@ -5,6 +5,8 @@
 #include "../../public_lib/mt_hashtable_kFlow_vLinklist.h"
 #include "../../public_lib/mt_hashtable_kFlowSrc_vInt.h"
 #include "../../public_lib/mt_hashtable_kFlowSrc_vFloat.h"
+#include "../../public_lib/mt_hashtable_kFlowSrc_fixsize.h"
+#include "../../public_lib/cm_experiment_setting.h"
 #include "task_manager.h"
 
 #define BUFFER_NUM 2
@@ -31,6 +33,7 @@ typedef struct data_warehouse_s {
     //4 hashtables for recording flow properties
     //here are <srcip> flow
     hashtable_kfs_vi_t* flow_volume_map[BUFFER_NUM];
+    hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map[BUFFER_NUM];
     hashtable_kfs_vi_t* flow_loss_volume_map[BUFFER_NUM];
     hashtable_kfs_vf_t* flow_loss_rate_map[BUFFER_NUM];
     hashtable_kfs_vi_t* target_flow_map[BUFFER_NUM];
@@ -77,6 +80,8 @@ hashtable_vl_t* data_warehouse_get_flow_recePktList_map();
 
 hashtable_kfs_vi_t* data_warehouse_get_flow_volume_map();
 
+hashtable_kfs_fixSize_t* data_warehouse_get_fixed_flow_loss_volume_map();
+
 hashtable_kfs_vi_t* data_warehouse_get_flow_loss_volume_map();
 
 hashtable_kfs_vf_t* data_warehouse_get_flow_loss_rate_map();
@@ -90,6 +95,8 @@ hashtable_kfs_vi_t* data_warehouse_get_flow_not_sampled_volume_map();
 hashtable_kfs_vi_t* data_warehouse_get_unactive_target_flow_map();
 
 hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_volume_map();
+
+hashtable_kfs_fixSize_t* data_warehouse_get_unactive_fixed_flow_loss_volume_map();
 
 hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_loss_volume_map();
 
