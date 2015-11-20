@@ -126,9 +126,8 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
             return;
         }
 
-        int loss_volume = 0;
         //update loss volume
-        loss_volume = ht_kfs_vi_get(flow_loss_volume_map, p_flow);
+        int loss_volume = ht_kfs_vi_get(flow_loss_volume_map, p_flow);
         if (loss_volume < 0) {
             loss_volume = 0;
         }
@@ -140,7 +139,9 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
             if (sample_packet_fixSize_map_sender(p_flow, loss_volume, &g_rand_buffer, fixed_flow_loss_volume_map)) {
                 ht_kfs_fixSize_add_value(fixed_flow_loss_volume_map, p_flow, added_loss_volume);
             }
-            //get loss_volume from fixed size hashmap
+            //get loss_volume from fixed size hashmap; 
+            //if not exist, loss_volume = added_loss_volume
+            loss_volume = added_loss_volume;
             entry_kfs_fixSize_t ret_entry;
             if (ht_kfs_fixSize_get(fixed_flow_loss_volume_map, p_flow, &ret_entry) == 0) {
                 loss_volume = ret_entry.value;
