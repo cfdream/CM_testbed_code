@@ -331,7 +331,7 @@ def query1_change_sender_loss_volume_map_size():
         for fix_loss_map_bucket_size_times in [1, 2, 4, 8, 16]:
             config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, fix_loss_map_bucket_size_times * fix_loss_map_bucket_size, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
             run_one_round(install_rule_type)
-            move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet, fix_loss_map_bucket_size * fix_loss_map_bucket_size_times)
+            move_one_round_data(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet, target_flow_loss_volume, fix_loss_map_bucket_size * fix_loss_map_bucket_size_times)
 
 def query3_compare_algos():
     '''

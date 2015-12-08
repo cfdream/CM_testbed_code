@@ -26,7 +26,7 @@
 
 struct entry_kfs_fixSize_s {
 	flow_src_t key;
-    bool is_target_flow;
+    int selected_level; //larger value has higher priority
 	KEY_INT_TYPE value;
 };
 
@@ -64,7 +64,7 @@ void ht_kfs_fixSize_refresh( hashtable_kfs_fixSize_t *hashtable );
 int ht_kfs_fixSize_hash( hashtable_kfs_fixSize_t *hashtable, flow_src_t *key );
 
 /* Create a key-value pair. */
-entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value, bool is_target_flow );
+entry_kfs_fixSize_t *ht_kfs_fixSize_newpair( flow_src_t *key, KEY_INT_TYPE value, int selected_level);
 
 /**
 * @brief Retrieve a key-value pair from a hash table.
@@ -88,13 +88,13 @@ bool ht_kfs_fixSize_is_sampled(hashtable_kfs_fixSize_t *hashtable, flow_src_t* k
 
 /* Insert a key-value pair into a hash table. */
 //replaced by the followed two functions
-void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, entry_kfs_fixSize_t* ret_entry);
+//void ht_kfs_fixSize_set(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, entry_kfs_fixSize_t* ret_entry);
 
 void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value);
 
-void ht_kfs_fixSize_add_value_and_update_target_flow_info(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value, bool is_target_flow);
+void ht_kfs_fixSize_add_value_and_update_selected_level_info(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, KEY_INT_TYPE delta_value, int selected_level);
 
-void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, bool is_target_flow);
+void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, int selected_level);
 
 /* del a key-value pair from a hash table. */
 void ht_kfs_fixSize_del( hashtable_kfs_fixSize_t *hashtable, flow_src_t *key);
@@ -105,7 +105,7 @@ void ht_kfs_fixSize_del( hashtable_kfs_fixSize_t *hashtable, flow_src_t *key);
  */
 int ht_kfs_fixSize_next(hashtable_kfs_fixSize_t *hashtable, entry_kfs_fixSize_t* entry);
 
-hashtable_kfs_fixSize_t* ht_kfs_fixSize_copy(hashtable_kfs_fixSize_t *source_hashtable);
+//hashtable_kfs_fixSize_t* ht_kfs_fixSize_copy(hashtable_kfs_fixSize_t *source_hashtable);
 
 //bool is_target_flow(hashtable_kfs_fixSize_t* target_flow_map, flow_src_t* key);
 

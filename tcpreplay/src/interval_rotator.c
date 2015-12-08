@@ -115,7 +115,7 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         return;
     }
     fflush(fp_target_flow);
-    hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
+    //hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
     hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_flow_loss_volume_map();
     hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_fixed_flow_loss_volume_map();
@@ -124,7 +124,7 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
     hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
 
     entry_kfs_vi_t ret_entry;
-    while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
+    while (ht_kfs_vi_next(flow_loss_volume_map_pre_interval, &ret_entry) == 0) {
         //get one target flow, output to file
         flow_src_t* p_flow = &ret_entry.key;
 

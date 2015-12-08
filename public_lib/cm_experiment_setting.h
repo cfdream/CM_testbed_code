@@ -25,7 +25,7 @@
 #define CM_RECEIVER_TARGET_FLOW_FNAME_PREFIX "/tmp/switch/"
 #define CM_RECEIVER_TARGET_FLOW_FNAME_SUFFIX "_intervals_target_flows.txt"
 
-#define CM_EXPERIMENT_SETTING_FNAME "/home/ubuntu/workspace/CM_testbed_code/public_lib/cm_experiment_setting.txt"
+#define CM_EXPERIMENT_SETTING_FNAME "/home/xuemei/workspace/CM_testbed_code/public_lib/cm_experiment_setting.txt"
 
 enum switch_mem_type_e {
     UNIFORM,

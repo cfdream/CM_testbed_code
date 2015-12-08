@@ -140,8 +140,8 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
                 ht_kfs_fixSize_add_value(fixed_flow_loss_volume_map, p_flow, added_loss_volume);
             }
             //get loss_volume from fixed size hashmap; 
-            //if not exist, loss_volume = added_loss_volume
-            loss_volume = added_loss_volume;
+            //if not exist, loss_volume = 0
+            loss_volume = 0;
             entry_kfs_fixSize_t ret_entry;
             if (ht_kfs_fixSize_get(fixed_flow_loss_volume_map, p_flow, &ret_entry) == 0) {
                 loss_volume = ret_entry.value;
@@ -179,6 +179,7 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
 
     hashtable_kfs_vi_t* flow_volume_map = data_warehouse_get_flow_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
+    hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map = data_warehouse_get_fixed_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
     hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
 
@@ -195,6 +196,15 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map, p_flow);
         if (loss_volume < 0) {
             loss_volume = 0;
+        }
+        if (cm_experiment_setting.sender_setting.loss_map_mem_type == FIXED) {
+            //get loss_volume from fixed size hashmap; 
+            //if not exist, loss_volume = 0
+            loss_volume = 0;
+            entry_kfs_fixSize_t ret_entry;
+            if (ht_kfs_fixSize_get(fixed_flow_loss_volume_map, p_flow, &ret_entry) == 0) {
+                loss_volume = ret_entry.value;
+            }
         }
 
         //update loss rate

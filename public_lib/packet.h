@@ -13,11 +13,18 @@
 #define MAX_PAYLOAD_SIZE (5000-58)
 
 //16 bits can be used at most
+//bit 1
 #define TAG_VLAN_PACKET_SAMPLED_VAL 1
+//bit 2
 #define TAG_VLAN_TARGET_FLOW_VAL (1<<1)
+//bit 2, 3 (TAG_VLAN_TARGET_FLOW_VAL is invalid if this is valid)
+#define SELECTED_FLOW_VAL_MASK 0x00000006
+#define TAG_VLAN_SELECTED_FLOW_VAL(selected_level) (selected_level << 1)
+#define GET_VLAN_SELECTED_FLOW_VAL(vlan_val) ((vlan_val & SELECTED_FLOW_VAL_MASK) >> 1)
 
 //skip the 5th bit of vlan_id, it changes even reset
-#define TAG_VLAN_FOR_SWITCH_I(i) ( (i < 2 ? 1<<(i+2) : 1<<(i+3)))  //i=0,1,...,SENDERS-1
+//use the bits 4, no 5, 6, 7, 8, ..., 16
+#define TAG_VLAN_FOR_SWITCH_I(i) ( (i < 1 ? 1<<(i+3) : 1<<(i+4)))  //i=0,1,...,SENDERS-1
 
 typedef struct packet {
     uint32_t srcip;
@@ -28,7 +35,7 @@ typedef struct packet {
     uint32_t seqid;
     uint16_t len;   //head len + payload len
     bool sampled;
-    bool is_target_flow;
+    uint32_t selected_level;
 }packet_s;
 
 typedef packet_s packet_t;
