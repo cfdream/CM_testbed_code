@@ -16,15 +16,16 @@
 //bit 1
 #define TAG_VLAN_PACKET_SAMPLED_VAL 1
 //bit 2
-#define TAG_VLAN_TARGET_FLOW_VAL (1<<1)
+//#define TAG_VLAN_TARGET_FLOW_VAL (1<<1)
 //bit 2, 3 (TAG_VLAN_TARGET_FLOW_VAL is invalid if this is valid)
 #define SELECTED_FLOW_VAL_MASK 0x00000006
-#define TAG_VLAN_SELECTED_FLOW_VAL(selected_level) (selected_level << 1)
+//selected_level: (0, 1, 2, 3)
+#define TAG_VLAN_SELECTED_FLOW_VAL(selected_level) ((selected_level << 1) & SELECTED_FLOW_VAL_MASK)
 #define GET_VLAN_SELECTED_FLOW_VAL(vlan_val) ((vlan_val & SELECTED_FLOW_VAL_MASK) >> 1)
 
 //skip the 5th bit of vlan_id, it changes even reset
 //use the bits 4, no 5, 6, 7, 8, ..., 16
-#define TAG_VLAN_FOR_SWITCH_I(i) ( (i < 1 ? 1<<(i+3) : 1<<(i+4)))  //i=0,1,...,SENDERS-1
+#define TAG_VLAN_FOR_SWITCH_I(i) ( (i < 1 ? 1<<(i+3) : 1<<(i+4)))  //i=0,1,...,SENDERS-1 ( 12-1=11 )
 
 typedef struct packet {
     uint32_t srcip;

@@ -75,7 +75,6 @@ void tag_selected_flow_level_in_normal_packet(u_char* packet_buf, int datalink, 
 *
 * @param packet_buf
 * @param datalink
-*/
 void tag_packet_as_target_flow_in_normal_packet(u_char* packet_buf, int datalink) {
     int l2_len = 0;
     uint16_t ether_type;
@@ -86,7 +85,7 @@ void tag_packet_as_target_flow_in_normal_packet(u_char* packet_buf, int datalink
             l2_len = ntohs(*((uint16_t*)&packet_buf[4]));
             l2_len += 6;
         } else
-            l2_len = 4; /* no header extensions */
+            l2_len = 4; 
     }
 
     ether_type = ntohs(((eth_hdr_t*)(packet_buf + l2_len))->ether_type);
@@ -96,6 +95,7 @@ void tag_packet_as_target_flow_in_normal_packet(u_char* packet_buf, int datalink
         //printf("target flow: vlan_priority_c_vid:%04x\n", vlan_hdr->vlan_priority_c_vid);
     }
 }
+*/
 
 /**
 * @brief tag the packet to tell which switch to use the packet
@@ -131,6 +131,7 @@ void tag_packet_for_switches(u_char* packet_buf, int datalink, int switchides[],
     
 }
 
+/*
 void tag_packet_as_target_flow(struct tcpr_802_1q_hdr* p_ethernet_header_vlan) {
     p_ethernet_header_vlan->vlan_priority_c_vid = TAG_VLAN_TARGET_FLOW_VAL;
 }
@@ -138,3 +139,4 @@ void tag_packet_as_target_flow(struct tcpr_802_1q_hdr* p_ethernet_header_vlan) {
 void tag_packet_as_not_target_flow(struct tcpr_802_1q_hdr* p_ethernet_header_vlan) {
     p_ethernet_header_vlan->vlan_priority_c_vid = 0;
 }
+*/

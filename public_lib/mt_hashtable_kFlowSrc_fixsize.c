@@ -195,6 +195,7 @@ void ht_kfs_fixSize_add_value(hashtable_kfs_fixSize_t *hashtable, flow_src_t *ke
             next->value += delta_value;
         } else {
             //nothing needs to be done in this case
+            ++hashtable->collision_times;
         }
     /* The bin is empty */
     } else {
@@ -262,7 +263,7 @@ void ht_kfs_fixSize_add_value_and_update_selected_level_info(hashtable_kfs_fixSi
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, int selected_level) {
+void ht_kfs_fixSize_set_selected_level(hashtable_kfs_fixSize_t *hashtable, flow_src_t *key, int selected_level) {
     int bin = 0;
     entry_kfs_fixSize_t *newpair = NULL;
     entry_kfs_fixSize_t *next = NULL;
@@ -318,6 +319,7 @@ void ht_kfs_fixSize_set_target_flow(hashtable_kfs_fixSize_t *hashtable, flow_src
     /* The bin is empty */
     } else {
         //replacement && a new condition packet, value is set to 0
+        //not replacement mode, ignore the condition signal
         if (cm_experiment_setting.replacement && selected_level > 0) {
             newpair = ht_kfs_fixSize_newpair( key, 0, selected_level);
             hashtable->table[ bin ] = newpair;
