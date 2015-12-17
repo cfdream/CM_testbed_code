@@ -24,8 +24,8 @@ int data_warehouse_init() {
         return -1;
     }
 
-    data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
-    if (data_warehouse.last_sent_target_flow_map == NULL) {
+    data_warehouse.last_sent_flow_selected_level_map = ht_kfs_vi_create();
+    if (data_warehouse.last_sent_flow_selected_level_map == NULL) {
         return -1;
     }
 
@@ -47,8 +47,8 @@ int data_warehouse_init() {
         if (data_warehouse.flow_loss_rate_map[a_idx] == NULL) {
             return -1;
         }
-        data_warehouse.target_flow_map[a_idx] = ht_kfs_vi_create();
-        if (data_warehouse.target_flow_map[a_idx] == NULL) {
+        data_warehouse.flow_selected_level_map[a_idx] = ht_kfs_vi_create();
+        if (data_warehouse.flow_selected_level_map[a_idx] == NULL) {
             return -1;
         }
         data_warehouse.flow_sample_map[a_idx] = ht_kfs_vi_create();
@@ -84,8 +84,8 @@ void data_warehouse_destroy() {
     // destory flow_recePktList_map
     ht_vl_destory(data_warehouse.flow_recePktList_map);
 
-    //destory last_sent_target_flow_map
-    ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
+    //destory last_sent_flow_selected_level_map
+    ht_kfs_vi_destory(data_warehouse.last_sent_flow_selected_level_map);
 
     int a_idx = 0;
     for (; a_idx < BUFFER_NUM; ++a_idx) {
@@ -93,7 +93,7 @@ void data_warehouse_destroy() {
         ht_kfs_fixSize_destory(data_warehouse.fixed_flow_loss_volume_map[a_idx]);
         ht_kfs_vi_destory(data_warehouse.flow_loss_volume_map[a_idx]);
         ht_kfs_vf_destory(data_warehouse.flow_loss_rate_map[a_idx]);
-        ht_kfs_vi_destory(data_warehouse.target_flow_map[a_idx]);
+        ht_kfs_vi_destory(data_warehouse.flow_selected_level_map[a_idx]);
         ht_kfs_vi_destory(data_warehouse.flow_sample_map[a_idx]);
         ht_kfs_vi_destory(data_warehouse.flow_not_sampled_volume_map[a_idx]);
     }
@@ -114,7 +114,6 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
     hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map = data_warehouse_get_fixed_flow_loss_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
-    hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
     data_warehouse.volume_lost[data_warehouse.active_idx] += added_loss_volume;
 
     if (added_loss_volume > 0) {
@@ -152,17 +151,8 @@ void update_flow_loss_volume(flow_src_t* p_flow, int added_loss_volume) {
         float loss_rate = 1.0 * loss_volume / volume;
         ht_kfs_vf_set(flow_loss_rate_map, p_flow, loss_rate);
 
-        //update target flows
-        if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
-            && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold
-            && loss_volume >= cm_experiment_setting.target_flow_setting.loss_volume_threshold) {
-            //this is a target flow
-            ht_kfs_vi_set(target_flow_map, p_flow, 1);
-        } else {
-            //this is not a target flow.
-            //to simplity, just del the flow from target_flow_map
-            ht_kfs_vi_del(target_flow_map, p_flow);
-        }
+        //update flow selected level
+        update_flow_selected_level_map(p_flow, volume, loss_volume, loss_rate);
 
         //printf("update_flow_loss_volume, flow[srcip:%u-volume:%d-lossrate:%f-%f-lossVolume:%d]\n", 
         //    p_flow->srcip, volume, loss_rate, ht_kfs_vf_get(flow_loss_rate_map, p_flow), 
@@ -181,7 +171,6 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
     hashtable_kfs_vi_t* flow_loss_volume_map = data_warehouse_get_flow_loss_volume_map();
     hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map = data_warehouse_get_fixed_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map = data_warehouse_get_flow_loss_rate_map();
-    hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
 
     if (added_volume > 0) {
         //update total volume of flow
@@ -211,17 +200,9 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
         float loss_rate = 1.0 * loss_volume / volume;
         ht_kfs_vf_set(flow_loss_rate_map, p_flow, loss_rate);
 
-        //update target flows
-        if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
-            && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold
-            && loss_volume >= cm_experiment_setting.target_flow_setting.loss_volume_threshold) {
-            //this is a target flow
-            ht_kfs_vi_set(target_flow_map, p_flow, 1);
-        } else {
-            //this is not a target flow.
-            //to simplity, just del the flow from target_flow_map
-            ht_kfs_vi_del(target_flow_map, p_flow);
-        }
+        //update selected level of the flow
+        update_flow_selected_level_map(p_flow, volume, loss_volume, loss_rate);
+
         /*
         if (loss_rate > 0) {
             printf("update_flow_normal_volume, flow[srcip:%u-volume:%d-lossrate:%f-%f-lossVolume:%d]\n", 
@@ -232,6 +213,29 @@ void update_flow_normal_volume(flow_src_t* p_flow, int added_volume) {
 
     /* release mutex */
     pthread_mutex_unlock(&data_warehouse.mutexs[lock_bin]);
+}
+
+void update_flow_selected_level_map(flow_src_t* p_flow, int volume, int loss_volume, float loss_rate) {
+    //update selected level of the flow
+    hashtable_kfs_vi_t* flow_selected_level_map = data_warehouse_get_flow_selected_level_map();
+    if (volume >= cm_experiment_setting.target_flow_setting.volume_threshold
+        && loss_rate >= cm_experiment_setting.target_flow_setting.loss_rate_threshold)
+    {
+        if (loss_volume >= cm_experiment_setting.target_flow_setting.loss_volume_threshold) {
+            //this is a target flow
+            ht_kfs_vi_set(flow_selected_level_map, p_flow, TARGET_LEVEL);
+        } else if (loss_volume >= cm_experiment_setting.target_flow_setting.selected_volume_threshold) {
+            //this is a selected flow
+            ht_kfs_vi_set(flow_selected_level_map, p_flow, SELECTED_LEVEL);
+        } else {
+            //this is not a target flow nor a selected one
+            ht_kfs_vi_del(flow_selected_level_map, p_flow);
+        }
+    } else {
+        //this is not a target flow.
+        //to simplity, just del the flow from flow_selected_level_map
+        ht_kfs_vi_del(flow_selected_level_map, p_flow);
+    }
 }
 
 void update_flow_not_sampled_volume(flow_src_t* p_flow) {
@@ -271,14 +275,14 @@ int data_warehouse_reset_noactive_buf() {
     ht_kfs_vi_destory(data_warehouse.flow_volume_map[na_idx]);
     ht_kfs_fixSize_destory(data_warehouse.fixed_flow_loss_volume_map[na_idx]);
     ht_kfs_vi_destory(data_warehouse.flow_loss_volume_map[na_idx]);
-    ht_kfs_vi_destory(data_warehouse.target_flow_map[na_idx]);
+    ht_kfs_vi_destory(data_warehouse.flow_selected_level_map[na_idx]);
     ht_kfs_vf_destory(data_warehouse.flow_loss_rate_map[na_idx]);
     ht_kfs_vi_destory(data_warehouse.flow_sample_map[na_idx]);
     ht_kfs_vi_destory(data_warehouse.flow_not_sampled_volume_map[na_idx]);
 
-    //destory last_sent_target_flow_map
-    //This is to make sure that next interval, last_sent_target_flow_map is clear
-    ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
+    //destory last_sent_flow_selected_level_map
+    //This is to make sure that next interval, last_sent_flow_selected_level_map is clear
+    ht_kfs_vi_destory(data_warehouse.last_sent_flow_selected_level_map);
 
     //recreate the hashmaps
     data_warehouse.flow_volume_map[na_idx] = ht_kfs_vi_create();
@@ -297,8 +301,8 @@ int data_warehouse_reset_noactive_buf() {
     if (data_warehouse.flow_loss_rate_map[na_idx] == NULL) {
         return -1;
     }
-    data_warehouse.target_flow_map[na_idx] = ht_kfs_vi_create();
-    if (data_warehouse.target_flow_map[na_idx] == NULL) {
+    data_warehouse.flow_selected_level_map[na_idx] = ht_kfs_vi_create();
+    if (data_warehouse.flow_selected_level_map[na_idx] == NULL) {
         return -1;
     }
     data_warehouse.flow_sample_map[na_idx] = ht_kfs_vi_create();
@@ -309,8 +313,8 @@ int data_warehouse_reset_noactive_buf() {
     if (data_warehouse.flow_not_sampled_volume_map[na_idx] == NULL) {
         return -1;
     }
-    data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
-    if (data_warehouse.last_sent_target_flow_map == NULL) {
+    data_warehouse.last_sent_flow_selected_level_map = ht_kfs_vi_create();
+    if (data_warehouse.last_sent_flow_selected_level_map == NULL) {
         return -1;
     }
     /* interval infor */
@@ -342,8 +346,8 @@ hashtable_kfs_vf_t* data_warehouse_get_flow_loss_rate_map() {
     return data_warehouse.flow_loss_rate_map[data_warehouse.active_idx];
 }
 
-hashtable_kfs_vi_t* data_warehouse_get_target_flow_map() {
-    return data_warehouse.target_flow_map[data_warehouse.active_idx];
+hashtable_kfs_vi_t* data_warehouse_get_flow_selected_level_map() {
+    return data_warehouse.flow_selected_level_map[data_warehouse.active_idx];
 }
 
 hashtable_kfs_vi_t* data_warehouse_get_flow_sample_map() {
@@ -354,8 +358,8 @@ hashtable_kfs_vi_t* data_warehouse_get_flow_not_sampled_volume_map() {
     return data_warehouse.flow_not_sampled_volume_map[data_warehouse.active_idx];
 }
 
-hashtable_kfs_vi_t* data_warehouse_get_unactive_target_flow_map() {
-    return data_warehouse.target_flow_map[(data_warehouse.active_idx+1)%BUFFER_NUM];
+hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_selected_level_map() {
+    return data_warehouse.flow_selected_level_map[(data_warehouse.active_idx+1)%BUFFER_NUM];
 }
 
 hashtable_kfs_vi_t* data_warehouse_get_unactive_flow_volume_map() {

@@ -63,6 +63,7 @@ typedef struct target_flow_setting_s {
     int volume_threshold;
     float loss_rate_threshold;
     int loss_volume_threshold;
+    int selected_volume_threshold;
 }target_flow_setting_t;
 
 typedef struct sender_setting_s {

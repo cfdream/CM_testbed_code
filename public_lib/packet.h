@@ -27,6 +27,13 @@
 //use the bits 4, no 5, 6, 7, 8, ..., 16
 #define TAG_VLAN_FOR_SWITCH_I(i) ( (i < 1 ? 1<<(i+3) : 1<<(i+4)))  //i=0,1,...,SENDERS-1 ( 12-1=11 )
 
+enum selected_level_e {
+    NO_SELECTED_LEVEL = 0,
+    SELECTED_LEVEL = 1,
+    TARGET_LEVEL = 2
+    // 3 is vacant now
+};
+
 typedef struct packet {
     uint32_t srcip;
     uint32_t dstip;

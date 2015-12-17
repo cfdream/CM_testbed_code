@@ -128,15 +128,13 @@ void tag_packet_for_switches(u_char* packet_buf, int datalink, int switchides[],
         }
         //printf("switches: vlan_priority_c_vid:%04x\n", vlan_hdr->vlan_priority_c_vid);
     }
-    
 }
 
-/*
-void tag_packet_as_target_flow(struct tcpr_802_1q_hdr* p_ethernet_header_vlan) {
-    p_ethernet_header_vlan->vlan_priority_c_vid = TAG_VLAN_TARGET_FLOW_VAL;
+void tag_packet_selected_level(struct tcpr_802_1q_hdr* p_ethernet_header_vlan, int selected_level) {
+    p_ethernet_header_vlan->vlan_priority_c_vid = TAG_VLAN_SELECTED_FLOW_VAL(selected_level);
 }
 
-void tag_packet_as_not_target_flow(struct tcpr_802_1q_hdr* p_ethernet_header_vlan) {
-    p_ethernet_header_vlan->vlan_priority_c_vid = 0;
+void tag_packet_as_unselected(struct tcpr_802_1q_hdr* p_ethernet_header_vlan) {
+    p_ethernet_header_vlan->vlan_priority_c_vid = TAG_VLAN_SELECTED_FLOW_VAL(NO_SELECTED_LEVEL);
 }
-*/
+

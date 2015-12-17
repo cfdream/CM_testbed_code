@@ -19,7 +19,7 @@ extern cm_experiment_setting_t cm_experiment_setting;
 *
 * @return 
 */
-int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
+int send_udp_condition_pkt(condition_t* p_condition, int selected_level) {
     char src_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
     char dst_mac[6] = {0x7c, 0x7a, 0x91, 0x86, 0xb3, 0xe8};
     //geneate a udp packet
@@ -64,6 +64,7 @@ int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
     ethernet_header_vlan.vlan_tpi = htons(0x8100);
     ethernet_header_vlan.vlan_len = htons(0x0800);
     //ethernet_header.ether_type = htons(0x0800);
+    /*
     if (is_target_flow) {
         // + delta info
         // now target flow, last non-target flow
@@ -75,6 +76,8 @@ int send_udp_condition_pkt(condition_t* p_condition, bool is_target_flow) {
         // not tagged flow is treated as non-target flow defaultly
         tag_packet_as_not_target_flow(&ethernet_header_vlan);
     }
+    */
+    tag_packet_selected_level(&ethernet_header_vlan, selected_level);
 
     memcpy(g_pkt_buffer, &ethernet_header_vlan, sizeof(ethernet_header_vlan));
     memcpy(g_pkt_buffer+sizeof(ethernet_header_vlan), &ip_header, sizeof(ip_header));
@@ -145,17 +148,18 @@ void* send_condition_to_network(void* param_ptr) {
         pthread_mutex_lock(&data_warehouse.data_warehouse_mutex);
 
         printf("-----start send_condition_to_network, current_msec:%lu ms-----\n", current_msec);
-        hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+        hashtable_kfs_vi_t* flow_selected_level_map = data_warehouse_get_flow_selected_level_map();
         entry_kfs_vi_t ret_entry;
-        //1. for one flow in target_flow_map, if it does not exist in the last_sent_target_flow_map, send the + information
-        while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
-            if (ht_kfs_vi_get(data_warehouse.last_sent_target_flow_map, &ret_entry.key) > 0) {
-                //the flow is target flow now and last time
+        //1. for one flow in flow_selected_level_map, if it does not exist in the last_sent_flow_selected_level_map, send the + information
+        while (ht_kfs_vi_next(flow_selected_level_map, &ret_entry) == 0) {
+            int selected_level = ret_entry.value;
+            int pre_selected_level = ht_kfs_vi_get(data_warehouse.last_sent_flow_selected_level_map, &ret_entry.key);
+            if (pre_selected_level == selected_level) {
+                //the selected_level value has not changed
                 continue;
             }
-            //1.1 new target flow not sent last time
+            //1.1 new selected value of the flow not sent last time
             //send the + delta info
-            //get one target flow, send to the network
             #ifdef FLOW_SRC
             condition.srcip = ret_entry.key.srcip;
             #endif
@@ -164,19 +168,19 @@ void* send_condition_to_network(void* param_ptr) {
             condition.dstip = ret_entry.key.dstip;
             #endif
 
-            send_udp_condition_pkt(&condition, true);
+            send_udp_condition_pkt(&condition, selected_level);
             ++plus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("plus condition srcip:%u\n", condition.srcip);
         }
 
-        //2. for one flow in last_sent_target_flow_map, if it does not exist in target_flow_map, send the - information
-        while (ht_kfs_vi_next(data_warehouse.last_sent_target_flow_map, &ret_entry) == 0) {
-            if (ht_kfs_vi_get(target_flow_map, &ret_entry.key) > 0) {
-                //the flow is target flow now and last time
+        //2. for one flow in last_sent_flow_selected_level_map, if it does not exist in flow_selected_level_map, send the - information
+        while (ht_kfs_vi_next(data_warehouse.last_sent_flow_selected_level_map, &ret_entry) == 0) {
+            if (ht_kfs_vi_get(flow_selected_level_map, &ret_entry.key) > 0) {
+                //the flow exist in flow_selected_level_map as well, already checked in 1.
                 continue;
             }
-            //2.1 target flow sent last time but now not target flow
+            //2.1 flow with selected level (>0) last time, but now the value = 0 (delete from flow_selected_level_map-refer to data_warehouse)
             //send the - delta info
             #ifdef FLOW_SRC
             condition.srcip = ret_entry.key.srcip;
@@ -185,21 +189,21 @@ void* send_condition_to_network(void* param_ptr) {
             condition.srcip = ret_entry.key.srcip;
             condition.dstip = ret_entry.key.dstip;
             #endif
-            send_udp_condition_pkt(&condition, false);
+            send_udp_condition_pkt(&condition, NO_SELECTED_LEVEL);
             ++minus_condition_pkt_num;
             ++data_warehouse.condition_pkt_num_sent[data_warehouse.active_idx];
             //printf("minus condition srcip:%u\n", condition.srcip);
         }
 
-        //3. copy the current target_flow_map into last_sent_target_flow_map
-        ht_kfs_vi_destory(data_warehouse.last_sent_target_flow_map);
-        data_warehouse.last_sent_target_flow_map = ht_kfs_vi_create();
-        if (data_warehouse.last_sent_target_flow_map == NULL) {
+        //3. copy the current flow_selected_level_map into last_sent_flow_selected_level_map
+        ht_kfs_vi_destory(data_warehouse.last_sent_flow_selected_level_map);
+        data_warehouse.last_sent_flow_selected_level_map = ht_kfs_vi_create();
+        if (data_warehouse.last_sent_flow_selected_level_map == NULL) {
             return NULL;
         }
-        while (ht_kfs_vi_next(target_flow_map, &ret_entry) == 0) {
-            //add the flow into last_sent_target_flow_map
-            ht_kfs_vi_set(data_warehouse.last_sent_target_flow_map, &ret_entry.key, ret_entry.value);
+        while (ht_kfs_vi_next(flow_selected_level_map, &ret_entry) == 0) {
+            //add the flow into last_sent_flow_selected_level_map
+            ht_kfs_vi_set(data_warehouse.last_sent_flow_selected_level_map, &ret_entry.key, ret_entry.value);
         }
 
         pthread_mutex_unlock(&data_warehouse.data_warehouse_mutex);

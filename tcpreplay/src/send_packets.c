@@ -439,11 +439,12 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                 tag_packet_for_switches(packet_buf, datalink, p_task->monitor_switch_ids, p_task->num_monitors);
                 
                 //-----------sample packet-------------
-                hashtable_kfs_vi_t* target_flow_map = data_warehouse_get_target_flow_map();
+                hashtable_kfs_vi_t* flow_selected_level_map = data_warehouse_get_flow_selected_level_map();
                 /* sample the packet at the sender side */
                 if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE) {
                     int sampled = 0;
-                    if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
+                    if (ht_kfs_vi_get(flow_selected_level_map, &flow_src) > NO_SELECTED_LEVEL) {
+                        //if the selected_level higher than NO_SELECTED_LEVEL, sample the flow
                         sampled = 1;
                     } else {
                         hashtable_kfs_vi_t* flow_sample_map = data_warehouse_get_flow_sample_map();
@@ -462,9 +463,10 @@ cm_handle_ipv4_packet(u_char **pktdata, int total_pkt_len, int datalink)
                 //tag packet only in coordination mode
                 if (cm_experiment_setting.host_or_switch_sample == HOST_SAMPLE
                     && cm_experiment_setting.inject_or_tag_packet == TAG_PKT_AS_CONDITION) {
-                    if (ht_kfs_vi_get(target_flow_map, &flow_src) > 0) {
-                        // the flow is a target flow
-                        tag_packet_as_target_flow_in_normal_packet(packet_buf, datalink);
+                    int selected_level = ht_kfs_vi_get(flow_selected_level_map, &flow_src);
+                    if (selected_level > NO_SELECTED_LEVEL) {
+                        // the flow is a selected
+                        tag_selected_flow_level_in_normal_packet(packet_buf, datalink, selected_level);
                     }
                 }
             }

@@ -31,16 +31,21 @@ FILE* init_target_flow_file() {
     return fp;
 }
 
-void write_last_sent_target_flow_map_lost_target_flow(FILE* fp_target_flow) {
-    hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
-    hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
+void write_last_sent_flow_selected_level_map_lost_target_flow(FILE* fp_target_flow) {
+    hashtable_kfs_vi_t* flow_selected_level_map_pre_interval = data_warehouse_get_unactive_flow_selected_level_map();
+    hashtable_kfs_vi_t* last_sent_flow_selected_level_map = data_warehouse.last_sent_flow_selected_level_map;
 
     int final_target_flow_num = 0;
-    int final_lost_num_in_last_sent_target_flow_map = 0;
+    int final_lost_num_in_last_sent_flow_selected_level_map = 0;
     entry_kfs_vi_t ret_entry;
-    while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
+    while (ht_kfs_vi_next(flow_selected_level_map_pre_interval, &ret_entry) == 0) {
         //get one target flow, output to file
         flow_src_t* p_flow = &ret_entry.key;
+
+        //just care about target flows
+        if (ret_entry.value != TARGET_LEVEL) {
+            continue;
+        }
 
         //------------if the flow is not interested by any task on this host. No need to output it-------------
         task_t* p_task = get_task_of_traffic(&data_warehouse.task_manager, p_flow);
@@ -49,12 +54,12 @@ void write_last_sent_target_flow_map_lost_target_flow(FILE* fp_target_flow) {
         }
         
         ++final_target_flow_num;
-        if (ht_kfs_vi_get(last_sent_target_flow_map, p_flow) < 0) {
-                ++ final_lost_num_in_last_sent_target_flow_map;
+        if (ht_kfs_vi_get(last_sent_flow_selected_level_map, p_flow) != TARGET_LEVEL) {
+                ++ final_lost_num_in_last_sent_flow_selected_level_map;
         }
     }
     fprintf(fp_target_flow, "target_flow_num:%d, lost_target_flow_num_last_sent_conditionmap:%d\n", 
-          final_target_flow_num, final_lost_num_in_last_sent_target_flow_map);
+          final_target_flow_num, final_lost_num_in_last_sent_flow_selected_level_map);
 }
 
 void write_interval_info_to_file(uint64_t current_msec, FILE* fp_target_flow) {
@@ -115,16 +120,21 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         return;
     }
     fflush(fp_target_flow);
-    hashtable_kfs_vi_t* target_flow_map_pre_interval = data_warehouse_get_unactive_target_flow_map();
+    hashtable_kfs_vi_t* flow_selected_level_map_pre_interval = data_warehouse_get_unactive_flow_selected_level_map();
     hashtable_kfs_vi_t* flow_volume_map_pre_interval = data_warehouse_get_unactive_flow_volume_map();
     hashtable_kfs_vi_t* flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_flow_loss_volume_map();
     hashtable_kfs_fixSize_t* fixed_flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_fixed_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
     hashtable_kfs_vi_t* flow_not_sampled_volume_map = data_warehouse_get_unactive_flow_not_sampled_volume_map();
-    hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
+    hashtable_kfs_vi_t* last_sent_flow_selected_level_map = data_warehouse.last_sent_flow_selected_level_map;
 
     entry_kfs_vi_t ret_entry;
-    while (ht_kfs_vi_next(target_flow_map_pre_interval, &ret_entry) == 0) {
+    while (ht_kfs_vi_next(flow_selected_level_map_pre_interval, &ret_entry) == 0) {
+        //just care about target flow
+        if (ret_entry.value != TARGET_LEVEL) {
+            continue;
+        }
+
         //get one target flow, output to file
         flow_src_t* p_flow = &ret_entry.key;
 
@@ -143,7 +153,7 @@ void write_target_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
             loss_volume_from_fixedmap = ret_entry.value;
         }
         int not_sampled_volume = ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow);
-        int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
+        int target_flow_sent_out = ht_kfs_vi_get(last_sent_flow_selected_level_map, p_flow);
         #ifdef FLOW_SRC
         fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, loss_volume_from_fixedmap, not_sampled_volume, target_flow_sent_out);
         #endif
@@ -165,7 +175,7 @@ void write_all_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
     hashtable_kfs_vi_t* flow_loss_volume_map_pre_interval = data_warehouse_get_unactive_flow_loss_volume_map();
     hashtable_kfs_vf_t* flow_loss_rate_map_pre_interval = data_warehouse_get_unactive_flow_loss_rate_map();
     hashtable_kfs_vi_t* flow_not_sampled_volume_map = data_warehouse_get_unactive_flow_not_sampled_volume_map();
-    hashtable_kfs_vi_t* last_sent_target_flow_map = data_warehouse.last_sent_target_flow_map;
+    hashtable_kfs_vi_t* last_sent_flow_selected_level_map = data_warehouse.last_sent_flow_selected_level_map;
 
     entry_kfs_vi_t ret_entry;
     while (ht_kfs_vi_next(flow_volume_map_pre_interval, &ret_entry) == 0) {
@@ -175,7 +185,7 @@ void write_all_flows_to_file(uint64_t current_msec, FILE* fp_target_flow) {
         float loss_rate = ht_kfs_vf_get(flow_loss_rate_map_pre_interval, p_flow);
         int loss_volume = ht_kfs_vi_get(flow_loss_volume_map_pre_interval, p_flow);
         int not_sampled_volume = ht_kfs_vi_get(flow_not_sampled_volume_map, p_flow);
-        int target_flow_sent_out = ht_kfs_vi_get(last_sent_target_flow_map, p_flow);
+        int target_flow_sent_out = ht_kfs_vi_get(last_sent_flow_selected_level_map, p_flow);
         #ifdef FLOW_SRC
         fprintf(fp_target_flow, "%u\t%d\t%f\t%d\t%d\t%d\n", p_flow->srcip, volume, loss_rate, loss_volume, not_sampled_volume, target_flow_sent_out);
         #endif
@@ -214,7 +224,7 @@ void* rotate_interval(void* param_ptr) {
         //2.1
         write_interval_info_to_file(current_msec, fp_target_flow);
         //2.2 
-        write_last_sent_target_flow_map_lost_target_flow(fp_target_flow);
+        write_last_sent_flow_selected_level_map_lost_target_flow(fp_target_flow);
         //2.3
         write_target_flows_to_file(current_msec, fp_target_flow);
         //write_all_flows_to_file(current_msec, fp_target_flow);
