@@ -28,10 +28,10 @@ inject_or_tag_packet:1
 #####use case4
 target_flow_volume:0
 target_flow_loss_rate:0
-#expected loss volume in 10 intervals in case3
+#expected loss volume in 10 intervals in case3; If don't use selected flow signal, set selected_loss_volume_threshold = target_flow_loss_volume
 target_flow_loss_volume:6000
 #selected volume threshold
-selected_volume_threshold:3000
+selected_loss_volume_threshold:6000
 #when target_flow_volume=0, this is used to set the default sampling_rate
 #for query 4, volume: 120000, loss: 6000
 target_flow_volume_in_sampling:120000

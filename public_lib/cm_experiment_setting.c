@@ -84,9 +84,9 @@ int read_cm_experiment_setting_from_file(void) {
             if (strcmp(*(tokens+0), "target_flow_loss_volume") == 0 && *(tokens+1)) {
                 cm_experiment_setting.target_flow_setting.loss_volume_threshold = strtol(*(tokens+1), NULL, 10);
             }
-            //selected_volume_threshold
-            if (strcmp(*(tokens+0), "selected_volume_threshold") == 0 && *(tokens+1)) {
-                cm_experiment_setting.target_flow_setting.selected_volume_threshold = strtol(*(tokens+1), NULL, 10);
+            //selected_loss_volume_threshold
+            if (strcmp(*(tokens+0), "selected_loss_volume_threshold") == 0 && *(tokens+1)) {
+                cm_experiment_setting.target_flow_setting.selected_loss_volume_threshold = strtol(*(tokens+1), NULL, 10);
             }
             //target_flow_volume_in_sampling
             if (strcmp(*(tokens+0), "target_flow_volume_in_sampling") == 0 && *(tokens+1)) {

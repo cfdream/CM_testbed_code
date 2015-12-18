@@ -224,7 +224,7 @@ void update_flow_selected_level_map(flow_src_t* p_flow, int volume, int loss_vol
         if (loss_volume >= cm_experiment_setting.target_flow_setting.loss_volume_threshold) {
             //this is a target flow
             ht_kfs_vi_set(flow_selected_level_map, p_flow, TARGET_LEVEL);
-        } else if (loss_volume >= cm_experiment_setting.target_flow_setting.selected_volume_threshold) {
+        } else if (loss_volume >= cm_experiment_setting.target_flow_setting.selected_loss_volume_threshold) {
             //this is a selected flow
             ht_kfs_vi_set(flow_selected_level_map, p_flow, SELECTED_LEVEL);
         } else {
