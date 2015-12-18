@@ -347,7 +347,7 @@ def query1_change_selected_flow_loss_volume_threshold():
         #for selected_loss_volume_threshold in [6000, 5500, 5000, 4500, 4000, 3500, 3000, 2500, 2000]:
         for selected_loss_volume_threshold in [5000, 4000, 3000, 2000, 1000]:
             print memory_times, selected_loss_volume_threshold
-            config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, 0, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
+            config_experiment_setting_file(host_switch_sample, replace, memory_type, memory_times*mem50kbytes_memory_times, freq, switch_drop_rate, target_flow_loss_rate, target_flow_volume, target_flow_loss_volume, target_flow_volume_in_sampling, inject_or_tag_packet)
             config_selected_flow_loss_volume(selected_loss_volume_threshold)
             run_one_round(install_rule_type)
             move_one_round_data_diffSelectedLossVoluemExample1(host_switch_sample, replace, memory_type, memory_times, freq, inject_or_tag_packet, selected_loss_volume_threshold)
